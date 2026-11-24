@@ -355,6 +355,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
+const VERSION = "0.3";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -368,7 +369,7 @@ function icon(kind, size) {
     partlyNight: '<path stroke="#1B2A4A" d="M11.5 7.5A4.5 4.5 0 0 1 6.5 2.5a4.5 4.5 0 1 0 5 5z"/>' + lowCloud,
     cloud: cloud,
     rain: cloud + '<path stroke="#1B2A4A" d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/>',
-    snow: cloud + '<path stroke="#1B2A4A" stroke-width="2.4" d="M8 20v.2M12 21v.2M16 20v.2"/>',
+    snow: '<g transform="translate(2.4 -1) scale(0.8)" stroke-width="2"><path stroke="#1B2A4A" d="M7 16h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 7.5 4.25 4.25 0 0 0 7 16z"/></g><path stroke="#1B2A4A" stroke-width="1.3" d="M7.5 15.7v5.8M4.99 17.15l5.02 2.9M4.99 20.05l5.02 -2.9M16.5 15.7v5.8M13.99 17.15l5.02 2.9M13.99 20.05l5.02 -2.9"/>',
     thunder: cloud + '<path stroke="#E8762B" d="M12.5 17l-2 3h3l-2 3"/>',
     wind: '<g stroke="#1B2A4A"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h8"/></g>',
     peak_clear: peak,
@@ -400,7 +401,7 @@ function languageSwitch() {
 }
 function footer() {
   return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
-    ' <a href="https://open-meteo.com/">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '">slf.ch</a></footer>';
+    ' <a href="https://open-meteo.com/">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '">slf.ch</a> · v' + VERSION + "</footer>";
 }
 function renderHome() {
   let html = '<header style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:flex-end">' + languageSwitch() + "</div><h1>" + esc(tr("favourites")) + "</h1></header>" +
