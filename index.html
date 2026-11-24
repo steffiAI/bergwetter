@@ -150,6 +150,13 @@ const CLOUD_TEXT = {
   it: { nextDays: "I prossimi giorni", hourByHour: "Ora per ora", tableLegend: "Colonne grigie: prima dell'alba o dopo il tramonto. Barra del sole: quota dell'ora con sole.", print: "Stampa", share: "Condividi o salva", exported: "Stampato o condiviso il", cloudTitle: "Nubi alla tua quota", from: "dalle", st_in: "nelle nubi", st_above: "libera, sopra le nubi", st_below: "libera, sotto le nubi", st_between: "libera, tra due strati di nubi", st_clear: "libera, nessuno strato di nubi", cloudBetween: "nubi da circa {a} a {b} m", cloudTopAt: "limite superiore delle nubi a circa {a} m", cloudBaseAt: "base delle nubi a circa {a} m", cloudNA: "Gli strati di nubi non sono disponibili al momento.", cloudLegend: "Stima per la quota del tuo luogo dal modello ICON a livelli fissi. Sono possibili scarti di 200 m o più, soprattutto con nebbia.", footCloud: "Strati di nubi: modello ICON del Deutscher Wetterdienst tramite Open-Meteo." }
 };
 for (const lang in CLOUD_TEXT) Object.assign(TEXT[lang], CLOUD_TEXT[lang]);
+const WIDE_TEXT = {
+  en: "Outside the MeteoSwiss area: forecast from the best available model for this place.",
+  de: "Ausserhalb des MeteoSchweiz-Gebiets: Vorhersage aus dem besten verfügbaren Modell für diesen Ort.",
+  fr: "Hors de la zone MétéoSuisse : prévision issue du meilleur modèle disponible pour ce lieu.",
+  it: "Fuori dall'area MeteoSvizzera: previsione dal miglior modello disponibile per questo luogo."
+};
+for (const lang in WIDE_TEXT) TEXT[lang].wideModel = WIDE_TEXT[lang];
 
 let state = { lang: "en", spots: [], cache: {} };
 let view = { name: "home", tab: "day", day: 0 };
@@ -171,10 +178,10 @@ function round(value, digits) {
 function show(value, unit) { return value === null || value === undefined ? tr("na") : value + (unit || ""); }
 function hourText(hour) { return String(hour).padStart(2, "0") + ":00"; }
 
-function forecastUrl(spot) {
+function forecastUrl(spot, model) {
   return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon +
     (typeof spot.elevation === "number" ? "&elevation=" + Math.round(spot.elevation) : "") +
-    "&hourly=" + HOURLY_VARS + "&daily=" + DAILY_VARS + "&models=meteoswiss_icon_seamless&timezone=Europe%2FZurich&forecast_days=5";
+    "&hourly=" + HOURLY_VARS + "&daily=" + DAILY_VARS + "&models=" + model + "&timezone=Europe%2FZurich&forecast_days=5";
 }
 function geocodeUrl(query) {
   return "https://geocoding-api.open-meteo.com/v1/search?count=6&format=json&language=" + state.lang + "&name=" + encodeURIComponent(query);
@@ -481,6 +488,7 @@ function renderSpot(spot) {
   if (entry.error) html += '<div class="err">' + esc(tr(forecast ? "refreshFail" : "loadFail")) + "</div>";
   if (!forecast) return html + (entry.error ? "" : '<p class="muted">' + esc(tr("loading")) + "</p>") + footer();
   const dayIndex = Math.min(view.day, forecast.days.length - 1), day = forecast.days[dayIndex];
+  if (forecast.wide) html += '<p class="small muted" style="margin:0">' + esc(tr("wideModel")) + "</p>";
   html += '<div class="pills">' + forecast.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
   return html + (view.tab === "details" ? renderDetailsTab(day, entry.avalanche) : renderDayTab(day, entry.avalanche, entry.cloud)) +
     '<div class="actions"><button data-print="' + esc(spot.id) + '">' + esc(tr("print")) + '</button><button data-share="' + esc(spot.id) + '">' + esc(tr("share")) + "</button></div>" + footer();
@@ -549,7 +557,7 @@ function renderReport(spot) {
   if (later.length) html += "<section>" + title(tr("nextDays")) + '<table class="pnext"><thead><tr><th></th><th></th><th>' + [tr("sunshine"), tr("temperature"), tr("gusts"), tr("newSnow"), tr("precipitation")].map(esc).join("</th><th>") + "</th></tr></thead><tbody>" +
     later.map(next => "<tr><td>" + esc(new Date(next.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "short" })) + "</td><td>" + icon(dayKind(next), 16) + "</td><td>" + show(next.sunHours, " h") + "</td><td>" +
       show(next.tempMin, "°") + " " + esc(tr("to")) + " " + show(next.tempMax, "°C") + "</td><td>" + (next.gustMax >= 60 ? "<b>" + next.gustMax + " km/h</b>" : show(next.gustMax, " km/h")) + "</td><td>" + show(next.snowCm, " cm") + "</td><td>" + show(next.precipMm, " mm") + "</td></tr>").join("") + "</tbody></table></section>";
-  return html + '<div class="pfoot">' + esc(tr("footNote")) + " " + esc(tr("cloudLegend")) + " " + esc(tr("astro")) + "<br>" + esc(tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + "</div>";
+  return html + '<div class="pfoot">' + esc(tr("footNote")) + " " + esc(tr("cloudLegend")) + " " + esc(tr("astro")) + "<br>" + esc(forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + "</div>";
 }
 function reportText(spot) {
   const report = reportDay(spot);
@@ -569,7 +577,7 @@ function reportText(spot) {
   for (const segment of segments) lines.push("  " + tr("from") + " " + hourText(segment.from) + ": " + tr("st_" + segment.state));
   lines.push("", tr("yourDay") + ":");
   for (const event of dayEvents(day)) lines.push("  " + event.time + "  " + event.title + (event.sub ? " (" + event.sub + ")" : ""));
-  lines.push("", tr("avalanche") + ": " + avalancheLine(report.entry.avalanche), "", tr("footNote"), tr("footForecast") + " " + tr("footAva"));
+  lines.push("", tr("avalanche") + ": " + avalancheLine(report.entry.avalanche), "", tr("footNote"), (forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + tr("footAva"));
   return lines.join("\n");
 }
 async function shareReport(spot) {
@@ -618,10 +626,24 @@ async function loadCloud(spot, entry) {
     if (!document.querySelector("#results button, #q:focus")) render();
   } catch (error) { /* keep the last saved cloud data */ }
 }
+function hasValues(json) {
+  return !!(json && json.hourly && (json.hourly.temperature_2m || []).some(value => value !== null && value !== undefined));
+}
+// The MeteoSwiss models cover the Alps and central Europe only; elsewhere fall back to Open-Meteo's best match.
+async function loadForecast(spot) {
+  let json = null;
+  try { json = await fetchJson(forecastUrl(spot, "meteoswiss_icon_seamless")); } catch (error) { json = null; }
+  const wide = !hasValues(json);
+  if (wide) json = await fetchJson(forecastUrl(spot, "best_match"));
+  if (!hasValues(json)) throw new Error("no forecast values");
+  const forecast = shapeForecast(json);
+  forecast.wide = wide;
+  return forecast;
+}
 async function refreshSpot(spot) {
   const entry = state.cache[spot.id] || (state.cache[spot.id] = {});
   entry.error = false;
-  try { entry.forecast = shapeForecast(await fetchJson(forecastUrl(spot))); } catch (error) { entry.error = true; }
+  try { entry.forecast = await loadForecast(spot); } catch (error) { entry.error = true; }
   if (entry.forecast && entry.forecast.elevation !== null) loadCloud(spot, entry);
   try {
     const bulletin = await getBulletin(state.lang);
