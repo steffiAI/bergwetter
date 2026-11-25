@@ -110,6 +110,35 @@
     #print section, .pcloud { break-inside:avoid; }
   }
   footer { color:var(--slate); font-size:12px; border-top:1px solid var(--line); padding-top:16px; }
+  .stack { display:flex; flex-direction:column; gap:10px; }
+  .linkbtn { background:none; border:0; padding:0; min-height:44px; font-size:13px; text-decoration:underline; }
+  .seg.kinds button, .seg.wide button { flex:1; padding:0 6px; }
+  .wbar { display:grid; gap:3px; }
+  .wbar i { height:22px; border-radius:4px; box-sizing:border-box; }
+  .wticks { margin-top:-6px; }
+  .wticks span { font-size:10px; color:var(--slate); text-align:center; }
+  .w-in { background:var(--navy); }
+  .w-dark { background:repeating-linear-gradient(135deg, var(--navy) 0 2px, transparent 2px 5px); border:1px solid var(--navy); }
+  .w-over { background:var(--orange); }
+  .w-under { border:1px solid var(--navy); }
+  .wlegend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:var(--slate); }
+  .wlegend span { display:inline-flex; align-items:center; gap:5px; }
+  .wlegend i { width:12px; height:12px; border-radius:3px; box-sizing:border-box; }
+  .wrows { display:grid; grid-template-columns:44px 20px 26px minmax(0, 1fr) 58px; column-gap:8px; row-gap:9px; align-items:center; font-size:13px; }
+  .wtrack { position:relative; height:12px; }
+  .wtrack i { position:absolute; left:0; top:0; height:12px; border-radius:3px; }
+  .wtrack .gust { background:rgba(27,42,74,0.14); }
+  .wtrack .gust.over { background:var(--orange); }
+  .wtrack .mean { background:var(--navy); }
+  .wtrack .mean.weak { opacity:0.35; }
+  .wtrack .mark { top:-3px; height:18px; width:1.5px; border-radius:0; background:var(--navy); opacity:0.55; }
+  .overtext { color:var(--orange); font-weight:600; }
+  .wblock { display:grid; grid-template-columns:78px 24px minmax(0, 1fr); column-gap:10px; align-items:start; font-size:14px; }
+  .wsketch { display:grid; grid-template-columns:120px minmax(0, 1fr); gap:12px; align-items:center; font-size:14px; }
+  .limitrow { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--line); padding:10px 0 4px; }
+  .stepper { display:inline-flex; align-items:center; gap:10px; }
+  .stepper button { width:44px; height:44px; border-radius:99px; border:1.2px solid var(--navy); background:none; font-size:20px; line-height:1; }
+  .stepper b { min-width:72px; text-align:center; font-weight:600; }
 </style>
 </head>
 <body>
@@ -117,7 +146,9 @@
 <main id="print"></main>
 <script>
 "use strict";
-const STORE_KEY = "bergwetter.v1";
+// The preview copy keeps its own storage so trying it out never touches the live favourites.
+const PREVIEW = typeof location !== "undefined" && location.pathname.includes("/preview/");
+const STORE_KEY = PREVIEW ? "bergwetter.preview" : "bergwetter.v1";
 const LANGS = ["de", "fr", "it", "en"];
 const LOCALES = { de: "de-CH", fr: "fr-CH", it: "it-CH", en: "en-GB" };
 const SLF_PAGE = { de: "https://www.slf.ch/de/lawinenbulletin-und-schneesituation/", fr: "https://www.slf.ch/fr/bulletin-davalanches-et-situation-nivologique/", it: "https://www.slf.ch/it/bollettino-valanghe-e-situazione-nivologica/", en: "https://www.slf.ch/en/avalanche-bulletin-and-snow-situation/" };
@@ -165,7 +196,7 @@ const MORE_TEXT = {
 };
 for (const lang in MORE_TEXT) Object.assign(TEXT[lang], MORE_TEXT[lang]);
 
-let state = { lang: "en", spots: [], cache: {} };
+let state = { lang: "en", spots: [], cache: {}, prefs: null };
 let view = { name: "home", tab: "day", day: 0 };
 const bulletinPromises = {};
 
@@ -382,7 +413,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.4";
+const VERSION = "0.5";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -431,11 +462,12 @@ function footer() {
     ' <a href="https://open-meteo.com/">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '">slf.ch</a> · v' + VERSION + "</footer>";
 }
 function renderHome() {
-  let html = '<header style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:flex-end">' + languageSwitch() + "</div><h1>" + esc(tr("favourites")) + "</h1></header>" +
+  let html = '<header style="display:flex;flex-direction:column;gap:10px"><div class="row"><button class="linkbtn" data-prefs="1">' + esc(tr("prefs")) + "</button>" + languageSwitch() + "</div><h1>" + esc(tr("favourites")) + "</h1></header>" +
     '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
-    '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
+    kindPicker() + '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
   if (!state.spots.length) html += '<p class="muted">' + esc(tr("empty")) + "</p>";
   for (const spot of state.spots) {
+    if (isWater(spot)) { html += waterCard(spot); continue; }
     const entry = state.cache[spot.id] || {}, forecast = entry.forecast, today = forecast && forecast.days[0];
     const top = entry.avalanche && entry.avalanche.status === "ok" ? entry.avalanche.summary.top : null;
     html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + chip(top) + "</span>" +
@@ -618,15 +650,410 @@ function render() {
   const spot = view.name === "spot" ? state.spots.find(item => item.id === view.id) : null;
   if (view.name === "spot" && !spot) view = { name: "home", tab: "day", day: 0 };
   document.documentElement.lang = state.lang;
-  document.getElementById("app").innerHTML = spot ? renderSpot(spot) : renderHome();
+  document.getElementById("app").innerHTML = view.name === "prefs" ? renderPrefs() : spot ? (isWater(spot) ? renderWaterSpot(spot) : renderSpot(spot)) : renderHome();
+}
+
+/* ---------- Water: sailing, kite, windsurf ---------- */
+const WATER_KINDS = ["sail", "kite", "windsurf"];
+const DEFAULT_PREFS = { view: "simple", unit: "auto", arrows: "to", limits: { sail: { max: 22 }, kite: { min: 12, max: 25 }, windsurf: { min: 14, max: 30 } } };
+const BFT_KNOTS = [1, 4, 7, 11, 17, 22, 28, 34, 41, 48, 56, 64];
+const WATER_TEXT = {
+  en: { kindMountain: "Mountain", kindSail: "Sailing", kindKite: "Kite", kindWindsurf: "Windsurf", addAs: "Add as", prefs: "Preferences", prefsSaved: "Saved on this device only", viewLabel: "View", simple: "Simple", sailor: "Sailor",
+    viewNote: "Simple: plain words, a sketch of the sea, the day in four parts. Sailor: hourly values, swell, tide and current.", detail: "How much detail", units: "Units and symbols", windSpeed: "Wind speed", unitAuto: "Auto", bftNote: "Auto: km/h in Simple, knots in Sailor. Beaufort is always shown next to it.",
+    arrowsLabel: "Wind arrows", arrTo: "Blows to", arrFrom: "Comes from", arrNote: "Named directions always say where the wind comes from, as in every forecast.", limits: "Your limits", limitMax: "gusts up to {v}", limitRange: "{a} to {b}", limitMin: "at least", limitTop: "gusts up to",
+    limitsNote: "Limits decide the colours in \"Your window\".", change: "Change", wind: "Wind", waves: "Waves", water: "Water", air: "Air", windFrom: "from {d}", peak: "peak {t}", yourWindow: "Your window",
+    winSail: "Inside your limit and in daylight: about {a} to {b}", winRange: "Enough wind for you: about {a} to {b}", winNone: "No hours inside your limit in daylight.", winWindy: "Too windy for you all day.", winLittle: "Not enough wind for you today.",
+    legIn: "inside your limit", legDark: "inside, but dark", legOver: "too much wind", legUnder: "too little wind", yourLimit: "Your limit: gusts up to {v}.", yourRange: "Your range: {a} to {b}.",
+    hourly: "Wind hour by hour", hourlyNote: "Steady wind / gusts in {u}. The lines mark your limit.", arrowNoteTo: "Arrows show where the wind blows to.", arrowNoteFrom: "Arrows point to where the wind comes from.", watch: "What to watch",
+    flOver: "Gusts above your limit from {a} to {b}", flOverSub: "Up to {v} around {t}", flShift: "Wind turns from {a} to {b}", flShiftSub: "Around {t}", flThunder: "Thunderstorm risk from {t}", flThunderSub: "Be off the water before then.",
+    flFog: "Poor visibility from {t}", flFogSub: "Less than 1 km.", flSun: "Sunset {t}", flSunSub: "Daylight from {t}", flOff: "Offshore wind from {a} to {b}", flOffSub: "The wind pushes you away from the shore.", flGusty: "Gusty", flGustySub: "Up to {v} between steady wind and gusts.",
+    shoreTitle: "Wind and shore", shoreAsk: "Which way does your launch face, towards the water?", shoreFaces: "Your launch faces {d}.", on: "Onshore", onSub: "The wind blows onto the shore. You drift back to land.", side: "Side-shore", sideSub: "The wind runs along the shore. You can get back to land on your own.",
+    off: "Offshore", offSub: "The wind blows out onto the water. Without help you may not get back.", sea: "Sea", swell: "Swell", current: "Current", visibility: "Visibility", visGood: "good", visMod: "moderate", visPoor: "poor", every: "every {s} s", toDir: "to {d}",
+    seaNote: "Waves, current and sea level come from a coarse model: for orientation only, not for navigation. Use your tide table.", seaNA: "No sea data for this spot (a lake, or too close to land for the model).", tideHigh: "high about {t}", tideLow: "low about {t}",
+    sketchNote: "Sketch of the sea at Beaufort {b}", sGood: "Good for you from about {a} to {b}.", sAfterWindy: "After that it is too windy.", sAfterLittle: "After that the wind drops.", dayWater: "Your day on the water",
+    bIn: "Fine for you", bOver: "Too windy", bUnder: "Too little wind", bDark: "Fine, but dark", blockSub: "From {d}, gusts up to {v}", preview: "Preview version for testing.",
+    footWater: "Wind: best available model from Open-Meteo. Sea: Open-Meteo Marine. Everything under \"What to watch\" is worked out by this app from the forecast and your limits; these are not official warnings.",
+    dirs: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+    bft: ["Calm", "Light air", "Light breeze", "Gentle breeze", "Moderate breeze", "Fresh breeze", "Strong breeze", "Near gale", "Gale", "Strong gale", "Storm", "Violent storm", "Hurricane force"],
+    seaLook: ["Sea like a mirror.", "Ripples, no foam.", "Small wavelets, crests do not break.", "Large wavelets, a few white crests.", "Small waves, frequent white crests.", "Moderate waves, many white crests, some spray.", "Large waves, white crests everywhere, spray.", "Sea heaps up, foam blown in streaks.", "High waves, crests break into spindrift.", "High waves, dense foam, spray cuts visibility.", "Very high waves, the sea looks white.", "Exceptionally high waves, sea covered in foam.", "Air filled with foam and spray."] },
+  de: { kindMountain: "Berg", kindSail: "Segeln", kindKite: "Kite", kindWindsurf: "Windsurfen", addAs: "Hinzufügen als", prefs: "Einstellungen", prefsSaved: "Nur auf diesem Gerät gespeichert", viewLabel: "Ansicht", simple: "Einfach", sailor: "Segler",
+    viewNote: "Einfach: klare Worte, eine Skizze der See, der Tag in vier Teilen. Segler: Stundenwerte, Dünung, Gezeiten und Strömung.", detail: "Wie viel Detail", units: "Einheiten und Symbole", windSpeed: "Windgeschwindigkeit", unitAuto: "Auto", bftNote: "Auto: km/h in Einfach, Knoten in Segler. Beaufort steht immer daneben.",
+    arrowsLabel: "Windpfeile", arrTo: "Weht nach", arrFrom: "Kommt aus", arrNote: "Benannte Richtungen sagen immer, woher der Wind kommt, wie in jeder Vorhersage.", limits: "Deine Grenzen", limitMax: "Böen bis {v}", limitRange: "{a} bis {b}", limitMin: "mindestens", limitTop: "Böen bis",
+    limitsNote: "Die Grenzen bestimmen die Farben in «Dein Fenster».", change: "Ändern", wind: "Wind", waves: "Wellen", water: "Wasser", air: "Luft", windFrom: "aus {d}", peak: "Spitze {t}", yourWindow: "Dein Fenster",
+    winSail: "Innerhalb deiner Grenze und bei Tageslicht: etwa {a} bis {b}", winRange: "Genug Wind für dich: etwa {a} bis {b}", winNone: "Keine Stunde innerhalb deiner Grenze bei Tageslicht.", winWindy: "Den ganzen Tag zu viel Wind für dich.", winLittle: "Heute zu wenig Wind für dich.",
+    legIn: "innerhalb deiner Grenze", legDark: "passt, aber dunkel", legOver: "zu viel Wind", legUnder: "zu wenig Wind", yourLimit: "Deine Grenze: Böen bis {v}.", yourRange: "Dein Bereich: {a} bis {b}.",
+    hourly: "Wind Stunde für Stunde", hourlyNote: "Mittelwind / Böen in {u}. Die Linien zeigen deine Grenze.", arrowNoteTo: "Pfeile zeigen, wohin der Wind weht.", arrowNoteFrom: "Pfeile zeigen dorthin, woher der Wind kommt.", watch: "Worauf achten",
+    flOver: "Böen über deiner Grenze von {a} bis {b}", flOverSub: "Bis {v} gegen {t}", flShift: "Wind dreht von {a} auf {b}", flShiftSub: "Gegen {t}", flThunder: "Gewittergefahr ab {t}", flThunderSub: "Vorher vom Wasser gehen.",
+    flFog: "Schlechte Sicht ab {t}", flFogSub: "Weniger als 1 km.", flSun: "Sonnenuntergang {t}", flSunSub: "Tageslicht ab {t}", flOff: "Ablandiger Wind von {a} bis {b}", flOffSub: "Der Wind treibt dich vom Ufer weg.", flGusty: "Böig", flGustySub: "Bis {v} zwischen Mittelwind und Böen.",
+    shoreTitle: "Wind und Ufer", shoreAsk: "In welche Richtung liegt das Wasser von deinem Startplatz aus?", shoreFaces: "Dein Startplatz schaut nach {d}.", on: "Auflandig", onSub: "Der Wind weht aufs Ufer. Du treibst zurück an Land.", side: "Sideshore", sideSub: "Der Wind läuft am Ufer entlang. Du kommst aus eigener Kraft zurück.",
+    off: "Ablandig", offSub: "Der Wind weht aufs Wasser hinaus. Ohne Hilfe kommst du vielleicht nicht zurück.", sea: "See", swell: "Dünung", current: "Strömung", visibility: "Sicht", visGood: "gut", visMod: "mässig", visPoor: "schlecht", every: "alle {s} s", toDir: "nach {d}",
+    seaNote: "Wellen, Strömung und Wasserstand stammen aus einem groben Modell: nur zur Orientierung, nicht zur Navigation. Nutze deine Gezeitentafel.", seaNA: "Keine Seedaten für diesen Ort (ein See, oder zu nah an Land für das Modell).", tideHigh: "Hochwasser etwa {t}", tideLow: "Niedrigwasser etwa {t}",
+    sketchNote: "Skizze der See bei Beaufort {b}", sGood: "Gut für dich von etwa {a} bis {b}.", sAfterWindy: "Danach ist es zu windig.", sAfterLittle: "Danach schläft der Wind ein.", dayWater: "Dein Tag auf dem Wasser",
+    bIn: "Passt für dich", bOver: "Zu windig", bUnder: "Zu wenig Wind", bDark: "Passt, aber dunkel", blockSub: "Aus {d}, Böen bis {v}", preview: "Vorschau-Version zum Testen.",
+    footWater: "Wind: bestes verfügbares Modell von Open-Meteo. See: Open-Meteo Marine. Alles unter «Worauf achten» berechnet diese App aus der Vorhersage und deinen Grenzen; das sind keine amtlichen Warnungen.",
+    dirs: ["N", "NO", "O", "SO", "S", "SW", "W", "NW"],
+    bft: ["Windstille", "Leiser Zug", "Leichte Brise", "Schwache Brise", "Mässige Brise", "Frische Brise", "Starker Wind", "Steifer Wind", "Stürmischer Wind", "Sturm", "Schwerer Sturm", "Orkanartiger Sturm", "Orkan"],
+    seaLook: ["Spiegelglatte See.", "Kleine Kräuselwellen, kein Schaum.", "Kleine Wellen, die Kämme brechen nicht.", "Kämme beginnen zu brechen, vereinzelt Schaumköpfe.", "Kleine Wellen, häufig weisse Schaumköpfe.", "Mässige Wellen, viele Schaumköpfe, etwas Gischt.", "Grosse Wellen, überall weisse Kämme, Gischt.", "Die See türmt sich, Schaum legt sich in Streifen.", "Hohe Wellen, Kämme verwehen zu Gischt.", "Hohe Wellen, dichter Schaum, Gischt nimmt die Sicht.", "Sehr hohe Wellen, die See wirkt weiss.", "Aussergewöhnlich hohe Wellen, See voller Schaum.", "Luft voller Schaum und Gischt."] },
+  fr: { kindMountain: "Montagne", kindSail: "Voile", kindKite: "Kite", kindWindsurf: "Planche à voile", addAs: "Ajouter comme", prefs: "Préférences", prefsSaved: "Enregistré sur cet appareil uniquement", viewLabel: "Vue", simple: "Simple", sailor: "Marin",
+    viewNote: "Simple : des mots clairs, un croquis de la mer, la journée en quatre parties. Marin : valeurs horaires, houle, marée et courant.", detail: "Niveau de détail", units: "Unités et symboles", windSpeed: "Vitesse du vent", unitAuto: "Auto", bftNote: "Auto : km/h en Simple, nœuds en Marin. Le Beaufort est toujours indiqué à côté.",
+    arrowsLabel: "Flèches du vent", arrTo: "Souffle vers", arrFrom: "Vient de", arrNote: "Les directions nommées indiquent toujours d'où vient le vent, comme dans toute prévision.", limits: "Tes limites", limitMax: "rafales jusqu'à {v}", limitRange: "{a} à {b}", limitMin: "au moins", limitTop: "rafales jusqu'à",
+    limitsNote: "Les limites déterminent les couleurs de « Ta fenêtre ».", change: "Modifier", wind: "Vent", waves: "Vagues", water: "Eau", air: "Air", windFrom: "de {d}", peak: "pointe {t}", yourWindow: "Ta fenêtre",
+    winSail: "Dans ta limite et de jour : environ {a} à {b}", winRange: "Assez de vent pour toi : environ {a} à {b}", winNone: "Aucune heure dans ta limite de jour.", winWindy: "Trop de vent pour toi toute la journée.", winLittle: "Pas assez de vent pour toi aujourd'hui.",
+    legIn: "dans ta limite", legDark: "bon, mais de nuit", legOver: "trop de vent", legUnder: "pas assez de vent", yourLimit: "Ta limite : rafales jusqu'à {v}.", yourRange: "Ta plage : {a} à {b}.",
+    hourly: "Vent heure par heure", hourlyNote: "Vent moyen / rafales en {u}. Les traits marquent ta limite.", arrowNoteTo: "Les flèches montrent vers où souffle le vent.", arrowNoteFrom: "Les flèches pointent vers l'origine du vent.", watch: "À surveiller",
+    flOver: "Rafales au-dessus de ta limite de {a} à {b}", flOverSub: "Jusqu'à {v} vers {t}", flShift: "Le vent tourne de {a} à {b}", flShiftSub: "Vers {t}", flThunder: "Risque d'orage dès {t}", flThunderSub: "Sors de l'eau avant.",
+    flFog: "Mauvaise visibilité dès {t}", flFogSub: "Moins de 1 km.", flSun: "Coucher du soleil {t}", flSunSub: "Jour dès {t}", flOff: "Vent de terre de {a} à {b}", flOffSub: "Le vent t'éloigne du rivage.", flGusty: "Rafaleux", flGustySub: "Jusqu'à {v} entre vent moyen et rafales.",
+    shoreTitle: "Vent et rivage", shoreAsk: "Dans quelle direction se trouve l'eau depuis ton spot ?", shoreFaces: "Ton spot regarde vers {d}.", on: "Onshore", onSub: "Le vent souffle vers le rivage. Tu dérives vers la terre.", side: "Side-shore", sideSub: "Le vent longe le rivage. Tu peux revenir par tes propres moyens.",
+    off: "Offshore", offSub: "Le vent souffle vers le large. Sans aide, tu risques de ne pas revenir.", sea: "Mer", swell: "Houle", current: "Courant", visibility: "Visibilité", visGood: "bonne", visMod: "moyenne", visPoor: "mauvaise", every: "toutes les {s} s", toDir: "vers {d}",
+    seaNote: "Vagues, courant et niveau de la mer viennent d'un modèle grossier : pour s'orienter seulement, pas pour naviguer. Utilise ton annuaire des marées.", seaNA: "Pas de données marines pour ce lieu (un lac, ou trop près de la côte pour le modèle).", tideHigh: "pleine mer vers {t}", tideLow: "basse mer vers {t}",
+    sketchNote: "Croquis de la mer à Beaufort {b}", sGood: "Bon pour toi d'environ {a} à {b}.", sAfterWindy: "Ensuite, il y a trop de vent.", sAfterLittle: "Ensuite, le vent tombe.", dayWater: "Ta journée sur l'eau",
+    bIn: "Bon pour toi", bOver: "Trop de vent", bUnder: "Pas assez de vent", bDark: "Bon, mais de nuit", blockSub: "De {d}, rafales jusqu'à {v}", preview: "Version d'essai pour les tests.",
+    footWater: "Vent : meilleur modèle disponible d'Open-Meteo. Mer : Open-Meteo Marine. Tout ce qui figure sous « À surveiller » est calculé par cette app à partir de la prévision et de tes limites ; ce ne sont pas des avis officiels.",
+    dirs: ["N", "NE", "E", "SE", "S", "SO", "O", "NO"],
+    bft: ["Calme", "Très légère brise", "Légère brise", "Petite brise", "Jolie brise", "Bonne brise", "Vent frais", "Grand frais", "Coup de vent", "Fort coup de vent", "Tempête", "Violente tempête", "Ouragan"],
+    seaLook: ["Mer comme un miroir.", "Rides, sans écume.", "Vaguelettes, les crêtes ne déferlent pas.", "Très petites vagues, quelques moutons.", "Petites vagues, moutons fréquents.", "Vagues modérées, nombreux moutons, un peu d'embruns.", "Grosses vagues, crêtes blanches partout, embruns.", "La mer grossit, l'écume file en traînées.", "Hautes vagues, les crêtes partent en embruns.", "Hautes vagues, écume dense, visibilité réduite.", "Très hautes vagues, la mer paraît blanche.", "Vagues exceptionnelles, mer couverte d'écume.", "Air rempli d'écume et d'embruns."] },
+  it: { kindMountain: "Montagna", kindSail: "Vela", kindKite: "Kite", kindWindsurf: "Windsurf", addAs: "Aggiungi come", prefs: "Preferenze", prefsSaved: "Salvato solo su questo dispositivo", viewLabel: "Vista", simple: "Semplice", sailor: "Velista",
+    viewNote: "Semplice: parole chiare, uno schizzo del mare, la giornata in quattro parti. Velista: valori orari, onda lunga, marea e corrente.", detail: "Quanto dettaglio", units: "Unità e simboli", windSpeed: "Velocità del vento", unitAuto: "Auto", bftNote: "Auto: km/h in Semplice, nodi in Velista. Il Beaufort è sempre indicato accanto.",
+    arrowsLabel: "Frecce del vento", arrTo: "Soffia verso", arrFrom: "Viene da", arrNote: "Le direzioni con nome dicono sempre da dove viene il vento, come in ogni previsione.", limits: "I tuoi limiti", limitMax: "raffiche fino a {v}", limitRange: "da {a} a {b}", limitMin: "almeno", limitTop: "raffiche fino a",
+    limitsNote: "I limiti decidono i colori di «La tua finestra».", change: "Modifica", wind: "Vento", waves: "Onde", water: "Acqua", air: "Aria", windFrom: "da {d}", peak: "picco {t}", yourWindow: "La tua finestra",
+    winSail: "Entro il tuo limite e con luce: circa dalle {a} alle {b}", winRange: "Vento sufficiente per te: circa dalle {a} alle {b}", winNone: "Nessuna ora entro il tuo limite con luce.", winWindy: "Troppo vento per te tutto il giorno.", winLittle: "Oggi poco vento per te.",
+    legIn: "entro il tuo limite", legDark: "bene, ma buio", legOver: "troppo vento", legUnder: "poco vento", yourLimit: "Il tuo limite: raffiche fino a {v}.", yourRange: "Il tuo intervallo: da {a} a {b}.",
+    hourly: "Vento ora per ora", hourlyNote: "Vento medio / raffiche in {u}. Le linee segnano il tuo limite.", arrowNoteTo: "Le frecce mostrano verso dove soffia il vento.", arrowNoteFrom: "Le frecce puntano da dove viene il vento.", watch: "A cosa fare attenzione",
+    flOver: "Raffiche oltre il tuo limite dalle {a} alle {b}", flOverSub: "Fino a {v} verso le {t}", flShift: "Il vento gira da {a} a {b}", flShiftSub: "Verso le {t}", flThunder: "Rischio di temporali dalle {t}", flThunderSub: "Esci dall'acqua prima.",
+    flFog: "Scarsa visibilità dalle {t}", flFogSub: "Meno di 1 km.", flSun: "Tramonto {t}", flSunSub: "Luce dalle {t}", flOff: "Vento da terra dalle {a} alle {b}", flOffSub: "Il vento ti allontana dalla riva.", flGusty: "Rafficato", flGustySub: "Fino a {v} tra vento medio e raffiche.",
+    shoreTitle: "Vento e riva", shoreAsk: "In che direzione si trova l'acqua dal tuo spot?", shoreFaces: "Il tuo spot guarda verso {d}.", on: "Onshore", onSub: "Il vento soffia verso riva. Vieni riportato a terra.", side: "Side-shore", sideSub: "Il vento corre lungo la riva. Puoi rientrare da solo.",
+    off: "Offshore", offSub: "Il vento soffia verso il largo. Senza aiuto potresti non rientrare.", sea: "Mare", swell: "Onda lunga", current: "Corrente", visibility: "Visibilità", visGood: "buona", visMod: "discreta", visPoor: "scarsa", every: "ogni {s} s", toDir: "verso {d}",
+    seaNote: "Onde, corrente e livello del mare vengono da un modello grossolano: solo per orientarsi, non per navigare. Usa le tue tavole di marea.", seaNA: "Nessun dato marino per questo luogo (un lago, o troppo vicino a terra per il modello).", tideHigh: "alta marea verso le {t}", tideLow: "bassa marea verso le {t}",
+    sketchNote: "Schizzo del mare a Beaufort {b}", sGood: "Buono per te circa dalle {a} alle {b}.", sAfterWindy: "Poi c'è troppo vento.", sAfterLittle: "Poi il vento cala.", dayWater: "La tua giornata in acqua",
+    bIn: "Va bene per te", bOver: "Troppo vento", bUnder: "Poco vento", bDark: "Bene, ma buio", blockSub: "Da {d}, raffiche fino a {v}", preview: "Versione di prova per i test.",
+    footWater: "Vento: miglior modello disponibile di Open-Meteo. Mare: Open-Meteo Marine. Tutto ciò che compare sotto «A cosa fare attenzione» è calcolato da questa app dalla previsione e dai tuoi limiti; non sono avvisi ufficiali.",
+    dirs: ["N", "NE", "E", "SE", "S", "SO", "O", "NO"],
+    bft: ["Calma", "Bava di vento", "Brezza leggera", "Brezza tesa", "Vento moderato", "Vento teso", "Vento fresco", "Vento forte", "Burrasca", "Burrasca forte", "Tempesta", "Tempesta violenta", "Uragano"],
+    seaLook: ["Mare come uno specchio.", "Increspature, senza schiuma.", "Ondine, le creste non si rompono.", "Onde piccole, qualche cresta bianca.", "Onde piccole, creste bianche frequenti.", "Onde moderate, molte creste bianche, qualche spruzzo.", "Onde grosse, creste bianche ovunque, spruzzi.", "Il mare si ingrossa, la schiuma forma strisce.", "Onde alte, le creste si polverizzano.", "Onde alte, schiuma densa, visibilità ridotta.", "Onde molto alte, il mare appare bianco.", "Onde eccezionali, mare coperto di schiuma.", "Aria piena di schiuma e spruzzi."] }
+};
+for (const lang in WATER_TEXT) Object.assign(TEXT[lang], WATER_TEXT[lang]);
+
+let addKind = "mountain", prefsBack = "";
+function isWater(spot) { return WATER_KINDS.includes(spot.kind); }
+function kindName(kind) { return tr({ sail: "kindSail", kite: "kindKite", windsurf: "kindWindsurf" }[kind] || "kindMountain"); }
+function windUnit() { return state.prefs.unit === "auto" ? (state.prefs.view === "sailor" ? "kn" : "kmh") : state.prefs.unit; }
+function unitLabel() { return { kn: "kn", kmh: "km/h", ms: "m/s" }[windUnit()]; }
+function speed(knots) {
+  if (knots === null || knots === undefined) return null;
+  const unit = windUnit();
+  return Math.round(unit === "kmh" ? knots * 1.852 : unit === "ms" ? knots * 0.5144 : knots);
+}
+function speedText(knots) { return knots === null || knots === undefined ? tr("na") : speed(knots) + " " + unitLabel(); }
+function beaufort(knots) { let force = 0; while (force < 12 && knots >= BFT_KNOTS[force]) force++; return force; }
+function dirName(degrees) { return degrees === null || degrees === undefined ? "" : tr("dirs")[Math.round(degrees / 45) % 8]; }
+function angleBetween(a, b) { const diff = Math.abs(a - b) % 360; return diff > 180 ? 360 - diff : diff; }
+function windArrow(degrees, size, color) {
+  const turn = state.prefs.arrows === "to" ? degrees + 180 : degrees;
+  return '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || "#1B2A4A") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:rotate(' + turn + 'deg)"><path d="M12 20V5M6.5 10.5L12 5l5.5 5.5"/></svg>';
+}
+function waterUrl(spot) {
+  return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon +
+    "&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,weather_code,visibility,is_day&daily=sunrise,sunset&wind_speed_unit=kn&models=best_match&timezone=auto&forecast_days=5";
+}
+function marineUrl(spot) {
+  return "https://marine-api.open-meteo.com/v1/marine?latitude=" + spot.lat + "&longitude=" + spot.lon +
+    "&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&timezone=auto&forecast_days=5";
+}
+function shapeWater(json) {
+  const hourly = json.hourly, daily = json.daily, days = [], byDate = {};
+  const column = name => hourly[name] || [];
+  for (let d = 0; d < daily.time.length; d++) {
+    const day = { date: daily.time[d], sunrise: String(daily.sunrise[d] || "").slice(11, 16), sunset: String(daily.sunset[d] || "").slice(11, 16), hours: [] };
+    days.push(day); byDate[day.date] = day;
+  }
+  for (let h = 0; h < hourly.time.length; h++) {
+    const day = byDate[hourly.time[h].slice(0, 10)], wind = column("wind_speed_10m")[h];
+    if (!day || typeof wind !== "number") continue;
+    const gust = column("wind_gusts_10m")[h], visibility = column("visibility")[h];
+    day.hours.push({ hour: Number(hourly.time[h].slice(11, 13)), wind: Math.round(wind), gust: Math.round(Math.max(typeof gust === "number" ? gust : wind, wind)), dir: column("wind_direction_10m")[h],
+      temp: round(column("temperature_2m")[h]), code: column("weather_code")[h], vis: typeof visibility === "number" ? visibility : null, isDay: column("is_day")[h] === 1 });
+  }
+  return { days: days.filter(day => day.hours.length), fetchedAt: Date.now() };
+}
+function shapeMarine(json) {
+  const hourly = json.hourly, byTime = {}, column = name => hourly[name] || [], number = value => typeof value === "number" ? value : null;
+  let found = false;
+  for (let h = 0; h < hourly.time.length; h++) {
+    const current = number(column("ocean_current_velocity")[h]);
+    const item = { wave: number(column("wave_height")[h]), waveDir: number(column("wave_direction")[h]), wavePeriod: number(column("wave_period")[h]), swell: number(column("swell_wave_height")[h]), swellPeriod: number(column("swell_wave_period")[h]),
+      sst: number(column("sea_surface_temperature")[h]), current: current === null ? null : current / 1.852, currentDir: number(column("ocean_current_direction")[h]), level: number(column("sea_level_height_msl")[h]) };
+    if (item.wave !== null || item.sst !== null || item.level !== null) found = true;
+    byTime[hourly.time[h]] = item;
+  }
+  return found ? { byTime, fetchedAt: Date.now() } : { none: true, fetchedAt: Date.now() };
+}
+function dayHours(day) { return day.hours.filter(hour => hour.hour >= 6 && hour.hour <= 20); }
+function hourStatus(hour, spot) {
+  const limit = state.prefs.limits[spot.kind];
+  if (hour.gust > limit.max) return "over";
+  if (limit.min && hour.wind < limit.min) return "under";
+  return hour.isDay ? "in" : "dark";
+}
+function bestWindow(day, spot) {
+  const hours = dayHours(day);
+  let best = null, start = -1;
+  for (let i = 0; i <= hours.length; i++) {
+    const inside = i < hours.length && hourStatus(hours[i], spot) === "in";
+    if (inside && start < 0) start = i;
+    if (!inside && start >= 0) { if (!best || i - start > best.end - best.start) best = { start, end: i }; start = -1; }
+  }
+  if (!best) return null;
+  const before = hours[best.start - 1], after = hours[best.end];
+  return { from: before && hourStatus(before, spot) === "dark" && day.sunrise ? day.sunrise : hourText(hours[best.start].hour),
+    to: after && hourStatus(after, spot) === "dark" && day.sunset ? day.sunset : hourText(hours[best.end - 1].hour + 1), after: after ? hourStatus(after, spot) : null };
+}
+function windowTitle(day, spot) {
+  const found = bestWindow(day, spot);
+  if (found) return tr(spot.kind === "sail" ? "winSail" : "winRange", { a: found.from, b: found.to });
+  const states = dayHours(day).filter(hour => hour.isDay).map(hour => hourStatus(hour, spot));
+  return tr(states.length && states.every(item => item === "under") ? "winLittle" : states.length && states.every(item => item === "over") ? "winWindy" : "winNone");
+}
+function shoreKind(windFrom, shore) { const diff = angleBetween(windFrom, shore); return diff <= 45 ? "on" : diff >= 135 ? "off" : "side"; }
+function peakHour(day) { return dayHours(day).reduce((best, hour) => !best || hour.gust > best.gust ? hour : best, null); }
+function waterFlags(day, spot) {
+  const hours = dayHours(day), flags = [], range = list => ({ a: hourText(list[0].hour), b: hourText(list[list.length - 1].hour + 1) });
+  const over = hours.filter(hour => hourStatus(hour, spot) === "over");
+  if (over.length) { const top = over.reduce((best, hour) => hour.gust > best.gust ? hour : best); flags.push({ kind: "warn", title: tr("flOver", range(over)), sub: tr("flOverSub", { v: speedText(top.gust), t: hourText(top.hour) }) }); }
+  const thunder = hours.find(hour => hour.code >= 95);
+  if (thunder) flags.push({ kind: "warn", title: tr("flThunder", { t: hourText(thunder.hour) }), sub: tr("flThunderSub") });
+  if (spot.kind !== "sail" && typeof spot.shore === "number") {
+    const offshore = hours.filter(hour => hour.wind >= 6 && shoreKind(hour.dir, spot.shore) === "off");
+    if (offshore.length) flags.push({ kind: "warn", title: tr("flOff", range(offshore)), sub: tr("flOffSub") });
+  }
+  const fog = hours.find(hour => hour.vis !== null && hour.vis < 1000);
+  if (fog) flags.push({ kind: "warn", title: tr("flFog", { t: hourText(fog.hour) }), sub: tr("flFogSub") });
+  const steady = hours.filter(hour => hour.wind >= 6 && typeof hour.dir === "number");
+  if (steady.length > 2 && angleBetween(steady[0].dir, steady[steady.length - 1].dir) >= 60) {
+    const turn = steady.find(hour => angleBetween(hour.dir, steady[0].dir) >= angleBetween(steady[0].dir, steady[steady.length - 1].dir) / 2);
+    flags.push({ kind: "turn", title: tr("flShift", { a: dirName(steady[0].dir), b: dirName(steady[steady.length - 1].dir) }), sub: tr("flShiftSub", { t: hourText(turn.hour) }) });
+  }
+  if (spot.kind !== "sail") { const spread = Math.max.apply(null, hours.map(hour => hour.gust - hour.wind).concat(0)); if (spread >= 10) flags.push({ kind: "info", title: tr("flGusty"), sub: tr("flGustySub", { v: speedText(spread) }) }); }
+  if (day.sunset) flags.push({ kind: "dark", title: tr("flSun", { t: day.sunset }), sub: tr("flSunSub", { t: day.sunrise }) });
+  return flags;
+}
+function marineDay(day, marine) {
+  if (!marine || marine.none || !marine.byTime) return null;
+  const items = [];
+  for (let hour = 0; hour < 24; hour++) { const item = marine.byTime[day.date + "T" + hourText(hour)]; if (item) items.push(Object.assign({ hour }, item)); }
+  return items.length ? items : null;
+}
+function highest(items, key) { return items.reduce((best, item) => item[key] !== null && (!best || item[key] > best[key]) ? item : best, null); }
+
+/* Rendering */
+function flagIcon(kind) {
+  const open = '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="' + (kind === "warn" ? "#E8762B" : "#1B2A4A") + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
+  const shapes = { warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.4v.2"/>', turn: '<path d="M5 15a7 7 0 0 1 12-5l2 2"/><path d="M19 7v5h-5"/>', dark: '<path d="M17.5 14.5A7 7 0 0 1 9.5 6.5a7 7 0 1 0 8 8z"/>', info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.8v.2"/>' };
+  return open + shapes[kind] + "</svg>";
+}
+function seaSketch(force) {
+  let paths = "", foam = "";
+  const rows = 4, height = 96, amplitude = 0.6 + force * 1.15, length = Math.max(34, 78 - force * 4);
+  for (let row = 0; row < rows; row++) {
+    const base = 18 + row * 22, shift = row * 17, points = [];
+    for (let x = 0; x <= 350; x += 5) points.push(x + "," + (base - amplitude * Math.sin((x + shift) / length * 2 * Math.PI)).toFixed(1));
+    paths += '<polyline points="' + points.join(" ") + '"/>';
+    if (force >= 3) {
+      const every = force >= 6 ? 1 : force >= 4 ? 2 : 4;
+      for (let n = 0, crest = length / 4 - shift; crest < 350; crest += length, n++) {
+        if (crest < 6 || n % every) continue;
+        const top = base - amplitude, width = 4 + force;
+        foam += '<path d="M' + (crest - width).toFixed(1) + " " + (top + 1.5).toFixed(1) + "q" + width + " " + (-3 - force * 0.5) + " " + (width * 2) + ' 0"/>';
+        if (force >= 7) foam += '<path stroke-width="1" d="M' + (crest + width).toFixed(1) + " " + (top + 5).toFixed(1) + "l" + (10 + force * 2) + ' 3"/>';
+      }
+    }
+  }
+  return '<svg role="img" aria-label="' + esc(tr("sketchNote", { b: force })) + '" viewBox="0 0 350 ' + height + '" style="width:100%;height:auto;display:block;border:1.2px solid #1B2A4A;border-radius:12px;background:#FFFDF8">' +
+    '<g fill="none" stroke="#1B2A4A" stroke-width="1.3" stroke-linecap="round" opacity="0.55">' + paths + '</g><g fill="none" stroke="#1B2A4A" stroke-width="1.7" stroke-linecap="round">' + foam + "</g></svg>";
+}
+function viewSwitch() {
+  return '<div class="row" style="justify-content:flex-start;margin-top:6px"><span class="small muted">' + esc(tr("viewLabel")) + '</span><div class="seg" role="group" aria-label="' + esc(tr("viewLabel")) + '">' +
+    ["simple", "sailor"].map(name => '<button data-pref="view:' + name + '" aria-pressed="' + (state.prefs.view === name) + '">' + esc(tr(name)) + "</button>").join("") +
+    '</div><button class="linkbtn" data-prefs="1">' + esc(tr("prefs")) + "</button></div>";
+}
+function windowSection(day, spot, withTitle) {
+  const hours = dayHours(day), limit = state.prefs.limits[spot.kind];
+  let html = '<section class="stack"><div class="label">' + esc(tr("yourWindow")) + "</div>";
+  if (withTitle) html += '<div style="font-size:17px;font-weight:600;line-height:1.3">' + esc(windowTitle(day, spot)) + "</div>";
+  html += '<div class="wbar" style="grid-template-columns:repeat(' + hours.length + ',minmax(0,1fr))">' + hours.map(hour => '<i class="w-' + hourStatus(hour, spot) + '"></i>').join("") + "</div>" +
+    '<div class="wbar wticks" style="grid-template-columns:repeat(' + hours.length + ',minmax(0,1fr))">' + hours.map(hour => "<span>" + (hour.hour % 2 ? "" : hour.hour) + "</span>").join("") + "</div>";
+  const keys = [["in", "legIn"], ["dark", "legDark"], ["over", "legOver"]].concat(limit.min ? [["under", "legUnder"]] : []);
+  html += '<div class="wlegend">' + keys.map(pair => '<span><i class="w-' + pair[0] + '"></i>' + esc(tr(pair[1])) + "</span>").join("") + "</div>";
+  return html + '<div class="small muted">' + esc(limit.min ? tr("yourRange", { a: speedText(limit.min), b: speedText(limit.max) }) : tr("yourLimit", { v: speedText(limit.max) })) + ' <button class="linkbtn" data-prefs="1">' + esc(tr("change")) + "</button></div></section>";
+}
+function flagsSection(day, spot) {
+  return '<section class="stack"><div class="label">' + esc(tr("watch")) + "</div>" + waterFlags(day, spot).map(flag =>
+    '<div class="summary" style="align-items:flex-start">' + flagIcon(flag.kind) + '<span><b style="font-weight:600">' + esc(flag.title) + '</b><br><span class="small muted">' + esc(flag.sub) + "</span></span></div>").join("") + "</section>";
+}
+function shoreSection(day, spot) {
+  if (spot.kind === "sail") return "";
+  let html = '<section class="stack"><div class="label">' + esc(tr("shoreTitle")) + "</div>";
+  if (typeof spot.shore !== "number") {
+    return html + "<div>" + esc(tr("shoreAsk")) + '</div><div class="pills" style="flex-wrap:wrap">' + tr("dirs").map((name, index) => '<button data-shore="' + esc(spot.id) + ":" + index * 45 + '">' + esc(name) + "</button>").join("") + "</div></section>";
+  }
+  const peak = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null);
+  if (!peak || typeof peak.dir !== "number") return "";
+  const kind = shoreKind(peak.dir, spot.shore), blowsTo = peak.dir + 180;
+  const compass = '<svg aria-hidden="true" viewBox="0 0 130 130" style="width:120px;height:120px;flex:none"><defs><clipPath id="shoreclip"><circle cx="65" cy="65" r="56"/></clipPath></defs>' +
+    '<g transform="rotate(' + spot.shore + ' 65 65)"><rect x="0" y="65" width="130" height="65" fill="rgba(27,42,74,0.14)" clip-path="url(#shoreclip)"/><line x1="9" y1="65" x2="121" y2="65" stroke="#1B2A4A" stroke-width="1.6"/></g>' +
+    '<circle cx="65" cy="65" r="56" fill="none" stroke="#1B2A4A" stroke-width="1.4"/><text x="61" y="9" font-size="10" font-weight="600" fill="#1B2A4A">N</text>' +
+    '<g transform="rotate(' + blowsTo + ' 65 65)" stroke="' + (kind === "off" ? "#E8762B" : "#1B2A4A") + '" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M65 96V34"/><path d="M57 43l8-9 8 9"/></g></svg>';
+  return html + '<div class="summary" style="gap:14px">' + compass + '<span><b style="font-size:17px;font-weight:600' + (kind === "off" ? ";color:#E8762B" : "") + '">' + esc(tr(kind)) + "</b><br>" + esc(tr(kind + "Sub")) +
+    '<br><span class="small muted">' + esc(tr("shoreFaces", { d: dirName(spot.shore) })) + ' <button class="linkbtn" data-shore="' + esc(spot.id) + ':x">' + esc(tr("change")) + "</button></span></span></div></section>";
+}
+function waterTiles(day, sea) {
+  const peak = peakHour(day), strong = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null);
+  const tile = (name, value, unit, sub) => '<div class="tile"><span class="small muted">' + esc(name) + "</span><b>" + value + " <span>" + esc(unit) + '</span></b><span class="small">' + esc(sub) + "</span></div>";
+  let html = '<section class="tiles">' + tile(tr("wind"), speed(strong.wind), unitLabel(), "Bft " + beaufort(strong.wind) + ", " + tr("windFrom", { d: dirName(strong.dir) })) +
+    tile(tr("gusts"), speed(peak.gust), unitLabel(), tr("peak", { t: hourText(peak.hour) }));
+  const light = sea ? sea.filter(item => item.hour >= 6 && item.hour <= 20) : [], wave = highest(light, "wave"), warm = highest(light, "sst");
+  if (wave) html += tile(tr("waves"), round(wave.wave, 1), "m", wave.wavePeriod !== null ? tr("every", { s: Math.round(wave.wavePeriod) }) : "");
+  else if (warm) html += tile(tr("water"), Math.round(warm.sst), "°C", "");
+  else html += tile(tr("air"), Math.max.apply(null, dayHours(day).map(hour => hour.temp)), "°C", "");
+  return html + "</section>";
+}
+function hourlySection(day, spot) {
+  const hours = dayHours(day), limit = state.prefs.limits[spot.kind], scale = Math.max(30, limit.max + 4, Math.max.apply(null, hours.map(hour => hour.gust)) + 2);
+  const marks = [limit.min, limit.max].filter(Boolean).map(value => '<i class="mark" style="left:' + (value / scale * 100).toFixed(1) + '%"></i>').join("");
+  return '<section class="stack"><div class="label">' + esc(tr("hourly")) + '</div><div class="wrows">' + hours.map(hour => {
+    const status = hourStatus(hour, spot), over = status === "over";
+    return "<b>" + hourText(hour.hour) + "</b>" + windArrow(hour.dir, 20) + '<span class="small muted">' + esc(dirName(hour.dir)) + '</span><span class="wtrack"><i class="gust' + (over ? " over" : "") + '" style="width:' + (hour.gust / scale * 100).toFixed(1) + '%"></i>' +
+      '<i class="mean' + (status === "under" ? " weak" : "") + '" style="width:' + (hour.wind / scale * 100).toFixed(1) + '%"></i>' + marks + '</span><span style="text-align:right"><b>' + speed(hour.wind) + '</b> <span class="' + (over ? "overtext" : "muted") + '">/ ' + speed(hour.gust) + "</span></span>";
+  }).join("") + '</div><div class="small muted">' + esc(tr("hourlyNote", { u: unitLabel() })) + " " + esc(tr(state.prefs.arrows === "to" ? "arrowNoteTo" : "arrowNoteFrom")) + "</div></section>";
+}
+function seaSection(day, sea) {
+  let html = '<section class="stack"><div class="label">' + esc(tr("sea")) + "</div>";
+  if (!sea) return html + '<div class="muted">' + esc(tr("seaNA")) + "</div></section>";
+  const light = sea.filter(item => item.hour >= 6 && item.hour <= 20), swell = highest(light, "swell"), current = highest(light, "current"), warm = highest(light, "sst");
+  const worst = dayHours(day).reduce((low, hour) => hour.vis !== null && (low === null || hour.vis < low) ? hour.vis : low, null);
+  const fact = (name, value) => '<div><span class="small muted">' + esc(name) + "</span><br>" + value + "</div>";
+  html += '<div class="facts" style="font-size:14px">';
+  if (swell) html += fact(tr("swell"), "<b style=\"display:inline;font-size:14px;font-weight:600\">" + round(swell.swell, 1) + " m</b>" + (swell.swellPeriod !== null ? ", " + esc(tr("every", { s: Math.round(swell.swellPeriod) })) : ""));
+  if (current && current.current >= 0.1) html += fact(tr("current"), "<b style=\"display:inline;font-size:14px;font-weight:600\">" + round(current.current, 1) + " kn</b> " + esc(tr("toDir", { d: dirName(current.currentDir) })));
+  if (warm) html += fact(tr("water"), "<b style=\"display:inline;font-size:14px;font-weight:600\">" + Math.round(warm.sst) + "°C</b>");
+  if (worst !== null) html += fact(tr("visibility"), "<b style=\"display:inline;font-size:14px;font-weight:600\">" + esc(tr(worst >= 10000 ? "visGood" : worst >= 4000 ? "visMod" : "visPoor")) + "</b>");
+  html += "</div>";
+  const levels = sea.filter(item => item.level !== null);
+  if (levels.length >= 12) {
+    const high = highest(levels, "level"), low = levels.reduce((best, item) => item.level < best.level ? item : best), span = high.level - low.level;
+    if (span >= 0.3) {
+      const x = hour => hour / 23 * 350, y = level => 66 - (level - low.level) / span * 44;
+      const tag = (item, text, dy) => '<text x="' + Math.min(Math.max(x(item.hour), 60), 290) + '" y="' + (y(item.level) + dy) + '" text-anchor="middle" font-size="11" fill="#1B2A4A">' + esc(text) + "</text>";
+      html += '<svg role="img" aria-label="' + esc(tr("tideHigh", { t: hourText(high.hour) }) + ", " + tr("tideLow", { t: hourText(low.hour) })) + '" viewBox="0 0 350 90" style="width:100%;height:auto;display:block"><polyline fill="none" stroke="#1B2A4A" stroke-width="1.8" stroke-linecap="round" points="' +
+        levels.map(item => x(item.hour).toFixed(1) + "," + y(item.level).toFixed(1)).join(" ") + '"/><circle cx="' + x(high.hour) + '" cy="' + y(high.level) + '" r="3.5" fill="#1B2A4A"/><circle cx="' + x(low.hour) + '" cy="' + y(low.level) + '" r="3.5" fill="#F6F1E7" stroke="#1B2A4A" stroke-width="1.5"/>' +
+        tag(high, tr("tideHigh", { t: hourText(high.hour) }), -9) + tag(low, tr("tideLow", { t: hourText(low.hour) }), 19) + "</svg>";
+    }
+  }
+  return html + '<div class="small muted">' + esc(tr("seaNote")) + "</div></section>";
+}
+function simpleBody(day, spot, sea) {
+  const found = bestWindow(day, spot), strong = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null), force = beaufort(strong.wind);
+  const headline = found ? tr("sGood", { a: found.from, b: found.to }) + (found.after === "over" ? " " + tr("sAfterWindy") : found.after === "under" ? " " + tr("sAfterLittle") : "") : windowTitle(day, spot);
+  let html = '<section style="font-size:22px;font-weight:600;line-height:1.25">' + esc(headline) + "</section>" +
+    '<section class="stack" style="gap:8px">' + seaSketch(force) + '<div style="font-size:13px"><b>Beaufort ' + force + ", " + esc(tr("bft")[force]) + ".</b> " + esc(tr("seaLook")[force]) + ' <span class="muted">' + esc(tr("sketchNote", { b: force })) + ".</span></div></section>" +
+    waterTiles(day, sea) + windowSection(day, spot, false) + '<section class="stack" style="gap:14px"><div class="label">' + esc(tr("dayWater")) + "</div>";
+  for (const part of [[6, 9], [10, 13], [14, 17], [18, 20]]) {
+    const hours = dayHours(day).filter(hour => hour.hour >= part[0] && hour.hour <= part[1]);
+    if (!hours.length) continue;
+    const states = hours.map(hour => hourStatus(hour, spot)), top = hours.reduce((best, hour) => hour.gust > best.gust ? hour : best);
+    const status = states.includes("over") ? "over" : states.every(item => item === "under") ? "under" : states.includes("in") ? "in" : states.includes("dark") ? "dark" : "under";
+    const color = status === "over" ? "#E8762B" : "#1B2A4A";
+    html += '<div class="wblock"><b>' + part[0] + " " + esc(tr("to")) + " " + (part[1] + 1) + " h</b>" + windArrow(top.dir, 22, color) + '<span><b style="font-weight:600;color:' + color + '">' + esc(tr({ in: "bIn", over: "bOver", under: "bUnder", dark: "bDark" }[status])) +
+      '</b><br><span class="small muted">' + esc(tr("blockSub", { d: dirName(top.dir), v: speedText(top.gust) })) + "</span></span></div>";
+  }
+  return html + "</section>" + shoreSection(day, spot) + flagsSection(day, spot);
+}
+function sailorBody(day, spot, sea) {
+  const strong = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null), force = beaufort(strong.wind);
+  return waterTiles(day, sea) + '<section class="wsketch">' + seaSketch(force) + '<span><b style="font-weight:600">Beaufort ' + force + ", " + esc(tr("bft")[force]) + '</b><br><span class="small muted">' + esc(tr("seaLook")[force]) + "</span></span></section>" +
+    windowSection(day, spot, true) + shoreSection(day, spot) + hourlySection(day, spot) + flagsSection(day, spot) + seaSection(day, sea);
+}
+function waterFooter() {
+  return "<footer>" + esc(tr("footWater")) + " " + esc(tr("seaNote")) + (PREVIEW ? " " + esc(tr("preview")) : "") + ' <a href="https://open-meteo.com/">open-meteo.com</a> · v' + VERSION + "</footer>";
+}
+function renderWaterSpot(spot) {
+  const entry = state.cache[spot.id] || {}, water = entry.water;
+  let html = '<header style="display:flex;flex-direction:column;gap:6px"><div class="row"><button class="iconbtn" data-home="1" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button>" +
+    '<button class="iconbtn" data-remove="' + esc(spot.id) + '" aria-label="' + esc(tr("remove")) + '" style="margin-right:-10px">' + icon("trash", 22) + "</button></div>" +
+    "<h1>" + esc(spot.name) + '</h1><div class="muted" style="font-size:14px">' + esc(kindName(spot.kind)) + " · " + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) + (water ? " · " + esc(tr("updated")) + " " + esc(clock(water.fetchedAt)) : "") + "</div>" + viewSwitch() + "</header>";
+  if (entry.error) html += '<div class="err">' + esc(tr(water ? "refreshFail" : "loadFail")) + "</div>";
+  if (!water || !water.days.length) return html + (entry.error ? "" : '<p class="muted">' + esc(tr("loading")) + "</p>") + waterFooter();
+  const dayIndex = Math.min(view.day, water.days.length - 1), day = water.days[dayIndex];
+  html += '<div class="pills">' + water.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
+  if (!dayHours(day).length) return html + waterFooter();
+  const sea = marineDay(day, entry.marine);
+  return html + (state.prefs.view === "sailor" ? sailorBody(day, spot, sea) : simpleBody(day, spot, sea)) + waterFooter();
+}
+function waterCard(spot) {
+  const entry = state.cache[spot.id] || {}, water = entry.water, today = water && water.days[0];
+  let html = '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + '</h2><span class="small muted" style="flex:none">' + esc(kindName(spot.kind)) + "</span></span>" +
+    '<span class="small muted">' + (water ? esc(tr("updated")) + " " + esc(clock(water.fetchedAt)) : esc(tr(entry.error ? "loadFail" : "loading"))) + "</span>";
+  if (today && dayHours(today).length) {
+    const peak = peakHour(today), strong = dayHours(today).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null);
+    html += '<span class="summary">' + windArrow(strong.dir, 24) + "<span>" + esc(tr("wind")) + " " + esc(speedText(strong.wind)) + " " + esc(tr("windFrom", { d: dirName(strong.dir) })) + " · " + esc(tr("gusts")) + " " + esc(speedText(peak.gust)) +
+      "<br>" + esc(windowTitle(today, spot)) + "</span></span>";
+  }
+  return html + "</button>";
+}
+function kindPicker() {
+  return '<div class="stack" style="gap:6px"><span class="small muted">' + esc(tr("addAs")) + '</span><div class="seg kinds" role="group" aria-label="' + esc(tr("addAs")) + '">' +
+    ["mountain"].concat(WATER_KINDS).map(kind => '<button data-kind="' + kind + '" aria-pressed="' + (addKind === kind) + '">' + esc(kindName(kind)) + "</button>").join("") + "</div></div>";
+}
+function renderPrefs() {
+  const prefs = state.prefs, choice = (title, key, options, note) => '<div class="stack" style="gap:6px"><b style="font-weight:600">' + esc(title) + '</b><div class="seg wide" role="group" aria-label="' + esc(title) + '">' +
+    options.map(option => '<button data-pref="' + key + ":" + option[0] + '" aria-pressed="' + (prefs[key] === option[0]) + '">' + esc(option[1]) + "</button>").join("") + "</div>" + (note ? '<span class="small muted">' + esc(note) + "</span>" : "") + "</div>";
+  const stepper = (kind, edge) => '<span class="stepper"><button data-limit="' + kind + ":" + edge + ':-1" aria-label="-">−</button><b>' + esc(speedText(prefs.limits[kind][edge])) + '</b><button data-limit="' + kind + ":" + edge + ':1" aria-label="+">+</button></span>';
+  let html = '<header style="display:flex;flex-direction:column;gap:6px"><div><button class="iconbtn" data-back="1" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button></div><h1>" + esc(tr("prefs")) +
+    '</h1><div class="muted" style="font-size:14px">' + esc(tr("prefsSaved")) + "</div></header>" +
+    '<section class="stack" style="gap:18px"><div class="label">' + esc(tr("detail")) + "</div>" + choice(tr("viewLabel"), "view", [["simple", tr("simple")], ["sailor", tr("sailor")]], tr("viewNote")) + "</section>" +
+    '<section class="stack" style="gap:18px"><div class="label">' + esc(tr("units")) + "</div>" + choice(tr("windSpeed"), "unit", [["auto", tr("unitAuto")], ["kmh", "km/h"], ["kn", "kn"], ["ms", "m/s"]], tr("bftNote")) +
+    choice(tr("arrowsLabel"), "arrows", [["to", tr("arrTo")], ["from", tr("arrFrom")]], tr("arrNote")) + "</section>" + '<section class="stack"><div class="label">' + esc(tr("limits")) + "</div>";
+  for (const kind of WATER_KINDS) {
+    html += '<div class="limitrow"><b style="font-weight:600">' + esc(kindName(kind)) + "</b>" + (prefs.limits[kind].min ? '<span class="row"><span class="small muted">' + esc(tr("limitMin")) + "</span>" + stepper(kind, "min") + "</span>" : "") +
+      '<span class="row"><span class="small muted">' + esc(tr("limitTop")) + "</span>" + stepper(kind, "max") + "</span></div>";
+  }
+  return html + '<span class="small muted">' + esc(tr("limitsNote")) + "</span></section>" + waterFooter();
+}
+function mergePrefs(saved) {
+  const prefs = JSON.parse(JSON.stringify(DEFAULT_PREFS));
+  if (!saved) return prefs;
+  if (["simple", "sailor"].includes(saved.view)) prefs.view = saved.view;
+  if (["auto", "kn", "kmh", "ms"].includes(saved.unit)) prefs.unit = saved.unit;
+  if (["to", "from"].includes(saved.arrows)) prefs.arrows = saved.arrows;
+  for (const kind of WATER_KINDS) for (const edge in prefs.limits[kind]) { const value = saved.limits && saved.limits[kind] && saved.limits[kind][edge]; if (typeof value === "number" && value > 0 && value < 100) prefs.limits[kind][edge] = value; }
+  return prefs;
+}
+function changeLimit(kind, edge, step) {
+  const limit = state.prefs.limits[kind], value = limit[edge] + step;
+  if (value < 1 || value > 70 || (edge === "min" && value >= limit.max) || (edge === "max" && limit.min && value <= limit.min)) return;
+  limit[edge] = value;
+}
+/* Sea data is a separate request that is not waited for, so a lake or an outage never blocks the wind forecast. */
+async function loadMarine(spot, entry) {
+  try { entry.marine = shapeMarine(await fetchJson(marineUrl(spot))); } catch (error) { if (!entry.marine) entry.marine = { none: true, fetchedAt: Date.now() }; }
+  saveState();
+  if (!document.querySelector("#results button, #q:focus")) render();
+}
+async function refreshWater(spot) {
+  const entry = state.cache[spot.id] || (state.cache[spot.id] = {});
+  entry.error = false;
+  try { const water = shapeWater(await fetchJson(waterUrl(spot))); if (!water.days.length) throw new Error("no wind values"); entry.water = water; } catch (error) { entry.error = true; }
+  loadMarine(spot, entry);
+  saveState();
+  if (!document.querySelector("#results button, #q:focus")) render();
 }
 
 /* ---------- Loading and saving ---------- */
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {} };
+    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {}, prefs: mergePrefs(saved.prefs) };
   } catch (error) { /* start empty */ }
+  if (!state.prefs) state.prefs = mergePrefs(null);
   for (const id in state.cache) if (state.cache[id].forecast && state.cache[id].forecast.days.some(day => !day.hours || (day.hours[0] && day.hours[0].isDay === undefined))) delete state.cache[id];
 }
 function saveState() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (error) { /* storage unavailable */ } }
@@ -662,6 +1089,7 @@ async function loadForecast(spot) {
   return forecast;
 }
 async function refreshSpot(spot) {
+  if (isWater(spot)) return refreshWater(spot);
   const entry = state.cache[spot.id] || (state.cache[spot.id] = {});
   entry.error = false;
   try { entry.forecast = await loadForecast(spot); } catch (error) { entry.error = true; }
@@ -676,7 +1104,8 @@ async function refreshSpot(spot) {
 }
 function addSpot(name, lat, lon, elevation) {
   const spot = { id: "s" + Date.now(), name, lat, lon };
-  if (typeof elevation === "number") spot.elevation = elevation;
+  if (addKind !== "mountain") spot.kind = addKind;
+  else if (typeof elevation === "number") spot.elevation = elevation;
   state.spots.unshift(spot); saveState(); render(); refreshSpot(spot);
 }
 let searchResults = [];
@@ -695,7 +1124,7 @@ async function onSearch(event) {
   } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share],[data-kind],[data-pref],[data-limit],[data-shore],[data-prefs],[data-back]");
   if (!target) return;
   const data = target.dataset;
   if (data.lang) { state.lang = data.lang; saveState(); render(); state.spots.forEach(refreshSpot); }
@@ -705,11 +1134,17 @@ function onClick(event) {
   else if (data.day) { view.day = Number(data.day); render(); }
   else if (data.remove) { state.spots = state.spots.filter(spot => spot.id !== data.remove); delete state.cache[data.remove]; saveState(); location.hash = ""; render(); }
   else if (data.print || data.share) { const spot = state.spots.find(item => item.id === (data.print || data.share)); if (spot) (data.print ? printReport : shareReport)(spot); }
+  else if (data.kind) { addKind = data.kind; document.querySelectorAll("[data-kind]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.kind === addKind))); }
+  else if (data.pref) { const pair = data.pref.split(":"); state.prefs[pair[0]] = pair[1]; saveState(); render(); }
+  else if (data.limit) { const parts = data.limit.split(":"); changeLimit(parts[0], parts[1], Number(parts[2])); saveState(); render(); }
+  else if (data.shore) { const parts = data.shore.split(":"), spot = state.spots.find(item => item.id === parts[0]); if (spot) { if (parts[1] === "x") delete spot.shore; else spot.shore = Number(parts[1]); saveState(); render(); } }
+  else if (data.prefs) { prefsBack = location.hash; location.hash = "prefs"; }
+  else if (data.back) { location.hash = prefsBack; }
   else if (data.pick) { const place = searchResults[Number(data.pick)]; addSpot(place.name, place.latitude, place.longitude, place.elevation); }
 }
 function onHash() {
   const match = /^#spot-(.+)$/.exec(location.hash);
-  view = match ? { name: "spot", id: match[1], tab: "day", day: 0 } : { name: "home", tab: "day", day: 0 };
+  view = location.hash === "#prefs" ? { name: "prefs", tab: "day", day: 0 } : match ? { name: "spot", id: match[1], tab: "day", day: 0 } : { name: "home", tab: "day", day: 0 };
   render(); window.scrollTo(0, 0);
 }
 function init() {
