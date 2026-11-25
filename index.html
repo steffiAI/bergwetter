@@ -419,7 +419,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.6";
+const VERSION = "0.7";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -1064,23 +1064,23 @@ const EXTRA_TEXT = {
   en: { coastTitle: "Wind and coast", leeSide: "Lee shore on the {d} side", leeSideSub: "Wind and waves push onto the {d} coast. Keep your distance. More shelter on the {o} side.", leeHere: "Lee shore here", leeHereSub: "The wind blows from the water onto this coast. Keep your distance from the shore.",
     offLand: "Wind off the land", offLandSub: "Calmer water close to the shore, but gusty. Further out the waves build.", coastNote: "Coast estimated from terrain heights within 5 km. Small islands, piers and shallows can be missed.", shoreGuess: "Estimated from the terrain.",
     warnOfficial: "Official warning", warnNone: "No official DWD warning for this place right now.", warnFail: "Official warnings could not be loaded.", warnLink: "Check dwd.de", warnOnlyDE: "Official warnings are shown for Germany only so far.", warnMore: "Read the full text", warnUntil: "{a} until {b}",
-    mapTitle: "Wind map", mapOpen: "Wind map", mapLoading: "Loading the wind map…", mapFail: "The wind map could not be loaded.", mapOver: "Orange: gusts above your limit of {v}", mapIn: "Grey: inside your limit", mapUnder: "Plain: too little wind for you", mapLand: "Beige: land",
-    mapLine: "{t} at {n}: wind {w}, gusts {g}.", mapNote: "One arrow about every {k} km, from the same forecast as the spot. Coastline: Natural Earth; small islands and lakes are missing.", play: "Play", pause: "Pause" },
+    mapTitle: "Map", mapOpen: "Map: wind, waves, pressure", mapLoading: "Loading the wind map…", mapFail: "The wind map could not be loaded.", mapOver: "Orange: gusts above your limit of {v}", mapIn: "Grey: inside your limit", mapUnder: "Plain: too little wind for you", mapLand: "Beige: land",
+    mapLine: "{t} at {n}: wind {w}, gusts {g}.", mapNote: "One arrow about every {k} km, from the same forecast as the spot. Coastline: Natural Earth; small islands and lakes are missing.", play: "Play", pause: "Pause", layers: ["Wind", "Gusts", "Waves", "Current", "Pressure", "Rain", "Visibility"], lineWave: "{t} at {n}: waves {h} m every {p} s from the {d}.", lineNoSea: "No sea data for this map area.", lineCurrent: "{t} at {n}: current {v} kn setting {d}.", linePressure: "{t} at {n}: pressure {p} hPa, {c}.", pFall: "falling {v} hPa in 3 hours", pRise: "rising {v} hPa in 3 hours", pSteady: "hardly changing in 3 hours", pFast: "Fast pressure drop: the wind can increase sharply.", lineRain: "{t} at {n}: {v} mm of rain per hour.", lineDry: "{t} at {n}: dry.", lineThunder: "{t} at {n}: thunderstorm possible.", lineVis: "{t} at {n}: visibility {v} km.", lineFog: "Fog.", legGust: "Numbers: gusts in {u}.", legWave: "Numbers: wave height in metres. Darker means higher.", legCurrent: "Numbers: current in knots. Arrows show where the water flows.", legPressure: "Lines of equal air pressure in hPa. The closer together, the more wind.", legRain: "Numbers: mm of rain per hour. Orange with a bolt: thunderstorm.", legVis: "Numbers: visibility in km. Orange: under 1 km (fog).", seaCoarse: "Waves and current come from a coarse model (about 8 km). Not for navigation close to the coast." },
   de: { coastTitle: "Wind und Küste", leeSide: "Leegerwall auf der {d}-Seite", leeSideSub: "Wind und Wellen drücken auf die {d}-Küste. Halte Abstand. Mehr Schutz auf der {o}-Seite.", leeHere: "Leegerwall hier", leeHereSub: "Der Wind weht vom Wasser auf diese Küste. Halte Abstand vom Ufer.",
     offLand: "Wind vom Land", offLandSub: "Ruhigeres Wasser dicht unter Land, aber böig. Weiter draussen baut sich Welle auf.", coastNote: "Küste aus Geländehöhen im Umkreis von 5 km geschätzt. Kleine Inseln, Molen und Untiefen können fehlen.", shoreGuess: "Aus dem Gelände geschätzt.",
     warnOfficial: "Amtliche Warnung", warnNone: "Derzeit keine amtliche DWD-Warnung für diesen Ort.", warnFail: "Amtliche Warnungen konnten nicht geladen werden.", warnLink: "Auf dwd.de nachsehen", warnOnlyDE: "Amtliche Warnungen gibt es bisher nur für Deutschland.", warnMore: "Ganzen Text lesen", warnUntil: "{a} bis {b}",
-    mapTitle: "Windkarte", mapOpen: "Windkarte", mapLoading: "Windkarte wird geladen…", mapFail: "Die Windkarte konnte nicht geladen werden.", mapOver: "Orange: Böen über deiner Grenze von {v}", mapIn: "Grau: innerhalb deiner Grenze", mapUnder: "Ohne Farbe: zu wenig Wind für dich", mapLand: "Beige: Land",
-    mapLine: "{t} bei {n}: Wind {w}, Böen {g}.", mapNote: "Etwa alle {k} km ein Pfeil, aus derselben Vorhersage wie der Ort. Küstenlinie: Natural Earth; kleine Inseln und Seen fehlen.", play: "Abspielen", pause: "Pause" },
+    mapTitle: "Karte", mapOpen: "Karte: Wind, Wellen, Druck", mapLoading: "Windkarte wird geladen…", mapFail: "Die Windkarte konnte nicht geladen werden.", mapOver: "Orange: Böen über deiner Grenze von {v}", mapIn: "Grau: innerhalb deiner Grenze", mapUnder: "Ohne Farbe: zu wenig Wind für dich", mapLand: "Beige: Land",
+    mapLine: "{t} bei {n}: Wind {w}, Böen {g}.", mapNote: "Etwa alle {k} km ein Pfeil, aus derselben Vorhersage wie der Ort. Küstenlinie: Natural Earth; kleine Inseln und Seen fehlen.", play: "Abspielen", pause: "Pause", layers: ["Wind", "Böen", "Wellen", "Strömung", "Luftdruck", "Regen", "Sicht"], lineWave: "{t} bei {n}: Wellen {h} m alle {p} s aus {d}.", lineNoSea: "Für diesen Kartenausschnitt gibt es keine Seedaten.", lineCurrent: "{t} bei {n}: Strömung {v} kn nach {d}.", linePressure: "{t} bei {n}: Luftdruck {p} hPa, {c}.", pFall: "fällt um {v} hPa in 3 Stunden", pRise: "steigt um {v} hPa in 3 Stunden", pSteady: "kaum Änderung in 3 Stunden", pFast: "Schneller Druckfall: Der Wind kann stark zunehmen.", lineRain: "{t} bei {n}: {v} mm Regen pro Stunde.", lineDry: "{t} bei {n}: trocken.", lineThunder: "{t} bei {n}: Gewitter möglich.", lineVis: "{t} bei {n}: Sicht {v} km.", lineFog: "Nebel.", legGust: "Zahlen: Böen in {u}.", legWave: "Zahlen: Wellenhöhe in Metern. Je dunkler, desto höher.", legCurrent: "Zahlen: Strömung in Knoten. Pfeile zeigen, wohin das Wasser fliesst.", legPressure: "Linien gleichen Luftdrucks in hPa. Je enger sie liegen, desto mehr Wind.", legRain: "Zahlen: mm Regen pro Stunde. Orange mit Blitz: Gewitter.", legVis: "Zahlen: Sicht in km. Orange: unter 1 km (Nebel).", seaCoarse: "Wellen und Strömung stammen aus einem groben Modell (etwa 8 km). Nicht für die Navigation nahe der Küste." },
   fr: { coastTitle: "Vent et côte", leeSide: "Côte sous le vent côté {d}", leeSideSub: "Le vent et les vagues poussent vers la côte {d}. Garde tes distances. Plus d'abri côté {o}.", leeHere: "Côte sous le vent ici", leeHereSub: "Le vent souffle de l'eau vers cette côte. Garde tes distances du rivage.",
     offLand: "Vent de terre", offLandSub: "Eau plus calme près du rivage, mais rafales. Plus au large, la mer se forme.", coastNote: "Côte estimée d'après le relief dans un rayon de 5 km. Petites îles, jetées et hauts-fonds peuvent manquer.", shoreGuess: "Estimé d'après le relief.",
     warnOfficial: "Avis officiel", warnNone: "Aucun avis officiel du DWD pour ce lieu actuellement.", warnFail: "Les avis officiels n'ont pas pu être chargés.", warnLink: "Voir dwd.de", warnOnlyDE: "Les avis officiels ne sont affichés que pour l'Allemagne pour l'instant.", warnMore: "Lire le texte complet", warnUntil: "{a} jusqu'à {b}",
-    mapTitle: "Carte des vents", mapOpen: "Carte des vents", mapLoading: "Chargement de la carte…", mapFail: "La carte des vents n'a pas pu être chargée.", mapOver: "Orange : rafales au-dessus de ta limite de {v}", mapIn: "Gris : dans ta limite", mapUnder: "Sans couleur : pas assez de vent pour toi", mapLand: "Beige : terre",
-    mapLine: "{t} à {n} : vent {w}, rafales {g}.", mapNote: "Une flèche tous les {k} km environ, issue de la même prévision que le lieu. Trait de côte : Natural Earth ; petites îles et lacs absents.", play: "Lecture", pause: "Pause" },
+    mapTitle: "Carte", mapOpen: "Carte : vent, vagues, pression", mapLoading: "Chargement de la carte…", mapFail: "La carte des vents n'a pas pu être chargée.", mapOver: "Orange : rafales au-dessus de ta limite de {v}", mapIn: "Gris : dans ta limite", mapUnder: "Sans couleur : pas assez de vent pour toi", mapLand: "Beige : terre",
+    mapLine: "{t} à {n} : vent {w}, rafales {g}.", mapNote: "Une flèche tous les {k} km environ, issue de la même prévision que le lieu. Trait de côte : Natural Earth ; petites îles et lacs absents.", play: "Lecture", pause: "Pause", layers: ["Vent", "Rafales", "Vagues", "Courant", "Pression", "Pluie", "Visibilité"], lineWave: "{t} à {n} : vagues {h} m toutes les {p} s, de {d}.", lineNoSea: "Pas de données marines pour cette zone.", lineCurrent: "{t} à {n} : courant {v} nd portant vers {d}.", linePressure: "{t} à {n} : pression {p} hPa, {c}.", pFall: "en baisse de {v} hPa en 3 heures", pRise: "en hausse de {v} hPa en 3 heures", pSteady: "presque stable sur 3 heures", pFast: "Chute rapide de pression : le vent peut forcir nettement.", lineRain: "{t} à {n} : {v} mm de pluie par heure.", lineDry: "{t} à {n} : sec.", lineThunder: "{t} à {n} : orage possible.", lineVis: "{t} à {n} : visibilité {v} km.", lineFog: "Brouillard.", legGust: "Chiffres : rafales en {u}.", legWave: "Chiffres : hauteur des vagues en mètres. Plus c'est foncé, plus c'est haut.", legCurrent: "Chiffres : courant en nœuds. Les flèches montrent vers où l'eau s'écoule.", legPressure: "Lignes d'égale pression en hPa. Plus elles sont serrées, plus il y a de vent.", legRain: "Chiffres : mm de pluie par heure. Orange avec éclair : orage.", legVis: "Chiffres : visibilité en km. Orange : moins de 1 km (brouillard).", seaCoarse: "Vagues et courant viennent d'un modèle grossier (environ 8 km). Pas pour la navigation près des côtes." },
   it: { coastTitle: "Vento e costa", leeSide: "Costa sottovento sul lato {d}", leeSideSub: "Vento e onde spingono verso la costa {d}. Tieniti a distanza. Più riparo sul lato {o}.", leeHere: "Costa sottovento qui", leeHereSub: "Il vento soffia dall'acqua verso questa costa. Tieniti a distanza dalla riva.",
     offLand: "Vento da terra", offLandSub: "Acqua più calma sotto costa, ma rafficato. Più al largo l'onda cresce.", coastNote: "Costa stimata dalle quote del terreno entro 5 km. Isolotti, moli e secche possono mancare.", shoreGuess: "Stimato dal terreno.",
     warnOfficial: "Avviso ufficiale", warnNone: "Nessun avviso ufficiale del DWD per questo luogo al momento.", warnFail: "Impossibile caricare gli avvisi ufficiali.", warnLink: "Vedi dwd.de", warnOnlyDE: "Gli avvisi ufficiali sono mostrati per ora solo per la Germania.", warnMore: "Leggi il testo completo", warnUntil: "{a} fino a {b}",
-    mapTitle: "Mappa del vento", mapOpen: "Mappa del vento", mapLoading: "Caricamento della mappa…", mapFail: "Impossibile caricare la mappa del vento.", mapOver: "Arancione: raffiche oltre il tuo limite di {v}", mapIn: "Grigio: entro il tuo limite", mapUnder: "Senza colore: poco vento per te", mapLand: "Beige: terra",
-    mapLine: "{t} a {n}: vento {w}, raffiche {g}.", mapNote: "Una freccia ogni {k} km circa, dalla stessa previsione del luogo. Linea di costa: Natural Earth; mancano isolotti e laghi.", play: "Avvia", pause: "Pausa" }
+    mapTitle: "Mappa", mapOpen: "Mappa: vento, onde, pressione", mapLoading: "Caricamento della mappa…", mapFail: "Impossibile caricare la mappa del vento.", mapOver: "Arancione: raffiche oltre il tuo limite di {v}", mapIn: "Grigio: entro il tuo limite", mapUnder: "Senza colore: poco vento per te", mapLand: "Beige: terra",
+    mapLine: "{t} a {n}: vento {w}, raffiche {g}.", mapNote: "Una freccia ogni {k} km circa, dalla stessa previsione del luogo. Linea di costa: Natural Earth; mancano isolotti e laghi.", play: "Avvia", pause: "Pausa", layers: ["Vento", "Raffiche", "Onde", "Corrente", "Pressione", "Pioggia", "Visibilità"], lineWave: "{t} a {n}: onde {h} m ogni {p} s da {d}.", lineNoSea: "Nessun dato marino per questa zona.", lineCurrent: "{t} a {n}: corrente {v} kn verso {d}.", linePressure: "{t} a {n}: pressione {p} hPa, {c}.", pFall: "in calo di {v} hPa in 3 ore", pRise: "in aumento di {v} hPa in 3 ore", pSteady: "quasi stabile in 3 ore", pFast: "Calo rapido della pressione: il vento può rinforzare molto.", lineRain: "{t} a {n}: {v} mm di pioggia all'ora.", lineDry: "{t} a {n}: asciutto.", lineThunder: "{t} a {n}: possibile temporale.", lineVis: "{t} a {n}: visibilità {v} km.", lineFog: "Nebbia.", legGust: "Numeri: raffiche in {u}.", legWave: "Numeri: altezza delle onde in metri. Più scuro, più alto.", legCurrent: "Numeri: corrente in nodi. Le frecce mostrano dove scorre l'acqua.", legPressure: "Linee di uguale pressione in hPa. Più sono vicine, più vento.", legRain: "Numeri: mm di pioggia all'ora. Arancione con fulmine: temporale.", legVis: "Numeri: visibilità in km. Arancione: sotto 1 km (nebbia).", seaCoarse: "Onde e corrente vengono da un modello grossolano (circa 8 km). Non per la navigazione vicino alla costa." }
 };
 for (const lang in EXTRA_TEXT) Object.assign(TEXT[lang], EXTRA_TEXT[lang]);
 
@@ -1221,8 +1221,9 @@ function warnSection(entry) {
     (item.description ? '<details><summary>' + esc(tr("warnMore")) + '</summary><p class="small">' + esc(item.description) + (item.instruction ? "<br><br>" + esc(item.instruction) : "") + "</p></details>" : "") + "</section>").join("");
 }
 
-/* Wind map: the same forecast on a 7 by 7 grid around the spot, over a public-domain coastline. */
+/* Map: the forecast on a 7 by 7 grid around the spot, over a public-domain coastline, one layer at a time. */
 const MAP_SIDE = 7, MAP_STEP = 0.15, MAP_PX = 350;
+const MAP_LAYERS = ["wind", "gust", "wave", "current", "pressure", "rain", "vis"];
 const mapData = {};
 let coastData = null, mapTimer = null;
 function mapGrid(spot) {
@@ -1230,20 +1231,38 @@ function mapGrid(spot) {
   for (let row = 0; row < MAP_SIDE; row++) for (let col = 0; col < MAP_SIDE; col++) points.push({ lat: spot.lat + (half - row) * MAP_STEP, lon: spot.lon + (col - half) * stepLon });
   return points;
 }
+function mapCoords(points) { return "latitude=" + points.map(point => point.lat.toFixed(3)).join(",") + "&longitude=" + points.map(point => point.lon.toFixed(3)).join(","); }
 function mapUrl(points) {
-  return "https://api.open-meteo.com/v1/forecast?latitude=" + points.map(point => point.lat.toFixed(3)).join(",") + "&longitude=" + points.map(point => point.lon.toFixed(3)).join(",") +
-    "&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kn&models=best_match&timezone=auto&forecast_days=2";
+  return "https://api.open-meteo.com/v1/forecast?" + mapCoords(points) + "&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,pressure_msl,precipitation,weather_code,visibility&wind_speed_unit=kn&models=best_match&timezone=auto&forecast_days=2";
+}
+function mapSeaUrl(points) {
+  return "https://marine-api.open-meteo.com/v1/marine?" + mapCoords(points) + "&hourly=wave_height,wave_direction,wave_period,ocean_current_velocity,ocean_current_direction&timezone=auto&forecast_days=2";
 }
 function shapeMap(json, points) {
   const list = Array.isArray(json) ? json : [json];
   if (list.length !== points.length) throw new Error("grid mismatch");
-  return { times: list[0].hourly.time, cells: list.map((item, index) => ({ lat: points[index].lat, lon: points[index].lon, wind: item.hourly.wind_speed_10m, gust: item.hourly.wind_gusts_10m, dir: item.hourly.wind_direction_10m })) };
+  return { times: list[0].hourly.time, cells: list.map((item, index) => { const h = item.hourly; return { lat: points[index].lat, lon: points[index].lon, wind: h.wind_speed_10m, gust: h.wind_gusts_10m, dir: h.wind_direction_10m,
+    pressure: h.pressure_msl || [], rain: h.precipitation || [], code: h.weather_code || [], vis: h.visibility || [], wave: [], waveDir: [], wavePeriod: [], current: [], currentDir: [] }; }) };
+}
+function addMapSea(data, json) {
+  const list = Array.isArray(json) ? json : [json];
+  if (list.length !== data.cells.length) return false;
+  let found = false;
+  list.forEach((item, index) => {
+    const h = item.hourly, cell = data.cells[index];
+    if (!h || !h.time || h.time.length !== data.times.length) return;
+    cell.wave = h.wave_height || []; cell.waveDir = h.wave_direction || []; cell.wavePeriod = h.wave_period || []; cell.currentDir = h.ocean_current_direction || [];
+    cell.current = (h.ocean_current_velocity || []).map(value => typeof value === "number" ? value / 1.852 : null);
+    if (cell.wave.some(value => typeof value === "number") || cell.current.some(value => typeof value === "number")) found = true;
+  });
+  return found;
 }
 async function loadMap(spot) {
   if (mapData[spot.id]) return;
   mapData[spot.id] = { status: "loading" };
   try {
     const points = mapGrid(spot), data = shapeMap(await fetchJson(mapUrl(points)), points);
+    try { data.sea = addMapSea(data, await fetchJson(mapSeaUrl(points))); } catch (error) { data.sea = false; }
     mapData[spot.id] = Object.assign({ status: "ok" }, data);
   } catch (error) { mapData[spot.id] = { status: "error" }; }
   if (!coastData) { try { coastData = await fetchJson("coast.json"); } catch (error) { coastData = { land: [], lakes: [] }; } }
@@ -1262,31 +1281,118 @@ function mapOutline(spot) {
     .map(ring => "M" + ring.map(p => ((p[0] - west) / (east - west) * MAP_PX).toFixed(1) + " " + ((north - p[1]) / (north - south) * MAP_PX).toFixed(1)).join("L") + "z").join("");
   return '<path d="' + path(coastData.land) + '" fill="#E4DCCB" stroke="#1B2A4A" stroke-width="1.1" stroke-linejoin="round"/><path d="' + path(coastData.lakes) + '" fill="#F6F1E7" stroke="#1B2A4A" stroke-width="0.8"/>';
 }
-function mapSvg(spot, data, hour) {
-  const limit = state.prefs.limits[spot.kind], size = MAP_PX / MAP_SIDE;
-  let tint = "", arrows = "";
+/* Lines of equal pressure through the grid of cell centres. */
+function mapIsobars(data, hour) {
+  const size = MAP_PX / MAP_SIDE, value = (row, col) => data.cells[row * MAP_SIDE + col].pressure[hour];
+  const all = data.cells.map(cell => cell.pressure[hour]);
+  if (all.some(item => typeof item !== "number")) return "";
+  const low = Math.min(...all), high = Math.max(...all), step = high - low > 10 ? 2 : high - low > 4 ? 1 : 0.5;
+  let lines = "", labels = "";
+  for (let level = Math.ceil(low / step) * step; level <= high; level += step) {
+    let d = "", mark = null;
+    for (let row = 0; row < MAP_SIDE - 1; row++) for (let col = 0; col < MAP_SIDE - 1; col++) {
+      const corners = [[row, col], [row, col + 1], [row + 1, col + 1], [row + 1, col]], cuts = [];
+      for (let edge = 0; edge < 4; edge++) {
+        const a = corners[edge], b = corners[(edge + 1) % 4], va = value(a[0], a[1]), vb = value(b[0], b[1]);
+        if ((va < level) === (vb < level)) continue;
+        const part = (level - va) / (vb - va);
+        cuts.push([(a[1] + (b[1] - a[1]) * part + 0.5) * size, (a[0] + (b[0] - a[0]) * part + 0.5) * size]);
+      }
+      for (let pair = 0; pair + 1 < cuts.length; pair += 2) {
+        d += "M" + cuts[pair][0].toFixed(1) + " " + cuts[pair][1].toFixed(1) + "L" + cuts[pair + 1][0].toFixed(1) + " " + cuts[pair + 1][1].toFixed(1);
+        if (!mark) mark = [(cuts[pair][0] + cuts[pair + 1][0]) / 2, (cuts[pair][1] + cuts[pair + 1][1]) / 2];
+      }
+    }
+    if (!d) continue;
+    lines += '<path d="' + d + '"/>';
+    labels += '<text x="' + mark[0].toFixed(1) + '" y="' + (mark[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#1B2A4A" paint-order="stroke" stroke="#F6F1E7" stroke-width="4">' + (step < 1 ? level.toFixed(1) : Math.round(level)) + "</text>";
+  }
+  return '<g fill="none" stroke="#1B2A4A" stroke-width="1.6" stroke-linecap="round">' + lines + "</g>" + labels;
+}
+function mapSvg(spot, data, hour, layer) {
+  const limit = state.prefs.limits[spot.kind], size = MAP_PX / MAP_SIDE, number = item => typeof item === "number";
+  let tint = "", arrows = "", texts = "";
+  const rect = (x, y, color, opacity) => { tint += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (size + 0.5).toFixed(1) + '" height="' + (size + 0.5).toFixed(1) + '" fill="' + color + '" opacity="' + opacity.toFixed(2) + '"/>'; };
+  const arrow = (cx, cy, turn, reach) => { arrows += '<g transform="translate(' + cx.toFixed(1) + " " + cy.toFixed(1) + ") rotate(" + turn + ')"><path d="M0 ' + reach.toFixed(1) + "V" + (-reach).toFixed(1) + "M-4.5 " + (-reach + 5).toFixed(1) + "L0 " + (-reach).toFixed(1) + "l4.5 5" + '"/></g>'; };
+  const label = (cx, cy, text, strong) => { texts += '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="' + (strong ? 700 : 500) + '" fill="#1B2A4A" paint-order="stroke" stroke="#F6F1E7" stroke-width="2.5" stroke-opacity="0.7">' + text + "</text>"; };
+  const windTurn = dir => state.prefs.arrows === "to" ? dir + 180 : dir;
   data.cells.forEach((cell, index) => {
-    const x = index % MAP_SIDE * size, y = Math.floor(index / MAP_SIDE) * size, wind = cell.wind[hour], gust = cell.gust[hour], dir = cell.dir[hour];
-    if (typeof wind !== "number") return;
-    const over = gust > limit.max, under = limit.min && wind < limit.min;
-    if (over || !under) tint += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (size + 0.5).toFixed(1) + '" height="' + (size + 0.5).toFixed(1) + '" fill="' + (over ? "#E8762B" : "#1B2A4A") + '" opacity="' + (over ? 0.32 : 0.16) + '"/>';
-    const reach = 7 + Math.min(gust, 40) / 40 * 11, turn = state.prefs.arrows === "to" ? dir + 180 : dir;
-    arrows += '<g transform="translate(' + (x + size / 2).toFixed(1) + " " + (y + size / 2).toFixed(1) + ") rotate(" + turn + ')"><path d="M0 ' + reach.toFixed(1) + "V" + (-reach).toFixed(1) + "M-4.5 " + (-reach + 5).toFixed(1) + "L0 " + (-reach).toFixed(1) + "l4.5 5" + '"/></g>';
+    const x = index % MAP_SIDE * size, y = Math.floor(index / MAP_SIDE) * size, cx = x + size / 2, cy = y + size / 2, wind = cell.wind[hour], gust = cell.gust[hour], dir = cell.dir[hour];
+    if (layer === "wind" || layer === "gust") {
+      if (!number(wind)) return;
+      const over = gust > limit.max, under = limit.min && wind < limit.min;
+      if (over || !under) rect(x, y, over ? "#E8762B" : "#1B2A4A", over ? 0.32 : 0.16);
+      if (layer === "wind") arrow(cx, cy, windTurn(dir), 7 + Math.min(gust, 40) / 40 * 11);
+      else label(cx, cy + 4, speed(gust), over);
+    } else if (layer === "wave") {
+      const wave = cell.wave[hour];
+      if (!number(wave)) return;
+      rect(x, y, "#1B2A4A", 0.06 + Math.min(wave / 3, 1) * 0.4);
+      if (number(cell.waveDir[hour])) arrow(cx, cy - 9, windTurn(cell.waveDir[hour]), 7);
+      label(cx, cy + 18, wave.toFixed(1), wave >= 2);
+    } else if (layer === "current") {
+      const current = cell.current[hour];
+      if (!number(current)) return;
+      rect(x, y, "#1B2A4A", 0.06 + Math.min(current / 3, 1) * 0.4);
+      if (number(cell.currentDir[hour]) && current >= 0.05) arrow(cx, cy - 9, cell.currentDir[hour], 5 + Math.min(current, 3) / 3 * 4);
+      label(cx, cy + 18, current.toFixed(1), current >= 2);
+    } else if (layer === "pressure") {
+      if (number(wind)) arrow(cx, cy, windTurn(dir), 7 + Math.min(gust, 40) / 40 * 11);
+    } else if (layer === "rain") {
+      const rain = cell.rain[hour], storm = cell.code[hour] >= 95;
+      if (storm) { rect(x, y, "#E8762B", 0.38); texts += '<path d="M' + (cx + 2).toFixed(1) + " " + (cy - 16).toFixed(1) + 'l-7 11h5l-2 8 7-11h-5z" fill="#1B2A4A"/>'; }
+      else if (number(rain) && rain >= 0.1) rect(x, y, "#1B2A4A", 0.1 + Math.min(rain / 4, 1) * 0.4);
+      if (number(rain) && rain >= 0.1) label(cx, cy + (storm ? 20 : 4), rain.toFixed(1), rain >= 2);
+    } else if (layer === "vis") {
+      const vis = cell.vis[hour];
+      if (!number(vis)) return;
+      if (vis < 1000) rect(x, y, "#E8762B", 0.38); else if (vis < 4000) rect(x, y, "#1B2A4A", 0.3); else if (vis < 10000) rect(x, y, "#1B2A4A", 0.12);
+      label(cx, cy + 4, vis < 10000 ? (vis / 1000).toFixed(1) : vis >= 20000 ? "20+" : Math.round(vis / 1000), vis < 1000);
+    }
   });
   return '<svg role="img" aria-label="' + esc(tr("mapTitle")) + '" viewBox="0 0 ' + MAP_PX + " " + MAP_PX + '" style="width:100%;height:auto;display:block;border:1.2px solid #1B2A4A;border-radius:12px;background:#F6F1E7">' + tint + mapOutline(spot) +
-    '<g fill="none" stroke="#1B2A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8">' + arrows + '</g><circle cx="' + MAP_PX / 2 + '" cy="' + MAP_PX / 2 + '" r="5" fill="#F6F1E7" stroke="#1B2A4A" stroke-width="2"/>' +
-    '<text x="' + (MAP_PX / 2 + 10) + '" y="' + (MAP_PX / 2 - 8) + '" font-size="12" font-weight="600" fill="#1B2A4A" paint-order="stroke" stroke="#F6F1E7" stroke-width="3.5">' + esc(spot.name) + '</text><text x="8" y="16" font-size="11" font-weight="600" fill="#1B2A4A">N ↑</text></svg>';
+    '<g fill="none" stroke="#1B2A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="' + (layer === "pressure" ? 0.3 : 0.8) + '">' + arrows + "</g>" + (layer === "pressure" ? mapIsobars(data, hour) : "") + texts +
+    '<circle cx="' + MAP_PX / 2 + '" cy="' + MAP_PX / 2 + '" r="5" fill="#F6F1E7" stroke="#1B2A4A" stroke-width="2"/>' + (layer === "wind" || layer === "pressure" ? '<text x="' + (MAP_PX / 2 + 10) + '" y="' + (MAP_PX / 2 - 8) + '" font-size="12" font-weight="600" fill="#1B2A4A" paint-order="stroke" stroke="#F6F1E7" stroke-width="3.5">' + esc(spot.name) + "</text>" : "") + "</svg>";
 }
-function mapLine(spot, data, hour) {
-  const centre = data.cells[(data.cells.length - 1) / 2], when = new Date(data.times[hour]).toLocaleString(LOCALES[state.lang], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+/* The cell closest to the spot that has a value: the sea model has none on land. */
+function mapNearest(data, name, hour) {
+  const mid = (MAP_SIDE - 1) / 2;
+  let best = null, bestGap = 99;
+  data.cells.forEach((cell, index) => { const gap = Math.hypot(index % MAP_SIDE - mid, Math.floor(index / MAP_SIDE) - mid); if (typeof cell[name][hour] === "number" && gap < bestGap) { best = cell; bestGap = gap; } });
+  return best;
+}
+function mapLine(spot, data, hour, layer) {
+  const centre = data.cells[(data.cells.length - 1) / 2], when = new Date(data.times[hour]).toLocaleString(LOCALES[state.lang], { weekday: "short", hour: "2-digit", minute: "2-digit" }), base = { t: when, n: spot.name };
+  if (layer === "wave" || layer === "current") {
+    const cell = mapNearest(data, layer, hour);
+    if (!cell) return tr("lineNoSea");
+    if (layer === "wave") return tr("lineWave", Object.assign(base, { h: cell.wave[hour].toFixed(1), p: typeof cell.wavePeriod[hour] === "number" ? Math.round(cell.wavePeriod[hour]) : "?", d: dirName(cell.waveDir[hour]) }));
+    return tr("lineCurrent", Object.assign(base, { v: cell.current[hour].toFixed(1), d: dirName(cell.currentDir[hour]) }));
+  }
+  if (layer === "pressure") {
+    const now = centre.pressure[hour];
+    if (typeof now !== "number") return tr("na");
+    const from = Math.max(0, hour - 3), to = Math.min(data.times.length - 1, from + 3), change = centre.pressure[to] - centre.pressure[from], size = Math.abs(change).toFixed(1);
+    return tr("linePressure", Object.assign(base, { p: Math.round(now), c: tr(change <= -0.5 ? "pFall" : change >= 0.5 ? "pRise" : "pSteady", { v: size }) })) + (change <= -3 ? " " + tr("pFast") : "");
+  }
+  if (layer === "rain") {
+    const rain = centre.rain[hour];
+    return tr(centre.code[hour] >= 95 ? "lineThunder" : typeof rain === "number" && rain >= 0.1 ? "lineRain" : "lineDry", Object.assign(base, { v: typeof rain === "number" ? rain.toFixed(1) : "" }));
+  }
+  if (layer === "vis") {
+    const vis = centre.vis[hour];
+    if (typeof vis !== "number") return tr("na");
+    return tr("lineVis", Object.assign(base, { v: vis < 10000 ? (vis / 1000).toFixed(1) : Math.round(vis / 1000) })) + (vis < 1000 ? " " + tr("lineFog") : "");
+  }
   const status = hourStatus({ wind: centre.wind[hour], gust: centre.gust[hour], isDay: true }, spot);
-  return tr("mapLine", { t: when, n: spot.name, w: speedText(Math.round(centre.wind[hour])), g: speedText(Math.round(centre.gust[hour])) }) + " " + tr({ in: "bIn", over: "bOver", under: "bUnder" }[status]) + ".";
+  return tr("mapLine", Object.assign(base, { w: speedText(Math.round(centre.wind[hour])), g: speedText(Math.round(centre.gust[hour])) })) + " " + tr({ in: "bIn", over: "bOver", under: "bUnder" }[status]) + ".";
 }
+function mapLayer() { return MAP_LAYERS.includes(view.layer) ? view.layer : "wind"; }
 function drawMap(spot) {
   const data = mapData[spot.id], box = document.getElementById("mapbox");
   if (!box || !data || data.status !== "ok") return;
-  box.innerHTML = mapSvg(spot, data, view.hour);
-  document.getElementById("mapline").textContent = mapLine(spot, data, view.hour);
+  box.innerHTML = mapSvg(spot, data, view.hour, mapLayer());
+  document.getElementById("mapline").textContent = mapLine(spot, data, view.hour, mapLayer());
   const slider = document.getElementById("maphour");
   if (slider && Number(slider.value) !== view.hour) slider.value = view.hour;
 }
@@ -1299,20 +1405,27 @@ function toggleMap(spot) {
   mapTimer = setInterval(() => { if (view.hour >= data.times.length - 1) { stopMap(); render(); return; } view.hour++; drawMap(spot); }, 550);
   render();
 }
+function mapLegend(spot, layer) {
+  const limit = state.prefs.limits[spot.kind];
+  const swatch = (color, opacity, text) => '<span><i style="background:' + color + ";opacity:" + opacity + (opacity ? "" : ";border:1px solid #1B2A4A;opacity:1;background:none") + '"></i>' + esc(text) + "</span>";
+  const limits = swatch("#E8762B", 0.45, tr("mapOver", { v: speedText(limit.max) })) + swatch("#1B2A4A", 0.25, tr("mapIn")) + (limit.min ? swatch("#1B2A4A", 0, tr("mapUnder")) : "");
+  const note = { wind: "", gust: tr("legGust", { u: unitLabel() }), wave: tr("legWave"), current: tr("legCurrent"), pressure: tr("legPressure"), rain: tr("legRain"), vis: tr("legVis") }[layer];
+  return '<div class="wlegend" style="flex-direction:column;font-size:12px">' + (note ? "<span>" + esc(note) + "</span>" : "") + (layer === "wind" || layer === "gust" ? limits : "") + swatch("#E4DCCB", 1, tr("mapLand")) + "</div>" +
+    '<div class="small muted">N ↑ · ' + (layer === "wind" || layer === "pressure" || layer === "wave" ? esc(tr(state.prefs.arrows === "to" ? "arrowNoteTo" : "arrowNoteFrom")) + " " : "") +
+    esc(layer === "wave" || layer === "current" ? tr("seaCoarse") : tr("mapNote", { k: Math.round(MAP_STEP * 111) })) + "</div>";
+}
 function renderMap(spot) {
-  const data = mapData[spot.id], limit = state.prefs.limits[spot.kind];
+  const data = mapData[spot.id], layer = mapLayer();
   let html = '<header style="display:flex;flex-direction:column;gap:6px"><div><button class="iconbtn" data-open="' + esc(spot.id) + '" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button></div><h1>" + esc(tr("mapTitle")) +
     '</h1><div class="muted" style="font-size:14px">' + esc(spot.name) + " · " + esc(kindName(spot.kind)) + "</div></header>";
   if (!data || data.status === "loading") return html + '<p class="muted">' + esc(tr("mapLoading")) + "</p>" + waterFooter();
   if (data.status === "error") return html + '<div class="err">' + esc(tr("mapFail")) + "</div>" + waterFooter();
   if (view.hour === undefined || view.hour >= data.times.length) view.hour = mapStartHour(data.times);
-  const swatch = (color, opacity, text) => '<span><i style="background:' + color + ";opacity:" + opacity + (opacity ? "" : ";border:1px solid #1B2A4A;opacity:1;background:none") + '"></i>' + esc(text) + "</span>";
-  html += '<div id="mapbox">' + mapSvg(spot, data, view.hour) + '</div><div class="row" style="gap:12px"><button class="playbtn" data-mapplay="' + esc(spot.id) + '" aria-label="' + esc(tr(mapTimer ? "pause" : "play")) + '">' +
+  html += '<div class="pills">' + MAP_LAYERS.map((name, index) => '<button data-layer="' + name + '" aria-pressed="' + (name === layer) + '">' + esc(tr("layers")[index]) + "</button>").join("") + "</div>" +
+    '<div id="mapbox">' + mapSvg(spot, data, view.hour, layer) + '</div><div class="row" style="gap:12px"><button class="playbtn" data-mapplay="' + esc(spot.id) + '" aria-label="' + esc(tr(mapTimer ? "pause" : "play")) + '">' +
     (mapTimer ? '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>' : '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>') +
     '</button><input id="maphour" type="range" min="0" max="' + (data.times.length - 1) + '" step="1" value="' + view.hour + '" aria-label="' + esc(tr("mapTitle")) + '"></div>' +
-    '<div id="mapline" style="font-size:15px;font-weight:600;line-height:1.35">' + esc(mapLine(spot, data, view.hour)) + '</div><div class="wlegend" style="flex-direction:column;font-size:12px">' +
-    swatch("#E8762B", 0.45, tr("mapOver", { v: speedText(limit.max) })) + swatch("#1B2A4A", 0.25, tr("mapIn")) + (limit.min ? swatch("#1B2A4A", 0, tr("mapUnder")) : "") + swatch("#E4DCCB", 1, tr("mapLand")) + "</div>" +
-    '<div class="small muted">' + esc(tr(state.prefs.arrows === "to" ? "arrowNoteTo" : "arrowNoteFrom")) + " " + esc(tr("mapNote", { k: Math.round(MAP_STEP * 111) })) + "</div>";
+    '<div id="mapline" style="font-size:15px;font-weight:600;line-height:1.35">' + esc(mapLine(spot, data, view.hour, layer)) + "</div>" + mapLegend(spot, layer);
   return html + waterFooter();
 }
 
@@ -1394,7 +1507,7 @@ async function onSearch(event) {
   } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share],[data-kind],[data-pref],[data-limit],[data-shore],[data-prefs],[data-back],[data-map],[data-mapplay]");
+  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share],[data-kind],[data-pref],[data-limit],[data-shore],[data-prefs],[data-back],[data-map],[data-mapplay],[data-layer]");
   if (!target) return;
   const data = target.dataset;
   if (data.lang) { state.lang = data.lang; saveState(); render(); state.spots.forEach(refreshSpot); }
@@ -1409,6 +1522,7 @@ function onClick(event) {
   else if (data.limit) { const parts = data.limit.split(":"); changeLimit(parts[0], parts[1], Number(parts[2])); saveState(); render(); }
   else if (data.shore) { const parts = data.shore.split(":"), spot = state.spots.find(item => item.id === parts[0]); if (spot) { if (parts[1] === "x") { delete spot.shore; spot.shorePick = true; } else { spot.shore = Number(parts[1]); delete spot.shorePick; } saveState(); render(); } }
   else if (data.map) { location.hash = "map-" + data.map; }
+  else if (data.layer) { view.layer = data.layer; render(); }
   else if (data.mapplay) { const spot = state.spots.find(item => item.id === data.mapplay); if (spot) toggleMap(spot); }
   else if (data.prefs) { prefsBack = location.hash; location.hash = "prefs"; }
   else if (data.back) { location.hash = prefsBack; }
