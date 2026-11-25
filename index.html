@@ -157,6 +157,13 @@ const WIDE_TEXT = {
   it: "Fuori dall'area MeteoSvizzera: previsione dal miglior modello disponibile per questo luogo."
 };
 for (const lang in WIDE_TEXT) TEXT[lang].wideModel = WIDE_TEXT[lang];
+const MORE_TEXT = {
+  en: { st_free: "free", highAt: "high cloud at times, from about {a} m", footWide: "Outside the MeteoSwiss area: the best available model from Open-Meteo." },
+  de: { st_free: "frei", highAt: "zeitweise hohe Wolken ab etwa {a} m", footWide: "Ausserhalb des MeteoSchweiz-Gebiets: das beste verfügbare Modell von Open-Meteo." },
+  fr: { st_free: "dégagé", highAt: "nuages élevés par moments, dès {a} m environ", footWide: "Hors de la zone MétéoSuisse : le meilleur modèle disponible d'Open-Meteo." },
+  it: { st_free: "libera", highAt: "a tratti nubi alte, da circa {a} m", footWide: "Fuori dall'area MeteoSvizzera: il miglior modello disponibile di Open-Meteo." }
+};
+for (const lang in MORE_TEXT) Object.assign(TEXT[lang], MORE_TEXT[lang]);
 
 let state = { lang: "en", spots: [], cache: {} };
 let view = { name: "home", tab: "day", day: 0 };
@@ -283,6 +290,8 @@ function cloudState(layers, elevation) {
   return { s: cloudBelow && cloudAbove ? "between" : cloudBelow ? "above" : cloudAbove ? "below" : "clear",
     b: cloudAbove ? round50(cloudAbove.height) : null, t: cloudBelow ? round50(cloudBelow.height) : null };
 }
+// Cloud this far above the spot does not change the day: such hours are shown together with clear ones.
+const HIGH_CLOUD_GAP = 1000;
 function shapeCloud(json, elevation) {
   const hourly = json.hourly, byTime = {};
   for (let h = 0; h < hourly.time.length; h++) {
@@ -293,7 +302,9 @@ function shapeCloud(json, elevation) {
     }
     if (layers.length < 3) continue;
     layers.sort((a, b) => a.height - b.height);
-    byTime[hourly.time[h]] = cloudState(layers, elevation);
+    const state = cloudState(layers, elevation);
+    if (state.s === "below" && state.b - elevation >= HIGH_CLOUD_GAP) state.h = 1;
+    byTime[hourly.time[h]] = state;
   }
   return { byTime, fetchedAt: Date.now() };
 }
@@ -303,9 +314,25 @@ function cloudSegments(day, cloud) {
     const item = hour.hour >= 6 && hour.hour <= 20 && cloud && cloud.byTime ? cloud.byTime[day.date + "T" + hourText(hour.hour)] : null;
     if (!item) continue;
     const last = segments[segments.length - 1];
-    if (last && last.state === item.s) last.items.push(item); else segments.push({ from: hour.hour, state: item.s, items: [item] });
+    const state = item.s === "clear" || item.h ? "free" : item.s;
+    if (last && last.state === state) last.items.push(item); else segments.push({ from: hour.hour, state, items: [item] });
   }
   return segments;
+}
+function segmentView(segment) {
+  const bases = segment.items.map(item => item.b).filter(value => value !== null && value !== undefined);
+  const tops = segment.items.map(item => item.t).filter(value => value !== null && value !== undefined);
+  const lowest = bases.length ? Math.min.apply(null, bases) : null, highest = tops.length ? Math.max.apply(null, tops) : null;
+  if (segment.state === "free") {
+    if (!bases.length) return { kind: "peak_clear", title: tr("st_clear"), detail: "" };
+    if (bases.length === segment.items.length) return { kind: "peak_below", title: tr("st_below"), detail: tr("cloudBaseAt", { a: lowest }) };
+    return { kind: "peak_below", title: tr("st_free"), detail: tr("highAt", { a: lowest }) };
+  }
+  let detail = "";
+  if (segment.state === "in" && bases.length && tops.length) detail = tr("cloudBetween", { a: lowest, b: highest });
+  else if ((segment.state === "above" || segment.state === "between") && tops.length) detail = tr("cloudTopAt", { a: highest });
+  else if (segment.state === "below" && bases.length) detail = tr("cloudBaseAt", { a: lowest });
+  return { kind: "peak_" + segment.state, title: tr("st_" + segment.state), detail };
 }
 
 /* ---------- Avalanche bulletin ---------- */
@@ -355,7 +382,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.3";
+const VERSION = "0.4";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -400,7 +427,7 @@ function languageSwitch() {
     '<button data-lang="' + lang + '" aria-pressed="' + (state.lang === lang) + '">' + lang.toUpperCase() + "</button>").join("") + "</div>";
 }
 function footer() {
-  return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
+  return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
     ' <a href="https://open-meteo.com/">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '">slf.ch</a> · v' + VERSION + "</footer>";
 }
 function renderHome() {
@@ -438,13 +465,9 @@ function renderCloudSection(day, cloud) {
   let html = '<section style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
   if (!segments.length) return html + '<div class="muted">' + esc(tr("cloudNA")) + "</div></section>";
   for (const segment of segments) {
-    const bases = segment.items.map(item => item.b).filter(value => value !== null), tops = segment.items.map(item => item.t).filter(value => value !== null);
-    let detail = "";
-    if (segment.state === "in" && bases.length && tops.length) detail = tr("cloudBetween", { a: Math.min.apply(null, bases), b: Math.max.apply(null, tops) });
-    else if ((segment.state === "above" || segment.state === "between") && tops.length) detail = tr("cloudTopAt", { a: Math.max.apply(null, tops) });
-    else if (segment.state === "below" && bases.length) detail = tr("cloudBaseAt", { a: Math.min.apply(null, bases) });
-    html += '<div class="summary">' + icon("peak_" + segment.state, 30) + '<span><b style="font-weight:600">' + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(tr("st_" + segment.state)) + "</b>" +
-      (detail ? '<br><span class="small muted">' + esc(detail) + "</span>" : "") + "</span></div>";
+    const view = segmentView(segment);
+    html += '<div class="summary">' + icon(view.kind, 30) + '<span><b style="font-weight:600">' + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(view.title) + "</b>" +
+      (view.detail ? '<br><span class="small muted">' + esc(view.detail) + "</span>" : "") + "</span></div>";
   }
   return html + '<div class="small muted">' + esc(tr("cloudLegend")) + "</div></section>";
 }
@@ -530,11 +553,8 @@ function renderReport(spot) {
     '<div class="time">' + esc(event.time) + '</div><div class="rail"><i></i>' + (index === events.length - 1 ? "" : "<span></span>") + '</div><div class="what"><b>' + esc(event.title) + "</b>" + (event.sub ? '<br><span class="psub">' + esc(event.sub) + "</span>" : "") + "</div>").join("") + "</div></div><div>";
   const segments = cloudSegments(day, report.entry.cloud);
   html += title(tr("cloudTitle")) + (segments.length ? segments.map(segment => {
-    const bases = segment.items.map(item => item.b).filter(value => value !== null), tops = segment.items.map(item => item.t).filter(value => value !== null);
-    const detail = segment.state === "in" && bases.length && tops.length ? tr("cloudBetween", { a: Math.min.apply(null, bases), b: Math.max.apply(null, tops) })
-      : (segment.state === "above" || segment.state === "between") && tops.length ? tr("cloudTopAt", { a: Math.max.apply(null, tops) })
-      : segment.state === "below" && bases.length ? tr("cloudBaseAt", { a: Math.min.apply(null, bases) }) : "";
-    return '<div class="pcloud">' + icon("peak_" + segment.state, 22) + "<div><b>" + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(tr("st_" + segment.state)) + "</b>" + (detail ? '<br><span class="psub">' + esc(detail) + "</span>" : "") + "</div></div>";
+    const view = segmentView(segment);
+    return '<div class="pcloud">' + icon(view.kind, 22) + "<div><b>" + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(view.title) + "</b>" + (view.detail ? '<br><span class="psub">' + esc(view.detail) + "</span>" : "") + "</div></div>";
   }).join("") : "<div>" + esc(tr("cloudNA")) + "</div>");
   if (ok) {
     const lines = avalanche.summary.ratings.filter(rating => rating !== top).map(rating => (rating.level || "") + " " + dangerWord(rating.value) + (whereText(rating) ? " · " + whereText(rating) : ""))
@@ -575,7 +595,7 @@ function reportText(spot) {
   if (day.freezingMin !== null) lines.push(tr("freezing") + ": " + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + tr("to") + " " + day.freezingMax : "") + " m");
   const segments = cloudSegments(day, report.entry.cloud);
   if (segments.length) lines.push("", tr("cloudTitle") + ":");
-  for (const segment of segments) lines.push("  " + tr("from") + " " + hourText(segment.from) + ": " + tr("st_" + segment.state));
+  for (const segment of segments) lines.push("  " + tr("from") + " " + hourText(segment.from) + ": " + segmentView(segment).title);
   lines.push("", tr("yourDay") + ":");
   for (const event of dayEvents(day)) lines.push("  " + event.time + "  " + event.title + (event.sub ? " (" + event.sub + ")" : ""));
   lines.push("", tr("avalanche") + ": " + avalancheLine(report.entry.avalanche), "", tr("footNote"), (forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + tr("footAva"));
