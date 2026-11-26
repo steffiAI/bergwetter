@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bergwetter</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com https://aws.slf.ch https://api.zippopotam.us https://nominatim.openstreetmap.org https://bergwetter-codes.lovable.app; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#F6F1E7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bergwetter">
@@ -105,7 +107,7 @@
   @page { size:A4; margin:12mm; }
   @media print {
     body { background:#FFFFFF; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    #app { display:none; }
+    #app, #up { display:none; }
     #print { display:flex; flex-direction:column; gap:15px; max-width:none; margin:0; padding:0; }
     #print section, .pcloud { break-inside:avoid; }
   }
@@ -149,6 +151,9 @@
   .found { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px; }
   .found > div { border:1.2px solid var(--navy); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
   .found b { font-size:18px; font-weight:600; }
+  #up { position:fixed; right:max(16px, env(safe-area-inset-right)); bottom:max(16px, env(safe-area-inset-bottom)); width:48px; height:48px; border-radius:50%; border:0; background:var(--navy); color:var(--cream); font-size:22px; line-height:1; box-shadow:0 2px 10px rgba(27,42,74,.3); cursor:pointer; z-index:5; }
+  #up[hidden] { display:none; }
+  .jump { align-self:flex-start; display:inline-flex; align-items:center; gap:8px; }
   .ghost { height:44px; padding:0 14px; border:1.2px solid var(--navy); border-radius:99px; background:none; font-size:13px; }
   .hero { display:block; width:100%; height:clamp(150px, 30vw, 400px); border-radius:16px; }
   .fact { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
@@ -187,6 +192,7 @@
 <body>
 <main id="app"></main>
 <main id="print"></main>
+<button id="up" type="button" hidden>↑</button>
 <script>
 "use strict";
 const STORE_KEY = "bergwetter.v1";
@@ -610,7 +616,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.13";
+const VERSION = "0.14";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -835,7 +841,7 @@ function finderList() {
 function renderFinder() {
   const seg = (attr, options, chosen) => '<div class="seg" role="group">' + options.map(option => '<button type="button" data-' + attr + '="' + option[0] + '" aria-pressed="' + (String(chosen) === String(option[0])) + '">' + esc(option[1]) + "</button>").join("") + "</div>";
   const dates = [0, 1, 2, 3, 4].map(offset => { const date = new Date(Date.now() + offset * 86400000); return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0"); });
-  const head = '<section class="finder"><div class="sortrow"><h2>' + esc(tr("finderTitle")) + '</h2><span class="tag">' + esc(tr(pass.token ? "passOn" : "premiumTag")) + "</span></div>";
+  const head = '<section class="finder" id="sun"><div class="sortrow"><h2>' + esc(tr("finderTitle")) + '</h2><span class="tag">' + esc(tr(pass.token ? "passOn" : "premiumTag")) + "</span></div>";
   if (!pass.token) return head + '<div>' + esc(tr("passLock")) + '</div><form id="redeem"><input id="code" placeholder="XXXX-XXXX-XXXX" aria-label="' + esc(tr("passField")) + '" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20"><button class="primary" type="submit">' + esc(tr("passGo")) + "</button></form>" +
     (pass.busy ? '<div class="muted">' + esc(tr("passBusy")) + "</div>" : "") + (pass.error ? '<div class="err">' + esc(pass.error) + "</div>" : "") + "</section>";
   let html = head +
@@ -863,6 +869,7 @@ function unitsPanel() {
 function renderHome() {
   let html = hero() + '<div class="homehead"><header class="row" style="flex-wrap:wrap-reverse;justify-content:space-between"><h1>' + esc(tr("favourites")) + "</h1>" + '<span class="row"><button class="ghost" data-unitsopen="1" aria-expanded="' + !!view.unitsOpen + '">' + esc(tr("unitsTitle")) + "</button>" + languageSwitch() + "</span></header>" + unitsPanel() +
     '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
+    '<button type="button" class="ghost jump" data-jump="sun">' + icon("sun", 18) + esc(tr("finderTitle")) + " ↓</button>" +
     '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
   if (!state.spots.length) html += '<p class="muted" style="margin:0">' + esc(tr("empty")) + "</p>";
   if (state.spots.length > 1) html += '<div class="sortrow"><span class="label">' + esc(tr("sortBy")) + '</span><div class="seg" role="group" aria-label="' + esc(tr("sortBy")) + '">' +
@@ -1348,10 +1355,11 @@ function onType(value) {
   searchTimer = setTimeout(() => showPlaces(query, false), 350);
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-sort],[data-unitsopen],[data-unit],[data-fh],[data-fm],[data-fd],[data-fadd],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  const target = event.target.closest("[data-jump],[data-lang],[data-sort],[data-unitsopen],[data-unit],[data-fh],[data-fm],[data-fd],[data-fadd],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
   if (!target) return;
   const data = target.dataset;
-  if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
+  if (data.jump) { const section = document.getElementById(data.jump); if (section) section.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  else if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
   else if (data.sort) { state.sort = data.sort; saveState(); render(); }
   else if (data.fh || data.fm || data.fd !== undefined || data.fadd) {
     const input = document.getElementById("fq");
@@ -1384,6 +1392,10 @@ function init() {
   document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); if (event.target.id === "finder") { event.preventDefault(); runFinder(); } if (event.target.id === "redeem") { event.preventDefault(); redeemCode(); } });
   document.addEventListener("input", event => { if (event.target.id === "q") onType(event.target.value); });
   window.addEventListener("hashchange", onHash);
+  const up = document.getElementById("up");
+  up.setAttribute("aria-label", "Top");
+  up.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  window.addEventListener("scroll", () => { up.hidden = window.scrollY < 300; }, { passive: true });
   onHash();
   loadHistory();
   checkPass();
