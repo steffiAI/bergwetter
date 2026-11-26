@@ -142,6 +142,8 @@
   #app > footer { margin-top:auto; }
   #results .label { margin-top:8px; }
   .sortrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pastrow { display:grid; grid-template-columns:minmax(0, 1.2fr) 24px minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap:6px; align-items:center; font-size:14px; padding:6px 0; border-bottom:1px solid var(--line); }
+  .pastrow.head { font-size:12px; color:var(--slate); border-bottom:1px solid var(--navy); }
   .finder { display:flex; flex-direction:column; gap:14px; border-top:1px solid var(--line); padding-top:24px; }
   .finder form { max-width:640px; }
   .found { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px; }
@@ -300,6 +302,13 @@ const UNIT_TEXT = {
   it: { unitsTitle: "Unità", unitWind: "Vento", unitLen: "Quota e neve", hourLabel: "Ora", miniLegend: "Temperatura massima · ore di sole" }
 };
 for (const lang in UNIT_TEXT) Object.assign(TEXT[lang], UNIT_TEXT[lang]);
+const PAST_TEXT = {
+  en: { pastTitle: "The last 7 days", snowDepth: "Snow depth (model)", snowDepthShort: "Snow depth", pastSum: "New snow in 7 days: {s} · days entirely below 0°: {f} · days above freezing: {t}", pastNote: "From the weather model for this spot, not measurements." },
+  de: { pastTitle: "Die letzten 7 Tage", snowDepth: "Schneehöhe (Modell)", snowDepthShort: "Schneehöhe", pastSum: "Neuschnee in 7 Tagen: {s} · Tage ganz unter 0°: {f} · Tage mit Plusgraden: {t}", pastNote: "Aus dem Wettermodell für diesen Ort, keine Messwerte." },
+  fr: { pastTitle: "Les 7 derniers jours", snowDepth: "Hauteur de neige (modèle)", snowDepthShort: "Hauteur de neige", pastSum: "Neige fraîche en 7 jours : {s} · jours entièrement sous 0° : {f} · jours au-dessus de 0° : {t}", pastNote: "Issu du modèle météo pour ce lieu, pas de mesures." },
+  it: { pastTitle: "Gli ultimi 7 giorni", snowDepth: "Altezza neve (modello)", snowDepthShort: "Altezza neve", pastSum: "Neve fresca in 7 giorni: {s} · giorni interamente sotto 0°: {f} · giorni sopra lo zero: {t}", pastNote: "Dal modello meteo per questo luogo, non misurazioni." }
+};
+for (const lang in PAST_TEXT) Object.assign(TEXT[lang], PAST_TEXT[lang]);
 const FINDER_TEXT = {
   en: { finderTitle: "Find the sun", premiumTag: "Premium preview", finderStart: "Start, e.g. Munich or 80331", finderTime: "Travel time", finderCar: "Car", finderTransit: "Public transport", finderDay: "Day", finderGo: "Search", finderNone: "No known place within this reach.", finderFrom: "From {name}: the sunniest places within about {km} km", finderAdd: "Add to favourites",
     finderNote: "Travel time is a rough estimate from the straight-line distance (car about 50 km/h, public transport about 35 km/h). Chosen from about 130 known places in the Alps." },
@@ -407,6 +416,10 @@ function bulletinUrl(lang) { return "https://aws.slf.ch/api/bulletin/caaml/" + l
 function compareUrl(spot) {
   return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon + (typeof spot.elevation === "number" ? "&elevation=" + Math.round(spot.elevation) : "") +
     "&daily=temperature_2m_max,precipitation_sum,wind_gusts_10m_max,sunshine_duration&models=" + COMPARE_MODELS.join(",") + "&timezone=Europe%2FZurich&forecast_days=5";
+}
+function pastUrl(spot) {
+  return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon + (typeof spot.elevation === "number" ? "&elevation=" + Math.round(spot.elevation) : "") +
+    "&daily=temperature_2m_max,temperature_2m_min,snowfall_sum,precipitation_sum,sunshine_duration&hourly=snow_depth&timezone=Europe%2FZurich&past_days=7&forecast_days=1";
 }
 function cloudUrl(spot) {
   const variables = CLOUD_LEVELS.map(level => "cloud_cover_" + level + "hPa").concat(CLOUD_LEVELS.map(level => "geopotential_height_" + level + "hPa"));
@@ -597,7 +610,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.11";
+const VERSION = "0.12";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -888,6 +901,23 @@ function renderGear(day, avalanche, cloud) {
     (items.length ? '<ul class="gear">' + items.map(item => "<li>" + icon(item[0], 22) + "<span>" + esc(words[item[1]]) + "</span></li>").join("") + "</ul>" : '<div class="muted">' + esc(tr("gearNone")) + "</div>") +
     '<div class="small muted">' + esc(tr("gearNote")) + "</div></section>";
 }
+function shapePast(json) {
+  const daily = json.daily || {}, hourly = json.hourly || {}, times = hourly.time || [], depths = hourly.snow_depth || [];
+  const depthOn = date => { const values = times.map((time, index) => time.slice(0, 10) === date ? depths[index] : null).filter(value => typeof value === "number"); return values.length ? Math.round(Math.max.apply(null, values) * 100) : null; };
+  const days = (daily.time || []).map((date, index) => ({ date, tempMin: round((daily.temperature_2m_min || [])[index]), tempMax: round((daily.temperature_2m_max || [])[index]), snowCm: round((daily.snowfall_sum || [])[index], 1),
+    precipMm: round((daily.precipitation_sum || [])[index], 1), sunHours: (daily.sunshine_duration || [])[index] === null || (daily.sunshine_duration || [])[index] === undefined ? null : round(daily.sunshine_duration[index] / 3600, 1), depthCm: depthOn(date) }));
+  const now = days.length ? days[days.length - 1] : null;
+  return { days: days.slice(0, -1).slice(-7), depthCm: now ? now.depthCm : null };
+}
+function renderPast(past) {
+  if (!past || !past.days.length) return "";
+  const cell = value => "<span>" + value + "</span>", kind = day => day.snowCm >= 1 ? "snow" : day.precipMm >= 1 ? "rain" : day.sunHours >= 4 ? "sun" : day.sunHours >= 1.5 ? "partly" : "cloud";
+  const snowSum = round(past.days.reduce((sum, day) => sum + (day.snowCm || 0), 0), 1), frost = past.days.filter(day => day.tempMax !== null && day.tempMax < 0).length, thaw = past.days.filter(day => day.tempMax !== null && day.tempMax > 0).length;
+  return '<section class="m-day" style="display:flex;flex-direction:column;gap:6px"><div class="label" style="margin-bottom:4px">' + esc(tr("pastTitle")) + '</div><div class="pastrow head"><span></span><span></span>' + cell("min / max " + tempUnit()) + cell(esc(tr("newSnow"))) + cell(esc(tr("sortSun"))) + cell(esc(tr("snowDepthShort"))) + "</div>" +
+    past.days.map(day => '<div class="pastrow">' + cell(esc(new Date(day.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short", day: "numeric", month: "numeric" }))) + icon(kind(day), 22) +
+      cell(show(day.tempMin, "°") + " / " + show(day.tempMax, "°")) + cell(show(day.snowCm, " cm")) + cell(show(day.sunHours, " h")) + cell(show(day.depthCm, " cm")) + "</div>").join("") +
+    '<div style="font-size:14px;margin-top:6px">' + esc(tr("pastSum", { s: show(snowSum, " cm"), f: frost, t: thaw })) + '</div><div class="small muted">' + esc(tr("pastNote")) + "</div></section>";
+}
 function shapeCompare(json) {
   const daily = json.daily || {}, pick = name => Object.keys(daily).filter(key => key === name || key.indexOf(name + "_") === 0).map(key => daily[key]);
   return { dates: daily.time || [], temp: pick("temperature_2m_max"), precip: pick("precipitation_sum"), gust: pick("wind_gusts_10m_max"), sun: pick("sunshine_duration").map(list => list.map(value => value === null ? null : value / 3600)) };
@@ -967,6 +997,7 @@ function tempTint(temp) {
   return "#EFAD74";
 }
 function renderDetailsTab(day, avalanche, elevation, spot) {
+  const depth = spot && (state.cache[spot.id] || {}).past ? state.cache[spot.id].past.depthCm : null;
   const share = day.sunHours !== null && day.daylightHours ? Math.min(100, Math.round(100 * day.sunHours / day.daylightHours)) : 0;
   return '<section class="facts m-details">' +
     '<div><span class="small muted flabel">' + icon("sun", 16) + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours, " h") + '</b><div class="bar"><i style="width:' + share + '%"></i></div></div>' +
@@ -976,6 +1007,7 @@ function renderDetailsTab(day, avalanche, elevation, spot) {
     '<div><span class="small muted flabel">' + icon("flake", 16) + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
     '<div><span class="small muted flabel">' + icon("drop", 16) + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
     (day.freezingMin !== null ? '<div><span class="small muted flabel">' + icon("zero", 16) + esc(tr("freezing")) + "</span><b>" + (day.freezingMax !== day.freezingMin ? convert(day.freezingMin, "alt") + " " + esc(tr("to")) + " " : "") + show(day.freezingMax, " m") + "</b></div>" : "") +
+    (depth !== null && depth !== undefined ? '<div><span class="small muted flabel">' + icon("flake", 16) + esc(tr("snowDepth")) + "</span><b>" + show(depth, " cm") + "</b></div>" : "") +
     "</section><!--ava-->" + renderAvalancheBlock(avalanche, elevation, spot);
 }
 function renderSpot(spot) {
@@ -991,7 +1023,7 @@ function renderSpot(spot) {
   if (forecast.wide) html += '<p class="small muted" style="margin:0">' + esc(tr("wideModel")) + "</p>";
   html += '<div class="pills">' + forecast.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
   const dayParts = renderDayTab(day, entry.avalanche, entry.cloud).split("<!--hours-->"), detailParts = renderDetailsTab(day, entry.avalanche, forecast.elevation, spot).split("<!--ava-->");
-  return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col">' + detailParts[0] + dayParts[0] +
+  return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col">' + detailParts[0] + dayParts[0] + renderPast(entry.past) +
     '</div><div class="col">' + renderOutlook(forecast, dayIndex, entry.compare) + detailParts[1] + '</div><div class="col col-wide">' + dayParts[1] + "</div></div>" +
     '<div class="actions"><button data-print="' + esc(spot.id) + '">' + esc(tr("print")) + '</button><button data-share="' + esc(spot.id) + '">' + esc(tr("share")) + "</button></div>" + footer();
 }
@@ -1129,6 +1161,13 @@ async function loadCloud(spot, entry) {
     if (!document.querySelector("#results button, #q:focus, #fq:focus")) render();
   } catch (error) { /* keep the last saved cloud data */ }
 }
+async function loadPast(spot, entry) {
+  try {
+    entry.past = shapePast(await fetchJson(pastUrl(spot)));
+    saveState();
+    if (!document.querySelector("#results button, #q:focus, #fq:focus")) render();
+  } catch (error) { /* past days are simply not shown */ }
+}
 async function loadCompare(spot, entry) {
   try {
     entry.compare = shapeCompare(await fetchJson(compareUrl(spot)));
@@ -1177,7 +1216,7 @@ async function refreshSpot(spot) {
   entry.error = false;
   try { entry.forecast = await loadForecast(spot); } catch (error) { entry.error = true; }
   if (entry.forecast && entry.forecast.elevation !== null) loadCloud(spot, entry);
-  if (entry.forecast) loadCompare(spot, entry);
+  if (entry.forecast) { loadCompare(spot, entry); loadPast(spot, entry); }
   fillCountry(spot);
   try {
     const bulletin = await getBulletin(state.lang);
