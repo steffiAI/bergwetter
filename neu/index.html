@@ -10,10 +10,10 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
-  :root { --cream:#F6F1E7; --tile:#EFE8D8; --navy:#1B2A4A; --slate:#5B6577; --line:#D5CDBB; --orange:#E8762B; }
+  :root { --cream:#F6F1E7; --tile:#EFE8D8; --navy:#1B2A4A; --slate:#4A5468; --line:#D5CDBB; --orange:#E8762B; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--cream); color:var(--navy);
-    font:15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   main { max-width:560px; margin:0 auto; padding:24px 20px 48px; display:flex; flex-direction:column; gap:20px; }
   h1 { margin:0; font-size:40px; font-weight:300; letter-spacing:-0.8px; line-height:1.1; overflow-wrap:break-word; }
@@ -21,7 +21,7 @@
   a { color:var(--navy); }
   button { font:inherit; color:var(--navy); cursor:pointer; }
   .muted { color:var(--slate); }
-  .small { font-size:12px; }
+  .small { font-size:13px; }
   .label { font-size:12px; font-weight:600; letter-spacing:1.2px; color:var(--slate); text-transform:uppercase; }
   .row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .iconbtn { width:44px; height:44px; background:none; border:0; display:flex; align-items:center; justify-content:center; }
@@ -51,9 +51,9 @@
   .timeline .text { padding-bottom:20px; }
   .timeline .text b { font-weight:500; display:block; }
   .timeline .last { padding-bottom:0; }
-  .hours { display:grid; grid-template-columns:repeat(8, minmax(0, 1fr)); gap:4px; text-align:center; font-size:12px; }
+  .hours { display:grid; grid-template-columns:repeat(8, minmax(0, 1fr)); gap:4px; text-align:center; font-size:13px; }
   .hours > div { display:flex; flex-direction:column; gap:4px; align-items:center; background:var(--tile); border-radius:8px; padding:8px 0; }
-  .hours b { font-size:14px; }
+  .hours b { font-size:15px; }
   .facts { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px 14px; }
   .facts b { display:block; font-size:20px; font-weight:500; }
   .bar { height:6px; background:var(--line); border-radius:3px; margin-top:6px; overflow:hidden; }
@@ -64,7 +64,7 @@
   .err { color:#9C1F17; font-size:14px; }
   ul { margin:0; padding-left:18px; font-size:14px; }
   .actions { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
-  .actions button { height:48px; border-radius:12px; border:1.2px solid var(--navy); background:none; font-weight:600; }
+  .actions button { height:48px; border-radius:12px; border:1.2px solid var(--navy); background:none; font-weight:600; font-size:14px; padding:0 6px; }
   #print { display:none; color:#000; font-size:10pt; line-height:1.35; }
   #print svg * { stroke:#000 !important; }
   #print svg [fill]:not([fill="none"]) { fill:#fff !important; }
@@ -109,15 +109,27 @@
     #print { display:flex; flex-direction:column; gap:15px; max-width:none; margin:0; padding:0; }
     #print section, .pcloud { break-inside:avoid; }
   }
-  footer { color:var(--slate); font-size:12px; border-top:1px solid var(--line); padding-top:16px; }
+  footer { color:var(--slate); font-size:13px; border-top:1px solid var(--line); padding-top:16px; }
   .pills { position:sticky; top:0; z-index:2; background:var(--cream); padding:8px 0; }
   .tag { border:1.2px solid var(--orange); border-radius:99px; padding:1px 9px; font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; white-space:nowrap; }
   .homehead, .cards, .cols, .col { display:flex; flex-direction:column; gap:20px; min-width:0; }
-  .cols[data-tab="day"] .col-details, .cols[data-tab="details"] .col-day { display:none; }
   .flabel { display:flex; align-items:center; gap:5px; }
   .hours .odd, .only-wide { display:none; }
   .hours .hh { font-weight:600; }
+  .hours .temp { border-radius:6px; padding:0 6px; }
   .gust { display:flex; align-items:center; gap:2px; }
+  .next { display:flex; flex-direction:column; gap:6px; }
+  .next button { display:grid; grid-template-columns:minmax(0, 1.5fr) 26px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:8px; align-items:center; text-align:left; min-height:48px; padding:6px 12px; border:1.2px solid var(--line); border-radius:12px; background:none; font-size:14px; }
+  .next button[aria-pressed="true"] { border-color:var(--navy); background:var(--tile); font-weight:600; }
+  .next span { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+  .mini { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:6px; width:100%; border-top:1px solid var(--line); padding-top:10px; }
+  .mini > span { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; }
+  .mini b { font-size:15px; }
+  .gear { display:flex; flex-direction:column; gap:10px; margin:0; padding:0; list-style:none; font-size:15px; }
+  .gear li { display:flex; gap:10px; align-items:center; }
+  .hist { display:flex; gap:6px; flex-wrap:wrap; }
+  .hist > span { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:12px; min-width:34px; }
+  .hist .chip { font-size:15px; }
   .probs { display:flex; flex-direction:column; gap:10px; }
   .prob { display:flex; flex-direction:column; gap:12px; border:1.2px solid var(--navy); border-radius:14px; padding:14px; }
   .prob-head { display:flex; gap:12px; align-items:center; }
@@ -125,18 +137,22 @@
   .prob-ico { flex:none; width:48px; height:48px; border-radius:12px; background:var(--tile); display:flex; align-items:center; justify-content:center; }
   .prob-figs { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; border-top:1px solid var(--line); padding-top:12px; }
   .prob-fig { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; min-width:0; }
-  .note { background:var(--tile); border-radius:10px; padding:10px 12px; font-size:13px; }
+  .note { background:var(--tile); border-radius:10px; padding:10px 12px; font-size:14px; }
+  @media screen and (max-width:999px) {
+    .cols[data-tab="day"] .m-details, .cols[data-tab="details"] .m-day { display:none !important; }
+  }
   @media screen and (min-width:1000px) {
-    #app { max-width:1120px; padding:40px 40px 64px; }
-    .homehead { max-width:560px; }
-    .cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .cols[data-tab] { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); grid-template-rows:auto auto 1fr auto; grid-template-areas:"facts ava" "cloud ava" "day ava" "hours hours"; gap:32px 56px; align-items:start; }
-    .cols[data-tab] .col { display:contents; }
-    .cols .tiles, .tabswitch, .only-narrow { display:none; }
-    .cols .facts { grid-area:facts; grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .a-cloud { grid-area:cloud; } .a-day { grid-area:day; } .a-hours { grid-area:hours; }
-    .a-ava { grid-area:ava; border-top:0; padding-top:0; }
-    .hours { grid-template-columns:repeat(15, minmax(0, 1fr)); gap:6px; font-size:13px; }
+    #app { max-width:1280px; padding:40px 48px 64px; }
+    h1 { font-size:46px; }
+    .homehead form { max-width:640px; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); }
+    .cols { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:36px 64px; align-items:start; }
+    .col { gap:32px; }
+    .col-wide { grid-column:1 / -1; }
+    .cols .tiles, .tabswitch, .only-narrow, .pills { display:none; }
+    .cols .facts { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .a-ava { border-top:0; padding-top:0; }
+    .hours { grid-template-columns:repeat(15, minmax(0, 1fr)); gap:6px; font-size:14px; }
     .hours .odd { display:flex; }
     .only-wide { display:inline; }
   }
@@ -159,16 +175,16 @@ const DAILY_VARS = "sunrise,sunset,sunshine_duration,daylight_duration,temperatu
 const CLOUD_LEVELS = [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500];
 
 const TEXT = {
-  en: { tagline: "Sun, weather and avalanche danger for your spots. No account, no analytics.", favourites: "Favourites", placeholder: "Place or peak, or 46.02, 7.75", add: "Add", searching: "Searching…", nothing: "Nothing found. Try another spelling or enter coordinates.", searchFailed: "Search failed. Check your connection.", empty: "Add your first spot above, for example a hut, a peak or a valley.", remove: "Remove", back: "Back to favourites", language: "Language", day: "Day", details: "Details", today: "Today", tomorrow: "Tomorrow", updated: "updated", loading: "Loading…", loadFail: "Could not load the forecast. Check your connection.", refreshFail: "Could not refresh. Showing the last saved forecast.", avalanche: "Avalanche", avaOfficial: "Avalanche danger · official SLF bulletin", avaNone: "No bulletin active right now.", avaOutside: "This spot lies outside the SLF bulletin regions.", avaError: "Could not load the bulletin.", avaFull: "Read the full SLF bulletin", validUntil: "Valid until", above: "above", below: "below", to: "to", gusts: "Gusts", sunshine: "Sunshine", ofDaylight: "of {h} h daylight", sunrise: "Sunrise", sunset: "Sunset", sunny: "Sunny spell", sunnyUntil: "until about {t}", snowStarts: "Snowfall starts", rainStarts: "Rain starts", dayTotal: "{v} over the day", strongest: "Strongest gusts", temperature: "Temperature", newSnow: "New snow", precipitation: "Precipitation", freezing: "Freezing level", yourDay: "Your day on the mountain", hourLegend: "Every two hours: weather, temperature, gusts in km/h.", noSun: "none expected", astro: "Sunrise and sunset are astronomical times, not when the sun clears the ridge.", footForecast: "Forecast: MeteoSwiss ICON-CH models via Open-Meteo (Source: MeteoSwiss).", footAva: "Avalanche bulletin: WSL Institute for Snow and Avalanche Research SLF.", footNote: "The bulletin does not replace your own assessment on site. No warning shown means no warning issued, not that it is safe.", na: "n/a",
+  en: { tagline: "Sun, weather and avalanche danger for your spots. No account, no analytics.", favourites: "Favourites", placeholder: "Place, peak, postcode or 46.02, 7.75", add: "Add", searching: "Searching…", nothing: "Nothing found. Try another spelling or enter coordinates.", searchFailed: "Search failed. Check your connection.", empty: "Add your first spot above, for example a hut, a peak or a valley.", remove: "Remove", back: "Back to favourites", language: "Language", day: "Day", details: "Details", today: "Today", tomorrow: "Tomorrow", updated: "updated", loading: "Loading…", loadFail: "Could not load the forecast. Check your connection.", refreshFail: "Could not refresh. Showing the last saved forecast.", avalanche: "Avalanche", avaOfficial: "Avalanche danger · official SLF bulletin", avaNone: "No bulletin active right now.", avaOutside: "This spot lies outside the SLF bulletin regions.", avaError: "Could not load the bulletin.", avaFull: "Read the full SLF bulletin", validUntil: "Valid until", above: "above", below: "below", to: "to", gusts: "Gusts", sunshine: "Sunshine", ofDaylight: "of {h} h daylight", sunrise: "Sunrise", sunset: "Sunset", sunny: "Sunny spell", sunnyUntil: "until about {t}", snowStarts: "Snowfall starts", rainStarts: "Rain starts", dayTotal: "{v} over the day", strongest: "Strongest gusts", temperature: "Temperature", newSnow: "New snow", precipitation: "Precipitation", freezing: "Freezing level", yourDay: "Your day on the mountain", hourLegend: "Every two hours: weather, temperature, gusts in km/h.", noSun: "none expected", astro: "Sunrise and sunset are astronomical times, not when the sun clears the ridge.", footForecast: "Forecast: MeteoSwiss ICON-CH models via Open-Meteo (Source: MeteoSwiss).", footAva: "Avalanche bulletin: WSL Institute for Snow and Avalanche Research SLF.", footNote: "The bulletin does not replace your own assessment on site. No warning shown means no warning issued, not that it is safe.", na: "n/a",
     danger: { low: "low", moderate: "moderate", considerable: "considerable", high: "high", very_high: "very high", no_snow: "no snow", no_rating: "no rating" },
     problem: { new_snow: "New snow", wind_slab: "Wind slab", persistent_weak_layers: "Persistent weak layers", wet_snow: "Wet snow", gliding_snow: "Gliding snow", no_distinct_avalanche_problem: "No distinct avalanche problem", favourable_situation: "Favourable situation" } },
-  de: { tagline: "Sonne, Wetter und Lawinengefahr für deine Orte. Ohne Konto, ohne Tracking.", favourites: "Favoriten", placeholder: "Ort oder Gipfel, oder 46.02, 7.75", add: "Hinzufügen", searching: "Suche…", nothing: "Nichts gefunden. Andere Schreibweise oder Koordinaten versuchen.", searchFailed: "Suche fehlgeschlagen. Verbindung prüfen.", empty: "Füge oben deinen ersten Ort hinzu, zum Beispiel eine Hütte, einen Gipfel oder ein Tal.", remove: "Entfernen", back: "Zurück zu den Favoriten", language: "Sprache", day: "Tag", details: "Details", today: "Heute", tomorrow: "Morgen", updated: "aktualisiert", loading: "Lädt…", loadFail: "Die Vorhersage konnte nicht geladen werden. Verbindung prüfen.", refreshFail: "Aktualisierung fehlgeschlagen. Letzte gespeicherte Vorhersage wird gezeigt.", avalanche: "Lawinen", avaOfficial: "Lawinengefahr · offizielles SLF-Bulletin", avaNone: "Zurzeit ist kein Bulletin aktiv.", avaOutside: "Dieser Ort liegt ausserhalb der SLF-Bulletinregionen.", avaError: "Das Bulletin konnte nicht geladen werden.", avaFull: "Ganzes SLF-Bulletin lesen", validUntil: "Gültig bis", above: "oberhalb", below: "unterhalb", to: "bis", gusts: "Böen", sunshine: "Sonnenschein", ofDaylight: "von {h} h Tageslicht", sunrise: "Sonnenaufgang", sunset: "Sonnenuntergang", sunny: "Sonnige Phase", sunnyUntil: "bis etwa {t}", snowStarts: "Schneefall beginnt", rainStarts: "Regen beginnt", dayTotal: "{v} über den Tag", strongest: "Stärkste Böen", temperature: "Temperatur", newSnow: "Neuschnee", precipitation: "Niederschlag", freezing: "Nullgradgrenze", yourDay: "Dein Tag am Berg", hourLegend: "Alle zwei Stunden: Wetter, Temperatur, Böen in km/h.", noSun: "keiner erwartet", astro: "Sonnenauf- und -untergang sind astronomische Zeiten, nicht der Moment, in dem die Sonne über den Grat kommt.", footForecast: "Vorhersage: ICON-CH-Modelle von MeteoSchweiz über Open-Meteo (Quelle: MeteoSchweiz).", footAva: "Lawinenbulletin: WSL-Institut für Schnee- und Lawinenforschung SLF.", footNote: "Das Bulletin ersetzt die eigene Beurteilung vor Ort nicht. Keine angezeigte Warnung heisst: keine Warnung ausgegeben, nicht: sicher.", na: "k. A.",
+  de: { tagline: "Sonne, Wetter und Lawinengefahr für deine Orte. Ohne Konto, ohne Tracking.", favourites: "Favoriten", placeholder: "Ort, Gipfel, PLZ oder 46.02, 7.75", add: "Hinzufügen", searching: "Suche…", nothing: "Nichts gefunden. Andere Schreibweise oder Koordinaten versuchen.", searchFailed: "Suche fehlgeschlagen. Verbindung prüfen.", empty: "Füge oben deinen ersten Ort hinzu, zum Beispiel eine Hütte, einen Gipfel oder ein Tal.", remove: "Entfernen", back: "Zurück zu den Favoriten", language: "Sprache", day: "Tag", details: "Details", today: "Heute", tomorrow: "Morgen", updated: "aktualisiert", loading: "Lädt…", loadFail: "Die Vorhersage konnte nicht geladen werden. Verbindung prüfen.", refreshFail: "Aktualisierung fehlgeschlagen. Letzte gespeicherte Vorhersage wird gezeigt.", avalanche: "Lawinen", avaOfficial: "Lawinengefahr · offizielles SLF-Bulletin", avaNone: "Zurzeit ist kein Bulletin aktiv.", avaOutside: "Dieser Ort liegt ausserhalb der SLF-Bulletinregionen.", avaError: "Das Bulletin konnte nicht geladen werden.", avaFull: "Ganzes SLF-Bulletin lesen", validUntil: "Gültig bis", above: "oberhalb", below: "unterhalb", to: "bis", gusts: "Böen", sunshine: "Sonnenschein", ofDaylight: "von {h} h Tageslicht", sunrise: "Sonnenaufgang", sunset: "Sonnenuntergang", sunny: "Sonnige Phase", sunnyUntil: "bis etwa {t}", snowStarts: "Schneefall beginnt", rainStarts: "Regen beginnt", dayTotal: "{v} über den Tag", strongest: "Stärkste Böen", temperature: "Temperatur", newSnow: "Neuschnee", precipitation: "Niederschlag", freezing: "Nullgradgrenze", yourDay: "Dein Tag am Berg", hourLegend: "Alle zwei Stunden: Wetter, Temperatur, Böen in km/h.", noSun: "keiner erwartet", astro: "Sonnenauf- und -untergang sind astronomische Zeiten, nicht der Moment, in dem die Sonne über den Grat kommt.", footForecast: "Vorhersage: ICON-CH-Modelle von MeteoSchweiz über Open-Meteo (Quelle: MeteoSchweiz).", footAva: "Lawinenbulletin: WSL-Institut für Schnee- und Lawinenforschung SLF.", footNote: "Das Bulletin ersetzt die eigene Beurteilung vor Ort nicht. Keine angezeigte Warnung heisst: keine Warnung ausgegeben, nicht: sicher.", na: "k. A.",
     danger: { low: "gering", moderate: "mässig", considerable: "erheblich", high: "gross", very_high: "sehr gross", no_snow: "kein Schnee", no_rating: "keine Einstufung" },
     problem: { new_snow: "Neuschnee", wind_slab: "Triebschnee", persistent_weak_layers: "Altschnee", wet_snow: "Nassschnee", gliding_snow: "Gleitschnee", no_distinct_avalanche_problem: "Kein ausgeprägtes Lawinenproblem", favourable_situation: "Günstige Situation" } },
-  fr: { tagline: "Soleil, météo et danger d'avalanche pour tes lieux. Sans compte, sans traçage.", favourites: "Favoris", placeholder: "Lieu ou sommet, ou 46.02, 7.75", add: "Ajouter", searching: "Recherche…", nothing: "Rien trouvé. Essaie une autre orthographe ou des coordonnées.", searchFailed: "La recherche a échoué. Vérifie la connexion.", empty: "Ajoute ton premier lieu ci-dessus, par exemple une cabane, un sommet ou une vallée.", remove: "Supprimer", back: "Retour aux favoris", language: "Langue", day: "Journée", details: "Détails", today: "Aujourd'hui", tomorrow: "Demain", updated: "mis à jour", loading: "Chargement…", loadFail: "Impossible de charger les prévisions. Vérifie la connexion.", refreshFail: "Mise à jour impossible. Dernières prévisions enregistrées affichées.", avalanche: "Avalanches", avaOfficial: "Danger d'avalanche · bulletin officiel du SLF", avaNone: "Aucun bulletin actif en ce moment.", avaOutside: "Ce lieu se trouve hors des régions du bulletin SLF.", avaError: "Impossible de charger le bulletin.", avaFull: "Lire le bulletin complet du SLF", validUntil: "Valable jusqu'à", above: "au-dessus de", below: "en dessous de", to: "à", gusts: "Rafales", sunshine: "Ensoleillement", ofDaylight: "sur {h} h de jour", sunrise: "Lever du soleil", sunset: "Coucher du soleil", sunny: "Période ensoleillée", sunnyUntil: "jusque vers {t}", snowStarts: "Début des chutes de neige", rainStarts: "Début de la pluie", dayTotal: "{v} sur la journée", strongest: "Rafales les plus fortes", temperature: "Température", newSnow: "Neige fraîche", precipitation: "Précipitations", freezing: "Isotherme zéro degré", yourDay: "Ta journée en montagne", hourLegend: "Toutes les deux heures : temps, température, rafales en km/h.", noSun: "aucun prévu", astro: "Lever et coucher sont des heures astronomiques, pas le moment où le soleil passe la crête.", footForecast: "Prévisions : modèles ICON-CH de MétéoSuisse via Open-Meteo (source : MétéoSuisse).", footAva: "Bulletin d'avalanches : WSL Institut pour l'étude de la neige et des avalanches SLF.", footNote: "Le bulletin ne remplace pas ta propre évaluation sur place. Aucune alerte affichée signifie : aucune alerte émise, pas : sans danger.", na: "n. d.",
+  fr: { tagline: "Soleil, météo et danger d'avalanche pour tes lieux. Sans compte, sans traçage.", favourites: "Favoris", placeholder: "Lieu, sommet, code postal ou 46.02, 7.75", add: "Ajouter", searching: "Recherche…", nothing: "Rien trouvé. Essaie une autre orthographe ou des coordonnées.", searchFailed: "La recherche a échoué. Vérifie la connexion.", empty: "Ajoute ton premier lieu ci-dessus, par exemple une cabane, un sommet ou une vallée.", remove: "Supprimer", back: "Retour aux favoris", language: "Langue", day: "Journée", details: "Détails", today: "Aujourd'hui", tomorrow: "Demain", updated: "mis à jour", loading: "Chargement…", loadFail: "Impossible de charger les prévisions. Vérifie la connexion.", refreshFail: "Mise à jour impossible. Dernières prévisions enregistrées affichées.", avalanche: "Avalanches", avaOfficial: "Danger d'avalanche · bulletin officiel du SLF", avaNone: "Aucun bulletin actif en ce moment.", avaOutside: "Ce lieu se trouve hors des régions du bulletin SLF.", avaError: "Impossible de charger le bulletin.", avaFull: "Lire le bulletin complet du SLF", validUntil: "Valable jusqu'à", above: "au-dessus de", below: "en dessous de", to: "à", gusts: "Rafales", sunshine: "Ensoleillement", ofDaylight: "sur {h} h de jour", sunrise: "Lever du soleil", sunset: "Coucher du soleil", sunny: "Période ensoleillée", sunnyUntil: "jusque vers {t}", snowStarts: "Début des chutes de neige", rainStarts: "Début de la pluie", dayTotal: "{v} sur la journée", strongest: "Rafales les plus fortes", temperature: "Température", newSnow: "Neige fraîche", precipitation: "Précipitations", freezing: "Isotherme zéro degré", yourDay: "Ta journée en montagne", hourLegend: "Toutes les deux heures : temps, température, rafales en km/h.", noSun: "aucun prévu", astro: "Lever et coucher sont des heures astronomiques, pas le moment où le soleil passe la crête.", footForecast: "Prévisions : modèles ICON-CH de MétéoSuisse via Open-Meteo (source : MétéoSuisse).", footAva: "Bulletin d'avalanches : WSL Institut pour l'étude de la neige et des avalanches SLF.", footNote: "Le bulletin ne remplace pas ta propre évaluation sur place. Aucune alerte affichée signifie : aucune alerte émise, pas : sans danger.", na: "n. d.",
     danger: { low: "faible", moderate: "limité", considerable: "marqué", high: "fort", very_high: "très fort", no_snow: "pas de neige", no_rating: "pas d'évaluation" },
     problem: { new_snow: "Neige fraîche", wind_slab: "Neige soufflée", persistent_weak_layers: "Neige ancienne", wet_snow: "Neige mouillée", gliding_snow: "Neige glissante", no_distinct_avalanche_problem: "Pas de problème d'avalanche typique", favourable_situation: "Situation favorable" } },
-  it: { tagline: "Sole, meteo e pericolo di valanghe per i tuoi luoghi. Senza account, senza tracciamento.", favourites: "Preferiti", placeholder: "Località o cima, oppure 46.02, 7.75", add: "Aggiungi", searching: "Ricerca…", nothing: "Nessun risultato. Prova un'altra grafia o le coordinate.", searchFailed: "Ricerca non riuscita. Controlla la connessione.", empty: "Aggiungi qui sopra il tuo primo luogo, per esempio una capanna, una cima o una valle.", remove: "Rimuovi", back: "Torna ai preferiti", language: "Lingua", day: "Giornata", details: "Dettagli", today: "Oggi", tomorrow: "Domani", updated: "aggiornato", loading: "Caricamento…", loadFail: "Impossibile caricare le previsioni. Controlla la connessione.", refreshFail: "Aggiornamento non riuscito. Sono mostrate le ultime previsioni salvate.", avalanche: "Valanghe", avaOfficial: "Pericolo di valanghe · bollettino ufficiale SLF", avaNone: "Nessun bollettino attivo al momento.", avaOutside: "Questo luogo è fuori dalle regioni del bollettino SLF.", avaError: "Impossibile caricare il bollettino.", avaFull: "Leggi il bollettino SLF completo", validUntil: "Valido fino a", above: "sopra i", below: "sotto i", to: "a", gusts: "Raffiche", sunshine: "Soleggiamento", ofDaylight: "su {h} h di luce", sunrise: "Alba", sunset: "Tramonto", sunny: "Fase soleggiata", sunnyUntil: "fino alle {t} circa", snowStarts: "Inizio delle nevicate", rainStarts: "Inizio della pioggia", dayTotal: "{v} nell'arco della giornata", strongest: "Raffiche più forti", temperature: "Temperatura", newSnow: "Neve fresca", precipitation: "Precipitazioni", freezing: "Isoterma di zero gradi", yourDay: "La tua giornata in montagna", hourLegend: "Ogni due ore: tempo, temperatura, raffiche in km/h.", noSun: "non previsto", astro: "Alba e tramonto sono orari astronomici, non il momento in cui il sole supera la cresta.", footForecast: "Previsioni: modelli ICON-CH di MeteoSvizzera tramite Open-Meteo (fonte: MeteoSvizzera).", footAva: "Bollettino valanghe: WSL Istituto per lo studio della neve e delle valanghe SLF.", footNote: "Il bollettino non sostituisce la tua valutazione sul posto. Nessuna allerta mostrata significa: nessuna allerta emessa, non: sicuro.", na: "n. d.",
+  it: { tagline: "Sole, meteo e pericolo di valanghe per i tuoi luoghi. Senza account, senza tracciamento.", favourites: "Preferiti", placeholder: "Località, cima, CAP o 46.02, 7.75", add: "Aggiungi", searching: "Ricerca…", nothing: "Nessun risultato. Prova un'altra grafia o le coordinate.", searchFailed: "Ricerca non riuscita. Controlla la connessione.", empty: "Aggiungi qui sopra il tuo primo luogo, per esempio una capanna, una cima o una valle.", remove: "Rimuovi", back: "Torna ai preferiti", language: "Lingua", day: "Giornata", details: "Dettagli", today: "Oggi", tomorrow: "Domani", updated: "aggiornato", loading: "Caricamento…", loadFail: "Impossibile caricare le previsioni. Controlla la connessione.", refreshFail: "Aggiornamento non riuscito. Sono mostrate le ultime previsioni salvate.", avalanche: "Valanghe", avaOfficial: "Pericolo di valanghe · bollettino ufficiale SLF", avaNone: "Nessun bollettino attivo al momento.", avaOutside: "Questo luogo è fuori dalle regioni del bollettino SLF.", avaError: "Impossibile caricare il bollettino.", avaFull: "Leggi il bollettino SLF completo", validUntil: "Valido fino a", above: "sopra i", below: "sotto i", to: "a", gusts: "Raffiche", sunshine: "Soleggiamento", ofDaylight: "su {h} h di luce", sunrise: "Alba", sunset: "Tramonto", sunny: "Fase soleggiata", sunnyUntil: "fino alle {t} circa", snowStarts: "Inizio delle nevicate", rainStarts: "Inizio della pioggia", dayTotal: "{v} nell'arco della giornata", strongest: "Raffiche più forti", temperature: "Temperatura", newSnow: "Neve fresca", precipitation: "Precipitazioni", freezing: "Isoterma di zero gradi", yourDay: "La tua giornata in montagna", hourLegend: "Ogni due ore: tempo, temperatura, raffiche in km/h.", noSun: "non previsto", astro: "Alba e tramonto sono orari astronomici, non il momento in cui il sole supera la cresta.", footForecast: "Previsioni: modelli ICON-CH di MeteoSvizzera tramite Open-Meteo (fonte: MeteoSvizzera).", footAva: "Bollettino valanghe: WSL Istituto per lo studio della neve e delle valanghe SLF.", footNote: "Il bollettino non sostituisce la tua valutazione sul posto. Nessuna allerta mostrata significa: nessuna allerta emessa, non: sicuro.", na: "n. d.",
     danger: { low: "debole", moderate: "moderato", considerable: "marcato", high: "forte", very_high: "molto forte", no_snow: "senza neve", no_rating: "nessuna valutazione" },
     problem: { new_snow: "Neve fresca", wind_slab: "Neve ventata", persistent_weak_layers: "Neve vecchia", wet_snow: "Neve bagnata", gliding_snow: "Slittamento di neve", no_distinct_avalanche_problem: "Nessun problema valanghivo tipico", favourable_situation: "Situazione favorevole" } }
 };
@@ -216,6 +232,23 @@ const HINT_TEXT = {
     hint: { new_snow: "Neve recente, ancora poco legata", wind_slab: "Neve trasportata dal vento, spesso fragile", persistent_weak_layers: "Strato debole in profondità nel manto, difficile da riconoscere", wet_snow: "Manto bagnato, il pericolo aumenta con caldo e pioggia", gliding_snow: "L'intero manto scivola su terreno liscio" } }
 };
 for (const lang in HINT_TEXT) Object.assign(TEXT[lang], HINT_TEXT[lang]);
+const GEAR_TEXT = {
+  en: { mostSun: "Most sun today", history: "History", historyEmpty: "History is being collected daily from now on.", historyNote: "Morning status each day. Zone borders rounded to about 1 km.",
+    gearTitle: "Pack for this day", gearNone: "Nothing special according to the forecast.", gearNote: "A reminder from the weather data, not a substitute for tour planning.",
+    gear: { ava: "Transceiver, shovel, probe (away from secured runs and paths)", cold: "Very cold: warm layers, thick gloves, face protection", wind: "Strong wind: windproof jacket, goggles", sun: "Lots of sun: sunscreen, sunglasses", rain: "Rain: waterproof jacket and trousers", snow: "New snow: gaiters, waterproof boots", fog: "Cloud at your altitude: map and GPS track", lamp: "Short day: headlamp" } },
+  de: { mostSun: "Meiste Sonne heute", history: "Verlauf", historyEmpty: "Der Verlauf wird ab jetzt täglich gesammelt.", historyNote: "Stand jeweils am Morgen. Zonengrenzen auf etwa 1 km gerundet.",
+    gearTitle: "Für diesen Tag einpacken", gearNone: "Nichts Besonderes laut Vorhersage.", gearNote: "Erinnerung aus den Wetterdaten, ersetzt keine Tourenplanung.",
+    gear: { ava: "LVS, Schaufel, Sonde (abseits gesicherter Pisten und Wege)", cold: "Sehr kalt: warme Schichten, dicke Handschuhe, Gesichtsschutz", wind: "Starker Wind: winddichte Jacke, Skibrille", sun: "Viel Sonne: Sonnencreme, Sonnenbrille", rain: "Regen: Regenjacke und Regenhose", snow: "Neuschnee: Gamaschen, wasserdichte Schuhe", fog: "Wolken auf deiner Höhe: Karte und GPS-Track", lamp: "Kurzer Tag: Stirnlampe" } },
+  fr: { mostSun: "Le plus de soleil aujourd'hui", history: "Évolution", historyEmpty: "L'évolution est enregistrée chaque jour à partir de maintenant.", historyNote: "État du matin pour chaque jour. Limites des zones arrondies à environ 1 km.",
+    gearTitle: "À emporter ce jour-là", gearNone: "Rien de particulier selon les prévisions.", gearNote: "Rappel tiré des données météo, ne remplace pas la préparation de la course.",
+    gear: { ava: "DVA, pelle, sonde (hors pistes et chemins sécurisés)", cold: "Très froid : couches chaudes, gants épais, protection du visage", wind: "Vent fort : veste coupe-vent, masque de ski", sun: "Beaucoup de soleil : crème solaire, lunettes de soleil", rain: "Pluie : veste et pantalon imperméables", snow: "Neige fraîche : guêtres, chaussures imperméables", fog: "Nuages à ton altitude : carte et trace GPS", lamp: "Journée courte : lampe frontale" } },
+  it: { mostSun: "Più sole oggi", history: "Andamento", historyEmpty: "L'andamento viene registrato ogni giorno da ora.", historyNote: "Stato del mattino per ogni giorno. Confini delle zone arrotondati a circa 1 km.",
+    gearTitle: "Da portare questo giorno", gearNone: "Niente di particolare secondo le previsioni.", gearNote: "Promemoria dai dati meteo, non sostituisce la pianificazione della gita.",
+    gear: { ava: "ARTVA, pala, sonda (fuori da piste e sentieri protetti)", cold: "Molto freddo: strati caldi, guanti spessi, protezione per il viso", wind: "Vento forte: giacca antivento, maschera da sci", sun: "Molto sole: crema solare, occhiali da sole", rain: "Pioggia: giacca e pantaloni impermeabili", snow: "Neve fresca: ghette, scarpe impermeabili", fog: "Nubi alla tua quota: carta e traccia GPS", lamp: "Giornata corta: lampada frontale" } }
+};
+for (const lang in GEAR_TEXT) Object.assign(TEXT[lang], GEAR_TEXT[lang]);
+const HISTORY_URL = (typeof location !== "undefined" && location.pathname.indexOf("/neu/") >= 0 ? "../" : "") + "verlauf/lawinen.json";
+let historyDays = null, historyPromise = null;
 const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478 };
 
 let state = { lang: "en", spots: [], cache: {} };
@@ -438,7 +471,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.5";
+const VERSION = "0.6";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -553,18 +586,21 @@ function footer() {
     ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · v' + VERSION + "</footer>";
 }
 function renderHome() {
-  let html = '<div class="homehead"><header style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:flex-end">' + languageSwitch() + "</div><h1>" + esc(tr("favourites")) + "</h1></header>" +
+  let html = '<div class="homehead"><header class="row" style="flex-wrap:wrap-reverse;justify-content:space-between"><h1>' + esc(tr("favourites")) + "</h1>" + languageSwitch() + "</header>" +
     '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
     '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
   if (!state.spots.length) html += '<p class="muted" style="margin:0">' + esc(tr("empty")) + "</p>";
   html += '</div><div class="cards">';
+  const sunniest = state.spots.map(spot => ({ id: spot.id, sun: (((state.cache[spot.id] || {}).forecast || { days: [{}] }).days[0] || {}).sunHours || 0 })).sort((a, b) => b.sun - a.sun)[0];
   for (const spot of shownSpots()) {
     const entry = state.cache[spot.id] || {}, forecast = entry.forecast, today = forecast && forecast.days[0];
     const top = entry.avalanche && entry.avalanche.status === "ok" ? entry.avalanche.summary.top : null;
-    html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + '<span class="row">' + (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + chip(top) + "</span></span>" +
+    html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + '<span class="row">' + (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + (state.spots.length > 1 && sunniest.sun > 0 && sunniest.id === spot.id ? '<span class="tag">' + esc(tr("mostSun")) + "</span>" : "") + chip(top) + "</span></span>" +
       '<span class="small muted">' + (forecast && forecast.elevation !== null ? forecast.elevation + " m · " : "") + (forecast ? esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : esc(tr(entry.error ? "loadFail" : "loading"))) + "</span>";
     if (today) html += '<span class="summary">' + icon(dayKind(today), 26) + "<span>" + esc(tr("sunshine")) + " " + show(today.sunHours, " h") + " · " + show(today.tempMin, "°") + " " + esc(tr("to")) + " " + show(today.tempMax, "°C") +
       " · " + esc(tr("gusts")) + " " + show(today.gustMax, " km/h") + (today.snowCm > 0 ? " · " + esc(tr("newSnow")) + " " + today.snowCm + " cm" : "") + "</span></span>";
+    if (forecast) html += '<span class="mini">' + forecast.days.map(item => '<span><span class="muted">' + esc(new Date(item.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short" })) + "</span>" +
+      icon(dayKind(item), 24) + "<b>" + show(item.tempMax, "°") + "</b><span>" + show(item.sunHours, " h") + "</span></span>").join("") + "</span>";
     html += "</button>";
   }
   return html + "</div>" + footer();
@@ -572,8 +608,24 @@ function renderHome() {
 function bulletinLink() {
   return '<a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener" title="' + esc(tr("newTab")) + '">' + esc(tr("avaFull")) + " ↗</a>";
 }
-function renderAvalancheBlock(avalanche, elevation) {
-  let html = '<section class="rule a-ava" style="display:flex;flex-direction:column;gap:14px"><div class="label">' + esc(tr("avaOfficial")) + "</div>";
+function spotHistory(spot) {
+  return (historyDays || []).map(day => {
+    const zone = (day.zones || []).find(item => (item.polys || []).some(polygon => pointInPolygon(spot.lon, spot.lat, polygon)));
+    return zone ? { date: day.date, level: zone.level, sign: zone.sign || "", problems: zone.problems || [] } : null;
+  }).filter(Boolean);
+}
+function renderHistory(spot, top) {
+  if (!spot || historyDays === null) return "";
+  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Zurich" }).format(new Date());
+  const past = spotHistory(spot).filter(day => day.date < today).slice(-13);
+  let html = '<div class="label">' + esc(tr("history")) + "</div>";
+  if (!past.length) return html + '<div class="small muted">' + esc(tr("historyEmpty")) + "</div>";
+  const cell = (label, entry, bold) => '<span title="' + esc(entry.problems ? entry.problems.map(problemWord).join(", ") : "") + '"' + (bold ? ' style="font-weight:700"' : "") + ">" + chip(entry) + esc(label) + "</span>";
+  return html + '<div class="hist">' + past.map(day => cell(new Date(day.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { day: "numeric", month: "numeric" }), day)).join("") +
+    (top && top.level ? cell(tr("today"), top, true) : "") + '</div><div class="small muted">' + esc(tr("historyNote")) + "</div>";
+}
+function renderAvalancheBlock(avalanche, elevation, spot) {
+  let html = '<section class="rule a-ava m-details" style="display:flex;flex-direction:column;gap:14px"><div class="label">' + esc(tr("avaOfficial")) + "</div>";
   if (!avalanche) return html + '<div class="muted">' + esc(tr("loading")) + "</div></section>";
   if (avalanche.status !== "ok") return html + "<div>" + esc(tr(avalanche.status === "none" ? "avaNone" : avalanche.status === "outside" ? "avaOutside" : "avaError")) + "</div>" + bulletinLink() + "</section>";
   const summary = avalanche.summary, top = summary.top, arrow = { increasing: "↗", steady: "→", decreasing: "↘" }[summary.tendency];
@@ -583,6 +635,7 @@ function renderAvalancheBlock(avalanche, elevation) {
       (arrow ? '<div class="small" style="font-weight:600">' + esc(tr("tendency")) + ": " + arrow + " " + esc(tr("tend_" + summary.tendency)) + "</div>" : "") + "</div></div>" + altitudeProfile(summary.ratings, elevation);
     if (top.level > 1 && (top.lower || top.upper || (top.aspects.length && top.aspects.length < 8))) html += '<div class="note">' + esc(tr("outsideNote")) + "</div>";
   }
+  html += renderHistory(spot, top);
   const others = summary.ratings.filter(rating => rating !== top).map(rating => (rating.level || "") + " " + dangerWord(rating.value) + (whereText(rating) ? " · " + whereText(rating) : ""));
   if (others.length) html += "<ul>" + others.map(line => "<li>" + esc(line) + "</li>").join("") + "</ul>";
   if (summary.problems.length) {
@@ -594,9 +647,29 @@ function renderAvalancheBlock(avalanche, elevation) {
   }
   return html + bulletinLink() + (summary.validUntil ? '<div class="small muted">' + esc(tr("validUntil")) + " " + esc(clock(summary.validUntil)) + "</div>" : "") + "</section>";
 }
+function renderGear(day, avalanche, cloud) {
+  const top = avalanche && avalanche.status === "ok" ? avalanche.summary.top : null, items = [];
+  if (top && top.level) items.push(["peak_clear", "ava"]);
+  if (day.tempMin !== null && day.tempMin <= -10) items.push(["thermo", "cold"]);
+  if (day.gustMax >= 50) items.push(["wind", "wind"]);
+  if (day.sunHours >= 4) items.push(["sun", "sun"]);
+  if (day.precipMm >= 2 && !(day.snowCm >= 1)) items.push(["drop", "rain"]);
+  if (day.snowCm >= 5) items.push(["flake", "snow"]);
+  if (cloudSegments(day, cloud).some(segment => segmentView(segment).kind === "peak_in")) items.push(["peak_in", "fog"]);
+  if (day.daylightHours !== null && day.daylightHours < 10) items.push(["moon", "lamp"]);
+  const words = TEXT[state.lang].gear || TEXT.en.gear;
+  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("gearTitle")) + "</div>" +
+    (items.length ? '<ul class="gear">' + items.map(item => "<li>" + icon(item[0], 22) + "<span>" + esc(words[item[1]]) + "</span></li>").join("") + "</ul>" : '<div class="muted">' + esc(tr("gearNone")) + "</div>") +
+    '<div class="small muted">' + esc(tr("gearNote")) + "</div></section>";
+}
+function renderOutlook(forecast, dayIndex) {
+  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("nextDays")) + '</div><div class="next">' + forecast.days.map((item, index) =>
+    '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '"><span>' + esc(dayLabel(item.date, index)) + "</span>" + icon(dayKind(item), 24) + "<span>" + show(item.tempMin, "°") + " / " + show(item.tempMax, "°") + "</span><span>" +
+    icon("sun", 16) + show(item.sunHours, " h") + "</span><span" + (item.gustMax >= 60 ? ' style="font-weight:700"' : "") + ">" + icon(item.gustMax >= 60 ? "gust" : "wind", 16) + show(item.gustMax) + "</span></button>").join("") + "</div></section>";
+}
 function renderCloudSection(day, cloud) {
   const segments = cloudSegments(day, cloud);
-  let html = '<section class="a-cloud" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
+  let html = '<section class="a-cloud m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
   if (!segments.length) return html + '<div class="muted">' + esc(tr("cloudNA")) + "</div></section>";
   for (const segment of segments) {
     const view = segmentView(segment);
@@ -607,21 +680,21 @@ function renderCloudSection(day, cloud) {
 }
 function renderDayTab(day, avalanche, cloud) {
   const top = avalanche && avalanche.status === "ok" ? avalanche.summary.top : null;
-  let html = '<section class="tiles"><div class="tile"><span class="small muted">' + esc(tr("avalanche")) + "</span><b>" + (top && top.level ? chip(top) : "–") + '</b><span class="small">' + esc(top ? dangerWord(top.value) : "") + "</span></div>" +
+  let html = '<section class="tiles m-day"><div class="tile"><span class="small muted">' + esc(tr("avalanche")) + "</span><b>" + (top && top.level ? chip(top) : "–") + '</b><span class="small">' + esc(top ? dangerWord(top.value) : "") + "</span></div>" +
     '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax) + ' <span>km/h</span></b><span class="small">' + (day.gustMax >= 75 ? esc(tr("stormGusts")) : "max") + "</span></div>" +
     '<div class="tile"><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours) + ' <span>h</span></b><span class="small">' + esc(tr("ofDaylight", { h: show(day.daylightHours) })) + "</span></div></section>";
   html += renderCloudSection(day, cloud);
   const events = dayEvents(day);
-  html += '<section class="a-day"><div class="label" style="margin-bottom:12px">' + esc(tr("yourDay")) + '</div><div class="timeline">';
+  html += '<section class="a-day m-day"><div class="label" style="margin-bottom:12px">' + esc(tr("yourDay")) + '</div><div class="timeline">';
   events.forEach((event, index) => {
     const last = index === events.length - 1 ? " last" : "";
     const marker = event.kind === "dot" ? '<span class="dot"></span>' : event.kind === "dotFull" ? '<span class="dot" style="background:#1B2A4A"></span>' : icon(event.kind, 22);
     html += '<div class="time' + last + '">' + esc(event.time) + '</div><div class="rail">' + marker + (last ? "" : "<i></i>") + '</div><div class="text' + last + '"><b>' + esc(event.title) + '</b><span class="small muted">' + esc(event.sub) + "</span></div>";
   });
-  html += '</div></section><section class="a-hours" style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
+  html += "</div></section>" + renderGear(day, avalanche, cloud) + '<!--hours--><section class="a-hours m-day" style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
   for (const hour of day.hours.filter(item => item.hour >= 6 && item.hour <= 20)) {
     const strong = hour.gust >= 60;
-    html += "<div" + (hour.hour % 2 ? ' class="odd"' : "") + ' style="background:' + tempTint(hour.temp) + '"><span class="hh">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + "<b>" + show(hour.temp, "°") +
+    html += "<div" + (hour.hour % 2 ? ' class="odd"' : "") + '><span class="hh">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + '<b class="temp" style="background:' + tempTint(hour.temp) + '">' + show(hour.temp, "°") +
       '</b><span class="gust"' + (strong ? ' style="font-weight:700"' : "") + ">" + (strong ? icon("gust", 14) : "") + show(hour.gust) + "</span></div>";
   }
   return html + '</div><div class="small muted"><span class="only-narrow">' + esc(tr("hourLegend")) + '</span><span class="only-wide">' + esc(tr("hourLegendAll")) + "</span> " + esc(tr("hourColors")) + "</div></section>";
@@ -632,9 +705,9 @@ function tempTint(temp) {
   for (const step of steps) if (temp < step[0]) return step[1];
   return "#EFAD74";
 }
-function renderDetailsTab(day, avalanche, elevation) {
+function renderDetailsTab(day, avalanche, elevation, spot) {
   const share = day.sunHours !== null && day.daylightHours ? Math.min(100, Math.round(100 * day.sunHours / day.daylightHours)) : 0;
-  return '<section class="facts">' +
+  return '<section class="facts m-details">' +
     '<div><span class="small muted flabel">' + icon("sun", 16) + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours, " h") + '</b><div class="bar"><i style="width:' + share + '%"></i></div></div>' +
     '<div><span class="small muted flabel">' + icon("sunrise", 16) + esc(tr("sunrise")) + " / " + esc(tr("sunset")) + "</span><b>" + esc(show(day.sunrise)) + " / " + esc(show(day.sunset)) + "</b></div>" +
     '<div><span class="small muted flabel">' + icon("thermo", 16) + esc(tr("temperature")) + "</span><b>" + show(day.tempMin, "°") + " " + esc(tr("to")) + " " + show(day.tempMax, "°C") + "</b></div>" +
@@ -642,7 +715,7 @@ function renderDetailsTab(day, avalanche, elevation) {
     '<div><span class="small muted flabel">' + icon("flake", 16) + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
     '<div><span class="small muted flabel">' + icon("drop", 16) + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
     (day.freezingMin !== null ? '<div><span class="small muted flabel">' + icon("zero", 16) + esc(tr("freezing")) + "</span><b>" + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + esc(tr("to")) + " " + day.freezingMax : "") + " m</b></div>" : "") +
-    "</section>" + renderAvalancheBlock(avalanche, elevation);
+    "</section><!--ava-->" + renderAvalancheBlock(avalanche, elevation, spot);
 }
 function renderSpot(spot) {
   const entry = state.cache[spot.id] || {}, forecast = entry.forecast;
@@ -656,8 +729,9 @@ function renderSpot(spot) {
   const dayIndex = Math.min(view.day, forecast.days.length - 1), day = forecast.days[dayIndex];
   if (forecast.wide) html += '<p class="small muted" style="margin:0">' + esc(tr("wideModel")) + "</p>";
   html += '<div class="pills">' + forecast.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
-  return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col col-day">' + renderDayTab(day, entry.avalanche, entry.cloud) +
-    '</div><div class="col col-details">' + renderDetailsTab(day, entry.avalanche, forecast.elevation) + "</div></div>" +
+  const dayParts = renderDayTab(day, entry.avalanche, entry.cloud).split("<!--hours-->"), detailParts = renderDetailsTab(day, entry.avalanche, forecast.elevation, spot).split("<!--ava-->");
+  return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col">' + detailParts[0] + dayParts[0] +
+    '</div><div class="col">' + renderOutlook(forecast, dayIndex) + detailParts[1] + '</div><div class="col col-wide">' + dayParts[1] + "</div></div>" +
     '<div class="actions"><button data-print="' + esc(spot.id) + '">' + esc(tr("print")) + '</button><button data-share="' + esc(spot.id) + '">' + esc(tr("share")) + "</button></div>" + footer();
 }
 function reportDay(spot) {
@@ -778,6 +852,10 @@ async function fetchJson(url) {
   if (!response.ok) throw new Error("HTTP " + response.status);
   return response.json();
 }
+function loadHistory() {
+  if (!historyPromise) historyPromise = fetchJson(HISTORY_URL).then(json => { historyDays = Array.isArray(json.days) ? json.days : []; }).catch(() => { historyDays = []; })
+    .then(() => { if (!document.querySelector("#results button, #q:focus")) render(); });
+}
 function getBulletin(lang) {
   if (!bulletinPromises[lang]) bulletinPromises[lang] = fetchJson(bulletinUrl(lang)).catch(error => { delete bulletinPromises[lang]; throw error; });
   return bulletinPromises[lang];
@@ -831,9 +909,12 @@ async function onSearch(event) {
   if (coordinates) return addSpot(coordinates.lat.toFixed(3) + ", " + coordinates.lon.toFixed(3), coordinates.lat, coordinates.lon);
   results.innerHTML = '<p class="muted" style="margin:0">' + esc(tr("searching")) + "</p>";
   try {
-    searchResults = (await fetchJson(geocodeUrl(query))).results || [];
+    const lookup = async text => (await fetchJson(geocodeUrl(text))).results || [], mixed = /^(\d{4,5})\s+(.+)$/.exec(query);
+    searchResults = await lookup(query);
+    if (!searchResults.length && mixed) searchResults = await lookup(mixed[1]);
+    if (!searchResults.length && mixed) searchResults = await lookup(mixed[2]);
     results.innerHTML = searchResults.length ? searchResults.map((place, index) => '<button type="button" data-pick="' + index + '">' + esc(place.name) +
-      ' <span class="small muted">' + esc([place.admin1, place.country, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>").join("")
+      ' <span class="small muted">' + esc([/^\d{4,5}/.test(query) ? query.match(/^\d+/)[0] : "", place.admin1, place.country, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>").join("")
       : '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>";
   } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
 }
@@ -863,6 +944,7 @@ function init() {
   document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); });
   window.addEventListener("hashchange", onHash);
   onHash();
+  loadHistory();
   shownSpots().forEach(refreshSpot);
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 }
