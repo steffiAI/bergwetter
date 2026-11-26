@@ -310,13 +310,13 @@ const PAST_TEXT = {
 };
 for (const lang in PAST_TEXT) Object.assign(TEXT[lang], PAST_TEXT[lang]);
 const FINDER_TEXT = {
-  en: { finderTitle: "Find the sun", premiumTag: "Premium preview", finderStart: "Start, e.g. Munich or 80331", finderTime: "Travel time", finderCar: "Car", finderTransit: "Public transport", finderDay: "Day", finderGo: "Search", finderNone: "No known place within this reach.", finderFrom: "From {name}: the sunniest places within about {km} km", finderAdd: "Add to favourites",
+  en: { finderTitle: "Find the sun", premiumTag: "Premium", finderStart: "Start, e.g. Munich or 80331", finderTime: "Travel time", finderCar: "Car", finderTransit: "Public transport", finderDay: "Day", finderGo: "Search", finderNone: "No known place within this reach.", finderFrom: "From {name}: the sunniest places within about {km} km", finderAdd: "Add to favourites",
     finderNote: "Travel time is a rough estimate from the straight-line distance (car about 50 km/h, public transport about 35 km/h). Chosen from about 130 known places in the Alps." },
-  de: { finderTitle: "Sonne finden", premiumTag: "Premium-Vorschau", finderStart: "Startort, z. B. München oder 80331", finderTime: "Fahrzeit", finderCar: "Auto", finderTransit: "ÖV", finderDay: "Tag", finderGo: "Sonne suchen", finderNone: "Kein bekannter Ort in dieser Reichweite.", finderFrom: "Ab {name}: die sonnigsten Orte im Umkreis von etwa {km} km", finderAdd: "Zu Favoriten",
+  de: { finderTitle: "Sonne finden", premiumTag: "Premium", finderStart: "Startort, z. B. München oder 80331", finderTime: "Fahrzeit", finderCar: "Auto", finderTransit: "ÖV", finderDay: "Tag", finderGo: "Sonne suchen", finderNone: "Kein bekannter Ort in dieser Reichweite.", finderFrom: "Ab {name}: die sonnigsten Orte im Umkreis von etwa {km} km", finderAdd: "Zu Favoriten",
     finderNote: "Fahrzeit grob aus der Luftlinie geschätzt (Auto etwa 50 km/h, ÖV etwa 35 km/h). Auswahl aus rund 130 bekannten Orten im Alpenraum." },
-  fr: { finderTitle: "Trouver le soleil", premiumTag: "Aperçu premium", finderStart: "Départ, p. ex. Munich ou 80331", finderTime: "Temps de trajet", finderCar: "Voiture", finderTransit: "Transports publics", finderDay: "Jour", finderGo: "Chercher", finderNone: "Aucun lieu connu à cette distance.", finderFrom: "Depuis {name} : les lieux les plus ensoleillés dans un rayon d'environ {km} km", finderAdd: "Ajouter aux favoris",
+  fr: { finderTitle: "Trouver le soleil", premiumTag: "Premium", finderStart: "Départ, p. ex. Munich ou 80331", finderTime: "Temps de trajet", finderCar: "Voiture", finderTransit: "Transports publics", finderDay: "Jour", finderGo: "Chercher", finderNone: "Aucun lieu connu à cette distance.", finderFrom: "Depuis {name} : les lieux les plus ensoleillés dans un rayon d'environ {km} km", finderAdd: "Ajouter aux favoris",
     finderNote: "Temps de trajet estimé grossièrement à vol d'oiseau (voiture env. 50 km/h, transports publics env. 35 km/h). Choix parmi environ 130 lieux connus des Alpes." },
-  it: { finderTitle: "Trova il sole", premiumTag: "Anteprima premium", finderStart: "Partenza, p. es. Monaco o 80331", finderTime: "Tempo di viaggio", finderCar: "Auto", finderTransit: "Mezzi pubblici", finderDay: "Giorno", finderGo: "Cerca", finderNone: "Nessun luogo noto a questa distanza.", finderFrom: "Da {name}: i luoghi più soleggiati nel raggio di circa {km} km", finderAdd: "Aggiungi ai preferiti",
+  it: { finderTitle: "Trova il sole", premiumTag: "Premium", finderStart: "Partenza, p. es. Monaco o 80331", finderTime: "Tempo di viaggio", finderCar: "Auto", finderTransit: "Mezzi pubblici", finderDay: "Giorno", finderGo: "Cerca", finderNone: "Nessun luogo noto a questa distanza.", finderFrom: "Da {name}: i luoghi più soleggiati nel raggio di circa {km} km", finderAdd: "Aggiungi ai preferiti",
     finderNote: "Tempo di viaggio stimato in modo approssimativo in linea d'aria (auto circa 50 km/h, mezzi pubblici circa 35 km/h). Scelta tra circa 130 luoghi noti delle Alpi." }
 };
 for (const lang in FINDER_TEXT) Object.assign(TEXT[lang], FINDER_TEXT[lang]);
@@ -610,7 +610,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.12";
+const VERSION = "0.13";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -760,6 +760,45 @@ function hero() {
   return '<svg class="hero" viewBox="0 120 1916 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(APP_NAME[state.lang] || APP_NAME.de) + '"><image href="winter.jpg" x="0" y="0" width="1916" height="821"/>' + extras +
     '<text x="250" y="262" font-size="' + ((APP_NAME[state.lang] || "").length > 12 ? 68 : 84) + '" font-weight="300" letter-spacing="-2" fill="#1B2A4A">' + esc(APP_NAME[state.lang] || APP_NAME.de) + "</text></svg>";
 }
+const PASS_TEXT = {
+  en: { passLock: "Enter a start place, pick a travel time and see where the sun shines. Unlocked with a supporter code; each code works once, on one device.", passField: "Supporter code", passGo: "Unlock", passBusy: "Checking …", passUnknown: "This code is not known. Please check the spelling.", passUsed: "This code has already been used on another device.", passRate: "Too many attempts. Please try again in an hour.", passFail: "The code could not be checked. Please try again later.", passOn: "Unlocked" },
+  de: { passLock: "Startort eingeben, Fahrzeit wählen und sehen, wo die Sonne scheint. Freigeschaltet mit einem Unterstützer-Code; jeder Code gilt einmal, auf einem Gerät.", passField: "Unterstützer-Code", passGo: "Freischalten", passBusy: "Wird geprüft …", passUnknown: "Dieser Code ist nicht bekannt. Bitte Schreibweise prüfen.", passUsed: "Dieser Code wurde schon auf einem anderen Gerät eingelöst.", passRate: "Zu viele Versuche. Bitte in einer Stunde erneut versuchen.", passFail: "Der Code konnte nicht geprüft werden. Bitte später erneut versuchen.", passOn: "Freigeschaltet" },
+  fr: { passLock: "Saisir un lieu de départ, choisir un temps de trajet et voir où le soleil brille. Débloqué avec un code de soutien ; chaque code vaut une fois, sur un appareil.", passField: "Code de soutien", passGo: "Débloquer", passBusy: "Vérification …", passUnknown: "Ce code est inconnu. Merci de vérifier la saisie.", passUsed: "Ce code a déjà été utilisé sur un autre appareil.", passRate: "Trop de tentatives. Merci de réessayer dans une heure.", passFail: "Le code n'a pas pu être vérifié. Merci de réessayer plus tard.", passOn: "Débloqué" },
+  it: { passLock: "Inserire un luogo di partenza, scegliere il tempo di viaggio e vedere dove splende il sole. Si sblocca con un codice sostenitore; ogni codice vale una volta, su un dispositivo.", passField: "Codice sostenitore", passGo: "Sblocca", passBusy: "Verifica …", passUnknown: "Questo codice non è noto. Controllare la scrittura.", passUsed: "Questo codice è già stato usato su un altro dispositivo.", passRate: "Troppi tentativi. Riprovare tra un'ora.", passFail: "Non è stato possibile verificare il codice. Riprovare più tardi.", passOn: "Sbloccato" }
+};
+for (const lang in PASS_TEXT) Object.assign(TEXT[lang], PASS_TEXT[lang]);
+const CODE_SERVER = "https://bergwetter-codes.lovable.app/api/public/";
+const PASS_KEY = "bergwetter.pass";
+let pass = { device: "", token: "", busy: false, error: "" };
+function loadPass() {
+  try { const saved = JSON.parse(localStorage.getItem(PASS_KEY)); if (saved && saved.device) { pass.device = saved.device; pass.token = saved.token || ""; } } catch (error) { /* no pass yet */ }
+  if (!pass.device) {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    pass.device = Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
+    savePass();
+  }
+}
+function savePass() { try { localStorage.setItem(PASS_KEY, JSON.stringify({ device: pass.device, token: pass.token })); } catch (error) { /* storage unavailable */ } }
+async function postCode(path, body) {
+  const response = await fetch(CODE_SERVER + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  return response.json();
+}
+async function redeemCode() {
+  const input = document.getElementById("code"), code = input ? input.value.trim() : "";
+  if (!code || pass.busy) return;
+  pass.busy = true; pass.error = ""; render();
+  try {
+    const answer = await postCode("redeem", { code, device: pass.device });
+    if (answer.ok && answer.token) { pass.token = answer.token; savePass(); }
+    else pass.error = tr({ unknown: "passUnknown", invalid: "passUnknown", used: "passUsed", rate: "passRate" }[answer.reason] || "passFail");
+  } catch (error) { pass.error = tr("passFail"); }
+  pass.busy = false; render();
+}
+// The server has the last word; without a connection the saved pass stays valid.
+async function checkPass() {
+  if (!pass.token) return;
+  try { const answer = await postCode("verify", { device: pass.device, token: pass.token }); if (answer && answer.ok === false) { pass.token = ""; savePass(); render(); } } catch (error) { /* offline */ }
+}
 function distanceKm(lat1, lon1, lat2, lon2) {
   const rad = Math.PI / 180, a = Math.sin((lat2 - lat1) * rad / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin((lon2 - lon1) * rad / 2) ** 2;
   return 12742 * Math.asin(Math.sqrt(a));
@@ -796,7 +835,10 @@ function finderList() {
 function renderFinder() {
   const seg = (attr, options, chosen) => '<div class="seg" role="group">' + options.map(option => '<button type="button" data-' + attr + '="' + option[0] + '" aria-pressed="' + (String(chosen) === String(option[0])) + '">' + esc(option[1]) + "</button>").join("") + "</div>";
   const dates = [0, 1, 2, 3, 4].map(offset => { const date = new Date(Date.now() + offset * 86400000); return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0"); });
-  let html = '<section class="finder"><div class="sortrow"><h2>' + esc(tr("finderTitle")) + '</h2><span class="tag">' + esc(tr("premiumTag")) + "</span></div>" +
+  const head = '<section class="finder"><div class="sortrow"><h2>' + esc(tr("finderTitle")) + '</h2><span class="tag">' + esc(tr(pass.token ? "passOn" : "premiumTag")) + "</span></div>";
+  if (!pass.token) return head + '<div>' + esc(tr("passLock")) + '</div><form id="redeem"><input id="code" placeholder="XXXX-XXXX-XXXX" aria-label="' + esc(tr("passField")) + '" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20"><button class="primary" type="submit">' + esc(tr("passGo")) + "</button></form>" +
+    (pass.busy ? '<div class="muted">' + esc(tr("passBusy")) + "</div>" : "") + (pass.error ? '<div class="err">' + esc(pass.error) + "</div>" : "") + "</section>";
+  let html = head +
     '<form id="finder"><input id="fq" value="' + esc(finder.query) + '" placeholder="' + esc(tr("finderStart")) + '" aria-label="' + esc(tr("finderStart")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("finderGo")) + "</button></form>" +
     '<div class="sortrow"><span class="label">' + esc(tr("finderTime")) + "</span>" + seg("fh", [[1, "1 h"], [2, "2 h"], [3, "3 h"]], finder.hours) + seg("fm", [["car", tr("finderCar")], ["transit", tr("finderTransit")]], finder.mode) + "</div>" +
     '<div class="sortrow"><span class="label">' + esc(tr("finderDay")) + "</span>" + seg("fd", dates.map((date, index) => [index, dayLabel(date, index)]), finder.day) + "</div>";
@@ -1337,12 +1379,14 @@ function init() {
   const browserLang = (navigator.language || "en").slice(0, 2);
   if (LANGS.includes(browserLang)) state.lang = browserLang;
   loadState();
+  loadPass();
   document.addEventListener("click", onClick);
-  document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); if (event.target.id === "finder") { event.preventDefault(); runFinder(); } });
+  document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); if (event.target.id === "finder") { event.preventDefault(); runFinder(); } if (event.target.id === "redeem") { event.preventDefault(); redeemCode(); } });
   document.addEventListener("input", event => { if (event.target.id === "q") onType(event.target.value); });
   window.addEventListener("hashchange", onHash);
   onHash();
   loadHistory();
+  checkPass();
   shownSpots().forEach(refreshSpot);
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 }
