@@ -111,21 +111,34 @@
   }
   footer { color:var(--slate); font-size:12px; border-top:1px solid var(--line); padding-top:16px; }
   .pills { position:sticky; top:0; z-index:2; background:var(--cream); padding:8px 0; }
-  .tag { border:1.2px solid var(--orange); border-radius:99px; padding:1px 9px; font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; }
+  .tag { border:1.2px solid var(--orange); border-radius:99px; padding:1px 9px; font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; white-space:nowrap; }
   .homehead, .cards, .cols, .col { display:flex; flex-direction:column; gap:20px; min-width:0; }
   .cols[data-tab="day"] .col-details, .cols[data-tab="details"] .col-day { display:none; }
-  .avatop { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
-  .probs { display:flex; flex-direction:column; gap:8px; }
-  .prob { display:grid; grid-template-columns:32px minmax(0, 1fr) 56px; gap:12px; align-items:center; border:1.2px solid var(--navy); border-radius:12px; padding:10px 12px; }
-  .prob b { display:block; font-weight:600; }
+  .flabel { display:flex; align-items:center; gap:5px; }
+  .hours .odd, .only-wide { display:none; }
+  .hours .hh { font-weight:600; }
+  .gust { display:flex; align-items:center; gap:2px; }
+  .probs { display:flex; flex-direction:column; gap:10px; }
+  .prob { display:flex; flex-direction:column; gap:12px; border:1.2px solid var(--navy); border-radius:14px; padding:14px; }
+  .prob-head { display:flex; gap:12px; align-items:center; }
+  .prob-head b { display:block; font-size:17px; font-weight:600; }
+  .prob-ico { flex:none; width:48px; height:48px; border-radius:12px; background:var(--tile); display:flex; align-items:center; justify-content:center; }
+  .prob-figs { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; border-top:1px solid var(--line); padding-top:12px; }
+  .prob-fig { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; min-width:0; }
+  .note { background:var(--tile); border-radius:10px; padding:10px 12px; font-size:13px; }
   @media screen and (min-width:1000px) {
     #app { max-width:1120px; padding:40px 40px 64px; }
     .homehead { max-width:560px; }
     .cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .cols { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:56px; align-items:start; }
-    .cols[data-tab] .col-day, .cols[data-tab] .col-details { display:flex; }
-    .tabswitch { display:none; }
-    .col-details .rule { border-top:0; padding-top:0; }
+    .cols[data-tab] { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); grid-template-rows:auto auto 1fr auto; grid-template-areas:"facts ava" "cloud ava" "day ava" "hours hours"; gap:32px 56px; align-items:start; }
+    .cols[data-tab] .col { display:contents; }
+    .cols .tiles, .tabswitch, .only-narrow { display:none; }
+    .cols .facts { grid-area:facts; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .a-cloud { grid-area:cloud; } .a-day { grid-area:day; } .a-hours { grid-area:hours; }
+    .a-ava { grid-area:ava; border-top:0; padding-top:0; }
+    .hours { grid-template-columns:repeat(15, minmax(0, 1fr)); gap:6px; font-size:13px; }
+    .hours .odd { display:flex; }
+    .only-wide { display:inline; }
   }
 </style>
 </head>
@@ -182,16 +195,27 @@ const MORE_TEXT = {
 };
 for (const lang in MORE_TEXT) Object.assign(TEXT[lang], MORE_TEXT[lang]);
 const AVA_TEXT = {
-  en: { allAspects: "all aspects", yourSpot: "your spot", example: "Example", problems: "Avalanche problems", tendency: "Tendency", tend_increasing: "increasing", tend_steady: "steady", tend_decreasing: "decreasing", newTab: "opens in a new tab",
-    roseLegend: "Rose: filled = affected aspect. Inner ring = above, outer ring = below the stated altitude." },
-  de: { allAspects: "alle Expositionen", yourSpot: "dein Ort", example: "Beispiel", problems: "Lawinenprobleme", tendency: "Tendenz", tend_increasing: "steigend", tend_steady: "gleichbleibend", tend_decreasing: "abnehmend", newTab: "öffnet in neuem Tab",
-    roseLegend: "Rose: gefüllt = betroffene Exposition. Innerer Ring = oberhalb, äusserer Ring = unterhalb der genannten Höhe." },
-  fr: { allAspects: "toutes les expositions", yourSpot: "ton lieu", example: "Exemple", problems: "Problèmes d'avalanche", tendency: "Tendance", tend_increasing: "en hausse", tend_steady: "stable", tend_decreasing: "en baisse", newTab: "s'ouvre dans un nouvel onglet",
-    roseLegend: "Rose : rempli = exposition concernée. Anneau intérieur = au-dessus, anneau extérieur = en dessous de l'altitude indiquée." },
-  it: { allAspects: "tutte le esposizioni", yourSpot: "il tuo luogo", example: "Esempio", problems: "Problemi valanghivi", tendency: "Tendenza", tend_increasing: "in aumento", tend_steady: "stabile", tend_decreasing: "in diminuzione", newTab: "si apre in una nuova scheda",
-    roseLegend: "Rosa: pieno = esposizione interessata. Anello interno = sopra, anello esterno = sotto la quota indicata." }
+  en: { allAspects: "all aspects", yourSpot: "your spot", example: "Example", problems: "Avalanche problems", tendency: "Tendency", tend_increasing: "increasing", tend_steady: "steady", tend_decreasing: "decreasing", newTab: "opens in a new tab" },
+  de: { allAspects: "alle Expositionen", yourSpot: "dein Ort", example: "Beispiel", problems: "Lawinenprobleme", tendency: "Tendenz", tend_increasing: "steigend", tend_steady: "gleichbleibend", tend_decreasing: "abnehmend", newTab: "öffnet in neuem Tab" },
+  fr: { allAspects: "toutes les expositions", yourSpot: "ton lieu", example: "Exemple", problems: "Problèmes d'avalanche", tendency: "Tendance", tend_increasing: "en hausse", tend_steady: "stable", tend_decreasing: "en baisse", newTab: "s'ouvre dans un nouvel onglet" },
+  it: { allAspects: "tutte le esposizioni", yourSpot: "il tuo luogo", example: "Esempio", problems: "Problemi valanghivi", tendency: "Tendenza", tend_increasing: "in aumento", tend_steady: "stabile", tend_decreasing: "in diminuzione", newTab: "si apre in una nuova scheda" }
 };
 for (const lang in AVA_TEXT) Object.assign(TEXT[lang], AVA_TEXT[lang]);
+const HINT_TEXT = {
+  en: { allElev: "all elevations", stormGusts: "storm gusts", hourLegendAll: "Every hour: weather, temperature, gusts in km/h.", hourColors: "Colour = temperature. Wind symbol = gusts from 60 km/h.",
+    outsideNote: "Outside the stated altitudes and aspects: as a rule of thumb one level lower, not zero.",
+    hint: { new_snow: "Fresh snow, still poorly bonded", wind_slab: "Snow moved by wind, often brittle", persistent_weak_layers: "Weak layer deep in the snowpack, hard to spot", wet_snow: "Soaked snowpack, danger rises with warmth and rain", gliding_snow: "Whole snowpack slides on smooth ground" } },
+  de: { allElev: "alle Höhenlagen", stormGusts: "Sturmböen", hourLegendAll: "Jede Stunde: Wetter, Temperatur, Böen in km/h.", hourColors: "Farbe = Temperatur. Windsymbol = Böen ab 60 km/h.",
+    outsideNote: "Ausserhalb der genannten Höhen und Expositionen: als Faustregel eine Stufe tiefer, nicht null.",
+    hint: { new_snow: "Frischer Schnee, noch schlecht verbunden", wind_slab: "Vom Wind verfrachteter Schnee, oft spröde", persistent_weak_layers: "Schwache Schicht tief in der Schneedecke, kaum erkennbar", wet_snow: "Durchnässte Schneedecke, Gefahr steigt mit Wärme und Regen", gliding_snow: "Ganze Schneedecke rutscht auf glattem Boden ab" } },
+  fr: { allElev: "toutes les altitudes", stormGusts: "rafales de tempête", hourLegendAll: "Chaque heure : temps, température, rafales en km/h.", hourColors: "Couleur = température. Symbole vent = rafales dès 60 km/h.",
+    outsideNote: "Hors des altitudes et expositions indiquées : en règle générale un degré de moins, pas zéro.",
+    hint: { new_snow: "Neige récente, encore mal liée", wind_slab: "Neige transportée par le vent, souvent cassante", persistent_weak_layers: "Couche fragile enfouie dans le manteau, difficile à repérer", wet_snow: "Manteau humidifié, le danger augmente avec la chaleur et la pluie", gliding_snow: "Tout le manteau glisse sur un sol lisse" } },
+  it: { allElev: "tutte le quote", stormGusts: "raffiche di burrasca", hourLegendAll: "Ogni ora: tempo, temperatura, raffiche in km/h.", hourColors: "Colore = temperatura. Simbolo vento = raffiche da 60 km/h.",
+    outsideNote: "Fuori dalle quote ed esposizioni indicate: di regola un grado in meno, non zero.",
+    hint: { new_snow: "Neve recente, ancora poco legata", wind_slab: "Neve trasportata dal vento, spesso fragile", persistent_weak_layers: "Strato debole in profondità nel manto, difficile da riconoscere", wet_snow: "Manto bagnato, il pericolo aumenta con caldo e pioggia", gliding_snow: "L'intero manto scivola su terreno liscio" } }
+};
+for (const lang in HINT_TEXT) Object.assign(TEXT[lang], HINT_TEXT[lang]);
 const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478 };
 
 let state = { lang: "en", spots: [], cache: {} };
@@ -401,15 +425,15 @@ function summarizeBulletin(feature) {
   const tendency = (props.tendency || []).find(item => item && item.tendencyType);
   return { top, ratings, problems, tendency: tendency ? tendency.tendencyType : null, validUntil: props.validTime && props.validTime.endTime || null };
 }
-function whereText(item) {
+function elevationText(item) {
   const unit = value => /^\d+$/.test(String(value)) ? value + " m" : String(value);
-  const parts = [];
-  if (item.lower && item.upper) parts.push(unit(item.lower) + " " + tr("to") + " " + unit(item.upper));
-  else if (item.lower) parts.push(tr("above") + " " + unit(item.lower));
-  else if (item.upper) parts.push(tr("below") + " " + unit(item.upper));
-  if (item.aspects.length) parts.push(item.aspects.length >= 8 ? tr("allAspects") : item.aspects.join(", "));
-  return parts.join(" · ");
+  if (item.lower && item.upper) return unit(item.lower) + " " + tr("to") + " " + unit(item.upper);
+  if (item.lower) return tr("above") + " " + unit(item.lower);
+  if (item.upper) return tr("below") + " " + unit(item.upper);
+  return "";
 }
+function aspectText(item) { return item.aspects.length >= 8 ? tr("allAspects") : item.aspects.join(", "); }
+function whereText(item) { return [elevationText(item), aspectText(item)].filter(Boolean).join(" · "); }
 function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[value] || String(value || "").replace(/_/g, " "); }
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
@@ -431,6 +455,12 @@ function icon(kind, size) {
     snow: '<g transform="translate(2.4 -1) scale(0.8)" stroke-width="2"><path stroke="#1B2A4A" d="M7 16h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 7.5 4.25 4.25 0 0 0 7 16z"/></g><path stroke="#1B2A4A" stroke-width="1.3" d="M7.5 15.7v5.8M4.99 17.15l5.02 2.9M4.99 20.05l5.02 -2.9M16.5 15.7v5.8M13.99 17.15l5.02 2.9M13.99 20.05l5.02 -2.9"/>',
     thunder: cloud + '<path stroke="#E8762B" d="M12.5 17l-2 3h3l-2 3"/>',
     wind: '<g stroke="#1B2A4A"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h8"/></g>',
+    gust: '<g stroke="#E8762B" stroke-width="2"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h8"/></g>',
+    thermo: '<path stroke="#1B2A4A" d="M12 3a2 2 0 0 0-2 2v9.3a4 4 0 1 0 4 0V5a2 2 0 0 0-2-2z"/><path stroke="#E8762B" d="M12 10v6.5"/>',
+    drop: '<path stroke="#1B2A4A" d="M12 3.5c3 4 5 6.6 5 9.2a5 5 0 0 1-10 0c0-2.6 2-5.2 5-9.2z"/>',
+    flake: '<path stroke="#1B2A4A" d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5M9.6 4.4L12 6.8l2.4-2.4M9.6 19.6L12 17.2l2.4 2.4"/>',
+    zero: peak + '<path stroke="#E8762B" stroke-dasharray="2.5 2.5" d="M2 14.5h20"/>',
+    sunrise: '<g stroke="#E8762B"><path d="M7 17a5 5 0 0 1 10 0M12 6.5V9M5 10.5l1.8 1.8M19 10.5l-1.8 1.8"/></g><path stroke="#1B2A4A" d="M3 20h18"/>',
     peak_clear: peak,
     peak_below: peak + '<path stroke="#1B2A4A" stroke-width="2.2" d="M4 3.5h16M7 6.5h10"/>',
     peak_between: peak + '<path stroke="#1B2A4A" stroke-width="2.2" d="M4 3.5h16M2 21.5h20"/>',
@@ -445,30 +475,34 @@ function icon(kind, size) {
 /* ---------- Avalanche drawings ---------- */
 function problemIcon(type, size) {
   const navy = 'stroke="#1B2A4A"', orange = 'stroke="#E8762B"';
+  const flake = (x, y) => "M" + x + " " + (y - 2.6) + "v5.2M" + (x - 2.25) + " " + (y - 1.3) + "l4.5 2.6M" + (x - 2.25) + " " + (y + 1.3) + "l4.5-2.6";
   const shapes = {
-    new_snow: '<path ' + navy + ' d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5M9.6 4.4L12 6.8l2.4-2.4M9.6 19.6L12 17.2l2.4 2.4"/>',
+    // flakes falling onto a fresh top layer
+    new_snow: '<path ' + navy + ' stroke-width="1.3" d="' + flake(7, 5) + flake(16.5, 4) + flake(12, 10.5) + '"/><path ' + orange + ' fill="#E8762B" fill-opacity=".25" d="M2.5 15.5h19v3h-19z"/><path ' + navy + ' d="M2.5 18.5h19v3.5h-19z"/>',
     wind_slab: '<path ' + orange + ' d="M2 5.5h8.5a2.3 2.3 0 1 0-2.3-2.3M2 9.5h13"/><path ' + navy + ' d="M2 20.5h20c-1.6-4.6-3.8-7.5-7.6-7.5-3 0-4.2 2-6.1 4-1.6 1.7-3.2 3.5-6.3 3.5z"/>',
-    persistent_weak_layers: '<path ' + navy + ' d="M3 4h18v16H3zM3 9h18"/><path ' + orange + ' stroke-dasharray="2 2.6" d="M4 14.5h16"/>',
+    // cut through the snowpack with a buried layer of loose crystals
+    persistent_weak_layers: '<path ' + navy + ' d="M3 3.5h18v17.5H3zM3 8.5h18"/><path ' + orange + ' stroke-width="1.3" fill="#E8762B" fill-opacity=".25" d="M5.2 15l1.7-1.9 1.7 1.9-1.7 1.9zM10.3 15l1.7-1.9 1.7 1.9-1.7 1.9zM15.4 15l1.7-1.9 1.7 1.9-1.7 1.9z"/>',
     wet_snow: '<path ' + navy + ' d="M12 2.5c3.2 4.2 5.5 7 5.5 9.8a5.5 5.5 0 0 1-11 0c0-2.8 2.3-5.6 5.5-9.8z"/><path ' + orange + ' d="M5 21.5h14"/>',
     gliding_snow: '<path ' + navy + ' d="M2 21.5L22 9.5M2 15.5l7.5-4.5 2 3.6M22 3.5l-8 4.8 2 3.6"/><path ' + orange + ' d="M10.6 9.6l3.2 5.8"/>',
     none: '<circle ' + navy + ' cx="12" cy="12" r="9"/><path ' + navy + ' d="M7.5 12.3l3 3 6-6.6"/>'
   };
   return '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (shapes[type] || shapes.none) + "</svg>";
 }
-// Inner ring: terrain above the stated altitude. Outer ring: terrain below it.
 function aspectRose(item, size) {
-  const names = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"], active = item.aspects.map(aspect => String(aspect).toUpperCase());
-  if (!active.length) return "<span></span>";
-  const innerOn = !(item.upper && !item.lower), outerOn = !(item.lower && !item.upper), cx = 24, cy = 27, mid = 9.5, out = 18;
-  const point = (radius, degrees) => (cx + radius * Math.sin(degrees * Math.PI / 180)).toFixed(2) + " " + (cy - radius * Math.cos(degrees * Math.PI / 180)).toFixed(2);
-  let wedges = "";
-  names.forEach((name, index) => {
-    const from = index * 45 - 22.5, to = index * 45 + 22.5, on = active.includes(name);
-    wedges += '<path fill="' + (on && innerOn ? "#1B2A4A" : "none") + '" d="M' + cx + " " + cy + "L" + point(mid, from) + "A" + mid + " " + mid + " 0 0 1 " + point(mid, to) + 'Z"/>' +
-      '<path fill="' + (on && outerOn ? "#1B2A4A" : "none") + '" d="M' + point(mid, from) + "L" + point(out, from) + "A" + out + " " + out + " 0 0 1 " + point(out, to) + "L" + point(mid, to) + "A" + mid + " " + mid + " 0 0 0 " + point(mid, from) + 'Z"/>';
-  });
-  return '<svg role="img" aria-label="' + esc(whereText(item)) + '" width="' + size + '" height="' + size + '" viewBox="0 0 48 48" stroke="#1B2A4A" stroke-width="1" stroke-linejoin="round">' + wedges +
-    '<text x="24" y="7" text-anchor="middle" font-size="8" font-weight="700" fill="#1B2A4A" stroke="none">N</text></svg>';
+  const names = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"], active = item.aspects.map(aspect => String(aspect).toUpperCase()), cx = 32, cy = 32, radius = 19;
+  const point = degrees => (cx + radius * Math.sin(degrees * Math.PI / 180)).toFixed(2) + " " + (cy - radius * Math.cos(degrees * Math.PI / 180)).toFixed(2);
+  const wedges = names.map((name, index) => '<path fill="' + (active.includes(name) ? "#1B2A4A" : "#FFFDF8") + '" d="M' + cx + " " + cy + "L" + point(index * 45 - 22.5) + "A" + radius + " " + radius + " 0 0 1 " + point(index * 45 + 22.5) + 'Z"/>').join("");
+  const letter = (text, x, y, weight) => '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="9" font-weight="' + weight + '" fill="#1B2A4A" stroke="none">' + text + "</text>";
+  return '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" stroke="#F6F1E7" stroke-width="1.2" stroke-linejoin="round" style="flex:none">' + wedges +
+    '<circle cx="32" cy="32" r="19" fill="none" stroke="#1B2A4A" stroke-width="1.2"/>' + letter("N", 32, 9, 700) + letter("E", 58, 35.2, 500) + letter("S", 32, 62, 500) + letter("W", 6, 35.2, 500) + "</svg>";
+}
+let clipCount = 0;
+// Small mountain, filled where the altitude range applies.
+function elevationIcon(item, size) {
+  const id = "elev" + (++clipCount), shape = "M2 28L15 6l6 8 4.5-5L38 28z";
+  const band = item.lower && item.upper ? [11, 11] : item.lower ? [0, 17] : item.upper ? [17, 13] : [0, 30];
+  return '<svg aria-hidden="true" width="' + size + '" height="' + Math.round(size * .75) + '" viewBox="0 0 40 30" fill="none" style="flex:none"><clipPath id="' + id + '"><path d="' + shape + '"/></clipPath>' +
+    '<rect clip-path="url(#' + id + ')" x="0" y="' + band[0] + '" width="40" height="' + band[1] + '" fill="#1B2A4A"/><path stroke="#1B2A4A" stroke-width="1.4" stroke-linejoin="round" d="' + shape + '"/></svg>';
 }
 // Side view of a mountain: danger bands by altitude, with the altitude of the chosen spot.
 function altitudeProfile(ratings, elevation) {
@@ -476,9 +510,9 @@ function altitudeProfile(ratings, elevation) {
   const bands = ratings.filter(rating => rating.level);
   if (!bands.length || bands.some(rating => (rating.lower && number(rating.lower) === null) || (rating.upper && number(rating.upper) === null))) return "";
   const known = typeof elevation === "number";
-  const low = known && elevation < 1200 ? 0 : 1000, high = Math.max(4800, known ? Math.ceil((elevation + 200) / 100) * 100 : 0), top = 8, height = 84, width = 96;
+  const low = known && elevation < 1200 ? 0 : 1000, high = Math.max(4800, known ? Math.ceil((elevation + 200) / 100) * 100 : 0), top = 10, height = 96, width = 170;
   const y = metres => top + (high - Math.min(high, Math.max(low, metres))) / (high - low) * height;
-  const outline = [[0, 1], [13, .74], [22, .8], [40, .14], [48, 0], [57, .22], [68, .56], [78, .5], [96, 1]].map(pair => pair[0] + " " + (top + pair[1] * height).toFixed(1)).join("L");
+  const outline = [[0, 1], [22, .72], [38, .8], [68, .15], [82, 0], [98, .22], [118, .56], [136, .5], [170, 1]].map(pair => pair[0] + " " + (top + pair[1] * height).toFixed(1)).join("L");
   let fills = "", marks = "";
   const labels = [];
   for (const band of bands) {
@@ -486,16 +520,16 @@ function altitudeProfile(ratings, elevation) {
     fills += '<rect x="0" y="' + from.toFixed(1) + '" width="' + width + '" height="' + (to - from).toFixed(1) + '" fill="' + DANGER_COLOR[band.level] + '"/>';
     for (const bound of [number(band.lower), number(band.upper)]) if (bound && !labels.some(label => label.metres === bound)) labels.push({ metres: bound, at: y(bound) });
   }
-  for (const label of labels) marks += '<path stroke="#1B2A4A" stroke-width="1" stroke-dasharray="3 3" d="M0 ' + label.at.toFixed(1) + "H" + (width + 6) + '"/><text x="' + (width + 10) + '" y="' + (label.at + 3.5).toFixed(1) + '" font-size="10" fill="#1B2A4A">' + label.metres + " m</text>";
+  for (const label of labels) marks += '<path stroke="#1B2A4A" stroke-width="1" stroke-dasharray="3 3" d="M0 ' + label.at.toFixed(1) + "H" + (width + 8) + '"/><text x="' + (width + 14) + '" y="' + (label.at + 4).toFixed(1) + '" font-size="12" fill="#1B2A4A">' + label.metres + " m</text>";
   if (known) {
     const at = y(elevation);
-    let textAt = at + 3.5;
-    for (const label of labels) if (Math.abs(label.at - at) < 12) textAt = label.at + (at <= label.at ? -8.5 : 15.5);
-    marks += '<path stroke="#E8762B" stroke-width="1.6" d="M0 ' + at.toFixed(1) + "H" + (width + 2) + '"/><circle cx="' + (width + 4) + '" cy="' + at.toFixed(1) + '" r="2.6" fill="#E8762B"/>' +
-      '<text x="' + (width + 10) + '" y="' + Math.max(9, textAt).toFixed(1) + '" font-size="10" font-weight="600" fill="#1B2A4A">' + esc(tr("yourSpot")) + " " + Math.round(elevation) + " m</text>";
+    let textAt = at + 4;
+    for (const label of labels) if (Math.abs(label.at - at) < 14) textAt = label.at + (at <= label.at ? -10 : 18);
+    marks += '<path stroke="#E8762B" stroke-width="1.8" d="M0 ' + at.toFixed(1) + "H" + (width + 4) + '"/><circle cx="' + (width + 6) + '" cy="' + at.toFixed(1) + '" r="3" fill="#E8762B"/>' +
+      '<text x="' + (width + 14) + '" y="' + Math.max(11, textAt).toFixed(1) + '" font-size="12" font-weight="600" fill="#1B2A4A">' + esc(tr("yourSpot")) + " " + Math.round(elevation) + " m</text>";
   }
-  return '<svg aria-hidden="true" width="210" height="100" viewBox="0 0 210 100" fill="none" style="flex:none;max-width:100%"><clipPath id="profileClip"><path d="M' + outline + 'Z"/></clipPath>' +
-    '<g clip-path="url(#profileClip)">' + fills + '</g><path stroke="#1B2A4A" stroke-width="1.4" stroke-linejoin="round" d="M' + outline + '"/>' + marks + "</svg>";
+  return '<svg aria-hidden="true" width="320" height="112" viewBox="0 0 320 112" fill="none" style="max-width:100%"><defs><pattern id="restHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path stroke="#B9B09A" stroke-width="1.6" d="M0 0v6"/></pattern>' +
+    '<clipPath id="profileClip"><path d="M' + outline + 'Z"/></clipPath></defs><g clip-path="url(#profileClip)"><rect x="0" y="0" width="' + width + '" height="112" fill="url(#restHatch)"/>' + fills + '</g><path stroke="#1B2A4A" stroke-width="1.5" stroke-linejoin="round" d="M' + outline + '"/>' + marks + "</svg>";
 }
 
 /* ---------- Rendering ---------- */
@@ -539,25 +573,30 @@ function bulletinLink() {
   return '<a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener" title="' + esc(tr("newTab")) + '">' + esc(tr("avaFull")) + " ↗</a>";
 }
 function renderAvalancheBlock(avalanche, elevation) {
-  let html = '<section class="rule" style="display:flex;flex-direction:column;gap:14px"><div class="label">' + esc(tr("avaOfficial")) + "</div>";
+  let html = '<section class="rule a-ava" style="display:flex;flex-direction:column;gap:14px"><div class="label">' + esc(tr("avaOfficial")) + "</div>";
   if (!avalanche) return html + '<div class="muted">' + esc(tr("loading")) + "</div></section>";
   if (avalanche.status !== "ok") return html + "<div>" + esc(tr(avalanche.status === "none" ? "avaNone" : avalanche.status === "outside" ? "avaOutside" : "avaError")) + "</div>" + bulletinLink() + "</section>";
   const summary = avalanche.summary, top = summary.top, arrow = { increasing: "↗", steady: "→", decreasing: "↘" }[summary.tendency];
-  if (top) html += '<div class="avatop"><div class="ava"><div class="big" style="background:' + (DANGER_COLOR[top.level] || "none") + (top.level >= 4 ? ";color:#FFFFFF" : "") + '">' + (top.level ? top.level + esc(top.sign) : "–") +
-    '</div><div><div style="font-size:22px;font-weight:500">' + esc(dangerWord(top.value)) + "</div><div>" + esc(whereText(top)) + "</div>" +
-    (arrow ? '<div class="small" style="font-weight:600">' + esc(tr("tendency")) + ": " + arrow + " " + esc(tr("tend_" + summary.tendency)) + "</div>" : "") + "</div></div>" + altitudeProfile(summary.ratings, elevation) + "</div>";
+  if (top) {
+    html += '<div class="ava"><div class="big" style="background:' + (DANGER_COLOR[top.level] || "none") + (top.level >= 4 ? ";color:#FFFFFF" : "") + '">' + (top.level ? top.level + esc(top.sign) : "–") +
+      '</div><div><div style="font-size:22px;font-weight:500">' + esc(dangerWord(top.value)) + "</div><div>" + esc(whereText(top)) + "</div>" +
+      (arrow ? '<div class="small" style="font-weight:600">' + esc(tr("tendency")) + ": " + arrow + " " + esc(tr("tend_" + summary.tendency)) + "</div>" : "") + "</div></div>" + altitudeProfile(summary.ratings, elevation);
+    if (top.level > 1 && (top.lower || top.upper || (top.aspects.length && top.aspects.length < 8))) html += '<div class="note">' + esc(tr("outsideNote")) + "</div>";
+  }
   const others = summary.ratings.filter(rating => rating !== top).map(rating => (rating.level || "") + " " + dangerWord(rating.value) + (whereText(rating) ? " · " + whereText(rating) : ""));
   if (others.length) html += "<ul>" + others.map(line => "<li>" + esc(line) + "</li>").join("") + "</ul>";
   if (summary.problems.length) {
+    const hints = TEXT[state.lang].hint || TEXT.en.hint;
     html += '<div class="label">' + esc(tr("problems")) + '</div><div class="probs">' + summary.problems.map(problem =>
-      '<div class="prob">' + problemIcon(problem.type, 30) + "<div><b>" + esc(problemWord(problem.type)) + '</b><span class="small muted">' + esc(whereText(problem)) + "</span></div>" + aspectRose(problem, 56) + "</div>").join("") + "</div>";
-    if (summary.problems.some(problem => problem.aspects.length)) html += '<div class="small muted">' + esc(tr("roseLegend")) + "</div>";
+      '<div class="prob"><div class="prob-head"><span class="prob-ico">' + problemIcon(problem.type, 34) + "</span><div><b>" + esc(problemWord(problem.type)) + "</b>" +
+      (hints[problem.type] ? '<span class="small muted">' + esc(hints[problem.type]) + "</span>" : "") + '</div></div><div class="prob-figs"><div class="prob-fig">' + elevationIcon(problem, 44) + "<span>" + esc(elevationText(problem) || tr("allElev")) + "</span></div>" +
+      (problem.aspects.length ? '<div class="prob-fig">' + aspectRose(problem, 60) + "<span>" + esc(aspectText(problem)) + "</span></div>" : "") + "</div></div>").join("") + "</div>";
   }
   return html + bulletinLink() + (summary.validUntil ? '<div class="small muted">' + esc(tr("validUntil")) + " " + esc(clock(summary.validUntil)) + "</div>" : "") + "</section>";
 }
 function renderCloudSection(day, cloud) {
   const segments = cloudSegments(day, cloud);
-  let html = '<section style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
+  let html = '<section class="a-cloud" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
   if (!segments.length) return html + '<div class="muted">' + esc(tr("cloudNA")) + "</div></section>";
   for (const segment of segments) {
     const view = segmentView(segment);
@@ -569,32 +608,40 @@ function renderCloudSection(day, cloud) {
 function renderDayTab(day, avalanche, cloud) {
   const top = avalanche && avalanche.status === "ok" ? avalanche.summary.top : null;
   let html = '<section class="tiles"><div class="tile"><span class="small muted">' + esc(tr("avalanche")) + "</span><b>" + (top && top.level ? chip(top) : "–") + '</b><span class="small">' + esc(top ? dangerWord(top.value) : "") + "</span></div>" +
-    '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax) + ' <span>km/h</span></b><span class="small">max</span></div>' +
+    '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax) + ' <span>km/h</span></b><span class="small">' + (day.gustMax >= 75 ? esc(tr("stormGusts")) : "max") + "</span></div>" +
     '<div class="tile"><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours) + ' <span>h</span></b><span class="small">' + esc(tr("ofDaylight", { h: show(day.daylightHours) })) + "</span></div></section>";
   html += renderCloudSection(day, cloud);
   const events = dayEvents(day);
-  html += '<section><div class="label" style="margin-bottom:12px">' + esc(tr("yourDay")) + '</div><div class="timeline">';
+  html += '<section class="a-day"><div class="label" style="margin-bottom:12px">' + esc(tr("yourDay")) + '</div><div class="timeline">';
   events.forEach((event, index) => {
     const last = index === events.length - 1 ? " last" : "";
     const marker = event.kind === "dot" ? '<span class="dot"></span>' : event.kind === "dotFull" ? '<span class="dot" style="background:#1B2A4A"></span>' : icon(event.kind, 22);
     html += '<div class="time' + last + '">' + esc(event.time) + '</div><div class="rail">' + marker + (last ? "" : "<i></i>") + '</div><div class="text' + last + '"><b>' + esc(event.title) + '</b><span class="small muted">' + esc(event.sub) + "</span></div>";
   });
-  html += '</div></section><section style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
-  for (const hour of day.hours.filter(item => item.hour >= 6 && item.hour <= 20 && item.hour % 2 === 0)) {
-    html += '<div><span class="muted">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + "<b>" + show(hour.temp, "°") + "</b><span" + (hour.gust >= 60 ? ' style="font-weight:700"' : "") + ">" + show(hour.gust) + "</span></div>";
+  html += '</div></section><section class="a-hours" style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
+  for (const hour of day.hours.filter(item => item.hour >= 6 && item.hour <= 20)) {
+    const strong = hour.gust >= 60;
+    html += "<div" + (hour.hour % 2 ? ' class="odd"' : "") + ' style="background:' + tempTint(hour.temp) + '"><span class="hh">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + "<b>" + show(hour.temp, "°") +
+      '</b><span class="gust"' + (strong ? ' style="font-weight:700"' : "") + ">" + (strong ? icon("gust", 14) : "") + show(hour.gust) + "</span></div>";
   }
-  return html + '</div><div class="small muted">' + esc(tr("hourLegend")) + "</div></section>";
+  return html + '</div><div class="small muted"><span class="only-narrow">' + esc(tr("hourLegend")) + '</span><span class="only-wide">' + esc(tr("hourLegendAll")) + "</span> " + esc(tr("hourColors")) + "</div></section>";
+}
+function tempTint(temp) {
+  if (temp === null || temp === undefined) return "#EFE8D8";
+  const steps = [[-15, "#BCD0E8"], [-10, "#CBDAEC"], [-5, "#DAE4EE"], [0, "#E8ECEC"], [5, "#F4EAD3"], [10, "#F7DFBD"], [15, "#F6D0A2"], [20, "#F3C08A"]];
+  for (const step of steps) if (temp < step[0]) return step[1];
+  return "#EFAD74";
 }
 function renderDetailsTab(day, avalanche, elevation) {
   const share = day.sunHours !== null && day.daylightHours ? Math.min(100, Math.round(100 * day.sunHours / day.daylightHours)) : 0;
   return '<section class="facts">' +
-    '<div><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours, " h") + '</b><div class="bar"><i style="width:' + share + '%"></i></div></div>' +
-    '<div><span class="small muted">' + esc(tr("sunrise")) + " / " + esc(tr("sunset")) + "</span><b>" + esc(show(day.sunrise)) + " / " + esc(show(day.sunset)) + "</b></div>" +
-    '<div><span class="small muted">' + esc(tr("temperature")) + "</span><b>" + show(day.tempMin, "°") + " " + esc(tr("to")) + " " + show(day.tempMax, "°C") + "</b></div>" +
-    '<div><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax, " km/h") + "</b></div>" +
-    '<div><span class="small muted">' + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
-    '<div><span class="small muted">' + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
-    (day.freezingMin !== null ? '<div><span class="small muted">' + esc(tr("freezing")) + "</span><b>" + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + esc(tr("to")) + " " + day.freezingMax : "") + " m</b></div>" : "") +
+    '<div><span class="small muted flabel">' + icon("sun", 16) + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours, " h") + '</b><div class="bar"><i style="width:' + share + '%"></i></div></div>' +
+    '<div><span class="small muted flabel">' + icon("sunrise", 16) + esc(tr("sunrise")) + " / " + esc(tr("sunset")) + "</span><b>" + esc(show(day.sunrise)) + " / " + esc(show(day.sunset)) + "</b></div>" +
+    '<div><span class="small muted flabel">' + icon("thermo", 16) + esc(tr("temperature")) + "</span><b>" + show(day.tempMin, "°") + " " + esc(tr("to")) + " " + show(day.tempMax, "°C") + "</b></div>" +
+    '<div><span class="small muted flabel">' + icon("wind", 16) + esc(tr("gusts")) + "</span><b>" + show(day.gustMax, " km/h") + "</b>" + (day.gustMax >= 75 ? '<span class="tag">' + esc(tr("stormGusts")) + "</span>" : "") + "</div>" +
+    '<div><span class="small muted flabel">' + icon("flake", 16) + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
+    '<div><span class="small muted flabel">' + icon("drop", 16) + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
+    (day.freezingMin !== null ? '<div><span class="small muted flabel">' + icon("zero", 16) + esc(tr("freezing")) + "</span><b>" + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + esc(tr("to")) + " " + day.freezingMax : "") + " m</b></div>" : "") +
     "</section>" + renderAvalancheBlock(avalanche, elevation);
 }
 function renderSpot(spot) {
