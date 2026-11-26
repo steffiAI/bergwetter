@@ -141,6 +141,8 @@
   #app { min-height:100vh; min-height:100dvh; }
   #app > footer { margin-top:auto; }
   #results .label { margin-top:8px; }
+  .sortrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .next button { grid-template-columns:minmax(0, 1.5fr) 26px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 30px; }
   #results button { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   @media screen and (max-width:999px) {
     .cols[data-tab="day"] .m-details, .cols[data-tab="details"] .m-day { display:none !important; }
@@ -258,10 +260,29 @@ const SEARCH_TEXT = {
   it: { kindPlace: "Località", kindPeak: "Montagna", kindPost: "CAP", footPost: "Ricerca per CAP: © i contributori di OpenStreetMap." }
 };
 for (const lang in SEARCH_TEXT) Object.assign(TEXT[lang], SEARCH_TEXT[lang]);
+const MORE2_TEXT = {
+  en: { footPost: "Postcode search: Zippopotam.us and © OpenStreetMap contributors.", sortBy: "Sort", sortCountry: "Country", sortKind: "Type", sortSun: "Sun", groupPeaks: "Mountains", groupPlaces: "Places", otherPlaces: "Other",
+    relTitle: "Reliability", rel3: "high", rel2: "medium", rel1: "low", relAgree: "The weather models agree.", relDiffer: "Models disagree on: {list}.", relFar: "Days further ahead are less certain in general.",
+    relNote: "Comparison of several weather models (including ECMWF, DWD, NOAA). An estimate, not a guarantee." },
+  de: { footPost: "PLZ-Suche: Zippopotam.us und © OpenStreetMap-Mitwirkende.", sortBy: "Sortieren", sortCountry: "Land", sortKind: "Art", sortSun: "Sonne", groupPeaks: "Berge", groupPlaces: "Orte", otherPlaces: "Weitere",
+    relTitle: "Verlässlichkeit", rel3: "hoch", rel2: "mittel", rel1: "gering", relAgree: "Die Wettermodelle sind sich einig.", relDiffer: "Modelle uneinig bei: {list}.", relFar: "Weiter entfernte Tage sind grundsätzlich unsicherer.",
+    relNote: "Vergleich mehrerer Wettermodelle (u. a. ECMWF, DWD, NOAA). Eine Einschätzung, keine Garantie." },
+  fr: { footPost: "Recherche par code postal : Zippopotam.us et © les contributeurs d'OpenStreetMap.", sortBy: "Trier", sortCountry: "Pays", sortKind: "Type", sortSun: "Soleil", groupPeaks: "Montagnes", groupPlaces: "Lieux", otherPlaces: "Autres",
+    relTitle: "Fiabilité", rel3: "élevée", rel2: "moyenne", rel1: "faible", relAgree: "Les modèles météo concordent.", relDiffer: "Désaccord des modèles sur : {list}.", relFar: "Les jours plus lointains sont en général plus incertains.",
+    relNote: "Comparaison de plusieurs modèles météo (dont ECMWF, DWD, NOAA). Une estimation, pas une garantie." },
+  it: { footPost: "Ricerca per CAP: Zippopotam.us e © i contributori di OpenStreetMap.", sortBy: "Ordina", sortCountry: "Paese", sortKind: "Tipo", sortSun: "Sole", groupPeaks: "Montagne", groupPlaces: "Località", otherPlaces: "Altri",
+    relTitle: "Affidabilità", rel3: "alta", rel2: "media", rel1: "bassa", relAgree: "I modelli meteo concordano.", relDiffer: "Modelli in disaccordo su: {list}.", relFar: "I giorni più lontani sono in generale più incerti.",
+    relNote: "Confronto tra più modelli meteo (tra cui ECMWF, DWD, NOAA). Una stima, non una garanzia." }
+};
+for (const lang in MORE2_TEXT) Object.assign(TEXT[lang], MORE2_TEXT[lang]);
+const COMPARE_MODELS = ["ecmwf_ifs025", "icon_seamless", "gfs_seamless"];
+function countryName(code, fallback) {
+  try { return (code && new Intl.DisplayNames([LOCALES[state.lang]], { type: "region" }).of(code)) || fallback || ""; } catch (error) { return fallback || code || ""; }
+}
 const NEAR_COUNTRIES = ["CH", "DE", "AT", "LI", "IT", "FR"];
 const HISTORY_URL = (typeof location !== "undefined" && location.pathname.indexOf("/neu/") >= 0 ? "../" : "") + "verlauf/lawinen.json";
 let historyDays = null, historyPromise = null;
-const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478 };
+const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478, cc: "CH", kind: "peak" };
 
 let state = { lang: "en", spots: [], cache: {} };
 function shownSpots() { return state.spots.length ? state.spots : [EXAMPLE_SPOT]; }
@@ -294,6 +315,10 @@ function geocodeUrl(query) {
   return "https://geocoding-api.open-meteo.com/v1/search?count=6&format=json&language=" + state.lang + "&name=" + encodeURIComponent(query);
 }
 function bulletinUrl(lang) { return "https://aws.slf.ch/api/bulletin/caaml/" + lang + "/geojson"; }
+function compareUrl(spot) {
+  return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon + (typeof spot.elevation === "number" ? "&elevation=" + Math.round(spot.elevation) : "") +
+    "&daily=temperature_2m_max,precipitation_sum,wind_gusts_10m_max,sunshine_duration&models=" + COMPARE_MODELS.join(",") + "&timezone=Europe%2FZurich&forecast_days=5";
+}
 function cloudUrl(spot) {
   const variables = CLOUD_LEVELS.map(level => "cloud_cover_" + level + "hPa").concat(CLOUD_LEVELS.map(level => "geopotential_height_" + level + "hPa"));
   return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon + "&hourly=" + variables.join(",") + "&models=icon_seamless&timezone=Europe%2FZurich&forecast_days=5";
@@ -483,7 +508,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.7";
+const VERSION = "0.8";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -597,14 +622,30 @@ function footer() {
   return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footPost")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
     ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · v' + VERSION + "</footer>";
 }
+function spotKind(spot) {
+  const forecast = (state.cache[spot.id] || {}).forecast, elevation = forecast && forecast.elevation !== null ? forecast.elevation : spot.elevation;
+  return spot.kind || (elevation >= 1500 ? "peak" : "place");
+}
+function homeGroups() {
+  const spots = shownSpots().slice(), mode = state.sort || "country", byName = (a, b) => a.name.localeCompare(b.name);
+  const sunOf = spot => (((state.cache[spot.id] || {}).forecast || { days: [{}] }).days[0] || {}).sunHours || 0;
+  if (mode === "sun") return [{ title: "", spots: spots.sort((a, b) => sunOf(b) - sunOf(a)) }];
+  if (mode === "kind") return [["peak", "groupPeaks"], ["place", "groupPlaces"]].map(item => ({ title: tr(item[1]), spots: spots.filter(spot => spotKind(spot) === item[0]).sort(byName) })).filter(group => group.spots.length);
+  const rank = code => { const index = NEAR_COUNTRIES.indexOf(code); return !code ? 99 : index < 0 ? 50 : index; }, codes = [];
+  spots.forEach(spot => { if (codes.indexOf(spot.cc || "") < 0) codes.push(spot.cc || ""); });
+  return codes.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map(code => ({ title: codes.length > 1 || code ? (code ? countryName(code) : tr("otherPlaces")) : "", spots: spots.filter(spot => (spot.cc || "") === code).sort(byName) }));
+}
 function renderHome() {
   let html = '<div class="homehead"><header class="row" style="flex-wrap:wrap-reverse;justify-content:space-between"><h1>' + esc(tr("favourites")) + "</h1>" + languageSwitch() + "</header>" +
     '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
     '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
   if (!state.spots.length) html += '<p class="muted" style="margin:0">' + esc(tr("empty")) + "</p>";
-  html += '</div><div class="cards">';
+  if (state.spots.length > 1) html += '<div class="sortrow"><span class="label">' + esc(tr("sortBy")) + '</span><div class="seg" role="group" aria-label="' + esc(tr("sortBy")) + '">' +
+    [["country", "sortCountry"], ["kind", "sortKind"], ["sun", "sortSun"]].map(item => '<button data-sort="' + item[0] + '" aria-pressed="' + ((state.sort || "country") === item[0]) + '">' + esc(tr(item[1])) + "</button>").join("") + "</div></div>";
+  html += "</div>";
   const sunniest = state.spots.map(spot => ({ id: spot.id, sun: (((state.cache[spot.id] || {}).forecast || { days: [{}] }).days[0] || {}).sunHours || 0 })).sort((a, b) => b.sun - a.sun)[0];
-  for (const spot of shownSpots()) {
+  const card = spot => {
+    let html = "";
     const entry = state.cache[spot.id] || {}, forecast = entry.forecast, today = forecast && forecast.days[0];
     const top = entry.avalanche && entry.avalanche.status === "ok" ? entry.avalanche.summary.top : null;
     html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + '<span class="row">' + (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + (state.spots.length > 1 && sunniest.sun > 0 && sunniest.id === spot.id ? '<span class="tag">' + esc(tr("mostSun")) + "</span>" : "") + chip(top) + "</span></span>" +
@@ -614,8 +655,10 @@ function renderHome() {
     if (forecast) html += '<span class="mini">' + forecast.days.map(item => '<span><span class="muted">' + esc(new Date(item.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short" })) + "</span>" +
       icon(dayKind(item), 24) + "<b>" + show(item.tempMax, "°") + "</b><span>" + show(item.sunHours, " h") + "</span></span>").join("") + "</span>";
     html += "</button>";
-  }
-  return html + "</div>" + footer();
+    return html;
+  };
+  for (const group of homeGroups()) html += (group.title ? '<div class="label">' + esc(group.title) + "</div>" : "") + '<div class="cards">' + group.spots.map(card).join("") + "</div>";
+  return html + footer();
 }
 function bulletinLink() {
   return '<a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener" title="' + esc(tr("newTab")) + '">' + esc(tr("avaFull")) + " ↗</a>";
@@ -674,10 +717,39 @@ function renderGear(day, avalanche, cloud) {
     (items.length ? '<ul class="gear">' + items.map(item => "<li>" + icon(item[0], 22) + "<span>" + esc(words[item[1]]) + "</span></li>").join("") + "</ul>" : '<div class="muted">' + esc(tr("gearNone")) + "</div>") +
     '<div class="small muted">' + esc(tr("gearNote")) + "</div></section>";
 }
-function renderOutlook(forecast, dayIndex) {
-  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("nextDays")) + '</div><div class="next">' + forecast.days.map((item, index) =>
-    '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '"><span>' + esc(dayLabel(item.date, index)) + "</span>" + icon(dayKind(item), 24) + "<span>" + show(item.tempMin, "°") + " / " + show(item.tempMax, "°") + "</span><span>" +
-    icon("sun", 16) + show(item.sunHours, " h") + "</span><span" + (item.gustMax >= 60 ? ' style="font-weight:700"' : "") + ">" + icon(item.gustMax >= 60 ? "gust" : "wind", 16) + show(item.gustMax) + "</span></button>").join("") + "</div></section>";
+function shapeCompare(json) {
+  const daily = json.daily || {}, pick = name => Object.keys(daily).filter(key => key === name || key.indexOf(name + "_") === 0).map(key => daily[key]);
+  return { dates: daily.time || [], temp: pick("temperature_2m_max"), precip: pick("precipitation_sum"), gust: pick("wind_gusts_10m_max"), sun: pick("sunshine_duration").map(list => list.map(value => value === null ? null : value / 3600)) };
+}
+// Agreement between the forecast and other weather models, as a rough measure of how certain a day is.
+function reliability(forecast, compare, index) {
+  const day = forecast.days[index], at = compare ? compare.dates.indexOf(day.date) : -1;
+  if (at < 0) return null;
+  const spread = (lists, own) => { const values = lists.map(list => list[at]).concat(own).filter(value => typeof value === "number"); return values.length > 1 ? { range: Math.max.apply(null, values) - Math.min.apply(null, values), max: Math.max.apply(null, values) } : null; };
+  const temp = spread(compare.temp, day.tempMax), precip = spread(compare.precip, day.precipMm), gust = spread(compare.gust, day.gustMax), sun = spread(compare.sun, day.sunHours), issues = [];
+  if (!temp && !precip && !gust && !sun) return null;
+  if (temp && temp.range > 3) issues.push("temperature");
+  if (precip && precip.range > Math.max(3, precip.max * 0.6)) issues.push("precipitation");
+  if (gust && gust.range > 25) issues.push("gusts");
+  if (sun && sun.range > 4) issues.push("sunshine");
+  let level = 3 - Math.min(2, issues.length);
+  if (index >= 3) level = Math.min(level, 2);
+  return { level, issues };
+}
+function dots(level) {
+  return '<svg role="img" aria-label="' + esc(tr("relTitle") + ": " + tr("rel" + level)) + '" width="28" height="10" viewBox="0 0 28 10">' + [0, 1, 2].map(index =>
+    '<circle cx="' + (5 + index * 9) + '" cy="5" r="3.4" fill="' + (index < level ? "#1B2A4A" : "none") + '" stroke="#1B2A4A" stroke-width="1.2"/>').join("") + "</svg>";
+}
+function renderOutlook(forecast, dayIndex, compare) {
+  const chosen = reliability(forecast, compare, dayIndex);
+  const verdict = chosen ? '<div class="note"><b>' + esc(tr("relTitle")) + " " + esc(dayLabel(forecast.days[dayIndex].date, dayIndex)) + ": " + esc(tr("rel" + chosen.level)) + ".</b> " +
+    esc(chosen.issues.length ? tr("relDiffer", { list: chosen.issues.map(key => tr(key)).join(", ") }) : tr("relAgree")) + (dayIndex >= 3 ? " " + esc(tr("relFar")) : "") +
+    '<div class="small muted" style="margin-top:4px">' + esc(tr("relNote")) + "</div></div>" : "";
+  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("nextDays")) + '</div><div class="next">' + forecast.days.map((item, index) => {
+    const rating = reliability(forecast, compare, index);
+    return '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '"><span>' + esc(dayLabel(item.date, index)) + "</span>" + icon(dayKind(item), 24) + "<span>" + show(item.tempMin, "°") + " / " + show(item.tempMax, "°") + "</span><span>" +
+      icon("sun", 16) + show(item.sunHours, " h") + "</span><span" + (item.gustMax >= 60 ? ' style="font-weight:700"' : "") + ">" + icon(item.gustMax >= 60 ? "gust" : "wind", 16) + show(item.gustMax) + "</span>" + (rating ? dots(rating.level) : "<span></span>") + "</button>";
+  }).join("") + "</div>" + verdict + "</section>";
 }
 function renderCloudSection(day, cloud) {
   const segments = cloudSegments(day, cloud);
@@ -743,7 +815,7 @@ function renderSpot(spot) {
   html += '<div class="pills">' + forecast.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
   const dayParts = renderDayTab(day, entry.avalanche, entry.cloud).split("<!--hours-->"), detailParts = renderDetailsTab(day, entry.avalanche, forecast.elevation, spot).split("<!--ava-->");
   return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col">' + detailParts[0] + dayParts[0] +
-    '</div><div class="col">' + renderOutlook(forecast, dayIndex) + detailParts[1] + '</div><div class="col col-wide">' + dayParts[1] + "</div></div>" +
+    '</div><div class="col">' + renderOutlook(forecast, dayIndex, entry.compare) + detailParts[1] + '</div><div class="col col-wide">' + dayParts[1] + "</div></div>" +
     '<div class="actions"><button data-print="' + esc(spot.id) + '">' + esc(tr("print")) + '</button><button data-share="' + esc(spot.id) + '">' + esc(tr("share")) + "</button></div>" + footer();
 }
 function reportDay(spot) {
@@ -854,7 +926,7 @@ function render() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {} };
+    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {}, sort: saved.sort || "country" };
   } catch (error) { /* start empty */ }
   for (const id in state.cache) if (state.cache[id].forecast && state.cache[id].forecast.days.some(day => !day.hours || (day.hours[0] && day.hours[0].isDay === undefined))) delete state.cache[id];
 }
@@ -880,6 +952,24 @@ async function loadCloud(spot, entry) {
     if (!document.querySelector("#results button, #q:focus")) render();
   } catch (error) { /* keep the last saved cloud data */ }
 }
+async function loadCompare(spot, entry) {
+  try {
+    entry.compare = shapeCompare(await fetchJson(compareUrl(spot)));
+    saveState();
+    if (!document.querySelector("#results button, #q:focus")) render();
+  } catch (error) { /* reliability is simply not shown */ }
+}
+// One-time lookup of the country for favourites saved before countries were stored.
+async function fillCountry(spot) {
+  if (spot === EXAMPLE_SPOT || spot.cc || spot.ccTried) return;
+  spot.ccTried = true;
+  try {
+    const json = await fetchJson("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=3&lat=" + spot.lat + "&lon=" + spot.lon);
+    spot.cc = String((json.address || {}).country_code || "").toUpperCase() || undefined;
+  } catch (error) { /* stays ungrouped */ }
+  saveState();
+  if (!document.querySelector("#results button, #q:focus")) render();
+}
 function hasValues(json) {
   return !!(json && json.hourly && (json.hourly.temperature_2m || []).some(value => value !== null && value !== undefined));
 }
@@ -899,6 +989,8 @@ async function refreshSpot(spot) {
   entry.error = false;
   try { entry.forecast = await loadForecast(spot); } catch (error) { entry.error = true; }
   if (entry.forecast && entry.forecast.elevation !== null) loadCloud(spot, entry);
+  if (entry.forecast) loadCompare(spot, entry);
+  fillCountry(spot);
   try {
     const bulletin = await getBulletin(state.lang);
     if (!bulletin.features || !bulletin.features.length) entry.avalanche = { status: "none" };
@@ -907,8 +999,10 @@ async function refreshSpot(spot) {
   saveState();
   if (!document.querySelector("#results button, #q:focus")) render();
 }
-function addSpot(name, lat, lon, elevation) {
+function addSpot(name, lat, lon, elevation, place) {
   const spot = { id: "s" + Date.now(), name, lat, lon };
+  if (place && place.country_code) spot.cc = place.country_code;
+  if (place) spot.kind = !place.postcode && placeKind(place) === tr("kindPeak") ? "peak" : "place";
   if (typeof elevation === "number") spot.elevation = elevation;
   state.spots.unshift(spot); saveState(); render(); refreshSpot(spot);
 }
@@ -933,41 +1027,70 @@ function renderResults() {
   searchResults = searchResults.map((place, index) => ({ place, index })).sort((a, b) => rank(a.place) - rank(b.place) || a.index - b.index).map(item => item.place);
   let html = "", country = null;
   searchResults.forEach((place, index) => {
-    if (place.country !== country) { country = place.country; html += '<div class="label">' + esc(country || "") + "</div>"; }
+    const land = countryName(place.country_code, place.country);
+    if (land !== country) { country = land; html += '<div class="label">' + esc(country) + "</div>"; }
     html += '<button type="button" data-pick="' + index + '">' + (placeKind(place) === tr("kindPeak") ? icon("peak_clear", 20) : "") + "<span>" + esc(place.name) + '</span><span class="small muted">' +
       esc([placeKind(place), place.admin1, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>";
   });
   return html;
 }
-async function onSearch(event) {
+async function zipLookup(code) {
+  const countries = code.length === 5 ? ["DE", "IT", "FR"] : ["CH", "AT", "LI"], places = [];
+  const answers = await Promise.all(countries.map(country => fetchJson("https://api.zippopotam.us/" + country.toLowerCase() + "/" + code).catch(() => null)));
+  answers.forEach((answer, index) => ((answer && answer.places) || []).slice(0, 5).forEach(item => places.push({ name: item["place name"], latitude: Number(item.latitude), longitude: Number(item.longitude),
+    admin1: item.state, country_code: countries[index], postcode: code })));
+  return places.filter(place => place.name && isFinite(place.latitude) && isFinite(place.longitude));
+}
+// submit: the user pressed the button. OpenStreetMap's search may only be asked then, not while typing.
+async function findPlaces(query, submit) {
+  const lookup = async text => (await fetchJson(geocodeUrl(text))).results || [], mixed = /^(\d{4,5})\s+(.+)$/.exec(query), code = (/^(\d{4,5})(\s|$)/.exec(query) || [])[1];
+  let byCode = [];
+  if (code) byCode = await zipLookup(code).catch(() => []);
+  if (code && !byCode.length && submit) byCode = await postcodeLookup(code).catch(() => []);
+  if (byCode.length) return byCode;
+  let places = await lookup(query);
+  if (!places.length && mixed) places = await lookup(mixed[2]);
+  return places;
+}
+let searchRun = 0, searchTimer = null;
+async function showPlaces(query, submit) {
+  const results = document.getElementById("results"), run = ++searchRun;
+  if (submit) results.innerHTML = '<p class="muted" style="margin:0">' + esc(tr("searching")) + "</p>";
+  try {
+    const places = await findPlaces(query, submit), input = document.getElementById("q");
+    if (run !== searchRun || !input || input.value.trim() !== query) return;
+    searchResults = places;
+    results.innerHTML = places.length ? renderResults() : submit ? '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>" : "";
+  } catch (error) { if (submit && run === searchRun) results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
+}
+function onSearch(event) {
   event.preventDefault();
-  const input = document.getElementById("q"), results = document.getElementById("results"), query = input.value.trim();
+  clearTimeout(searchTimer);
+  const query = document.getElementById("q").value.trim();
   if (!query) return;
   const coordinates = parseCoordinates(query);
   if (coordinates) return addSpot(coordinates.lat.toFixed(3) + ", " + coordinates.lon.toFixed(3), coordinates.lat, coordinates.lon);
-  results.innerHTML = '<p class="muted" style="margin:0">' + esc(tr("searching")) + "</p>";
-  try {
-    const lookup = async text => (await fetchJson(geocodeUrl(text))).results || [], mixed = /^(\d{4,5})\s+(.+)$/.exec(query), code = (/^(\d{4,5})(\s|$)/.exec(query) || [])[1];
-    let byCode = [];
-    if (code) { try { byCode = await postcodeLookup(code); } catch (error) { byCode = []; } }
-    let places = await lookup(query);
-    if (!places.length && mixed) places = await lookup(mixed[2]);
-    searchResults = byCode.concat(places.filter(place => !byCode.some(hit => hit.name === place.name && hit.country_code === place.country_code)));
-    results.innerHTML = searchResults.length ? renderResults() : '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>";
-  } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
+  showPlaces(query, true);
+}
+function onType(value) {
+  clearTimeout(searchTimer);
+  const query = value.trim();
+  if (query.length < 3 || parseCoordinates(query)) { searchRun++; document.getElementById("results").innerHTML = ""; return; }
+  searchTimer = setTimeout(() => showPlaces(query, false), 350);
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  const target = event.target.closest("[data-lang],[data-sort],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
   if (!target) return;
   const data = target.dataset;
   if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
+  else if (data.sort) { state.sort = data.sort; saveState(); render(); }
   else if (data.open) { location.hash = "spot-" + data.open; }
   else if (data.home) { location.hash = ""; }
   else if (data.tab) { view.tab = data.tab; render(); }
   else if (data.day) { view.day = Number(data.day); render(); }
   else if (data.remove) { state.spots = state.spots.filter(spot => spot.id !== data.remove); delete state.cache[data.remove]; saveState(); location.hash = ""; render(); if (!state.spots.length) refreshSpot(EXAMPLE_SPOT); }
   else if (data.print || data.share) { const spot = findSpot(data.print || data.share); if (spot) (data.print ? printReport : shareReport)(spot); }
-  else if (data.pick) { const place = searchResults[Number(data.pick)]; addSpot(place.name, place.latitude, place.longitude, place.elevation); }
+  else if (data.pick) { const place = searchResults[Number(data.pick)]; addSpot(place.name, place.latitude, place.longitude, place.elevation, place); }
 }
 function onHash() {
   const match = /^#spot-(.+)$/.exec(location.hash);
@@ -980,6 +1103,7 @@ function init() {
   loadState();
   document.addEventListener("click", onClick);
   document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); });
+  document.addEventListener("input", event => { if (event.target.id === "q") onType(event.target.value); });
   window.addEventListener("hashchange", onHash);
   onHash();
   loadHistory();
