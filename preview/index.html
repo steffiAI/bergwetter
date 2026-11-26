@@ -134,6 +134,7 @@
   .wtrack .mark { top:-3px; height:18px; width:1.5px; border-radius:0; background:var(--navy); opacity:0.55; }
   .overtext { color:var(--orange); font-weight:600; }
   .wblock { display:grid; grid-template-columns:78px 24px minmax(0, 1fr); column-gap:10px; align-items:start; font-size:14px; }
+  .photo { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; background:#F6F1E7; }
   .wsketch { display:grid; grid-template-columns:120px minmax(0, 1fr); gap:12px; align-items:center; font-size:14px; }
   .limitrow { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--line); padding:10px 0 4px; }
   .stepper { display:inline-flex; align-items:center; gap:10px; }
@@ -419,7 +420,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.7";
+const VERSION = "0.8";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -860,6 +861,14 @@ function flagIcon(kind) {
   const shapes = { warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.4v.2"/>', turn: '<path d="M5 15a7 7 0 0 1 12-5l2 2"/><path d="M19 7v5h-5"/>', dark: '<path d="M17.5 14.5A7 7 0 0 1 9.5 6.5a7 7 0 1 0 8 8z"/>', info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.8v.2"/>' };
   return open + shapes[kind] + "</svg>";
 }
+// Pen illustration for the Simple view: calm, strong wind, or a kite/windsurf lake. Other forces keep the drawn sea.
+function seaPhoto(force, spot) {
+  let name = "";
+  if (force <= 3) name = "calm";
+  else if (force >= 6) name = "storm";
+  else if (spot.kind === "kite" || spot.kind === "windsurf") name = "kite";
+  return name ? '<img class="photo" src="img/' + name + '.jpg" alt="" loading="lazy" decoding="async">' : "";
+}
 function seaSketch(force) {
   let paths = "", foam = "";
   const rows = 4, height = 96, amplitude = 0.6 + force * 1.15, length = Math.max(34, 78 - force * 4);
@@ -965,7 +974,7 @@ function simpleBody(day, spot, sea) {
   const found = bestWindow(day, spot), strong = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null), force = beaufort(strong.wind);
   const headline = found ? tr("sGood", { a: found.from, b: found.to }) + (found.after === "over" ? " " + tr("sAfterWindy") : found.after === "under" ? " " + tr("sAfterLittle") : "") : windowTitle(day, spot);
   let html = '<section style="font-size:22px;font-weight:600;line-height:1.25">' + esc(headline) + "</section>" +
-    '<section class="stack" style="gap:8px">' + seaSketch(force) + '<div style="font-size:13px"><b>Beaufort ' + force + ", " + esc(tr("bft")[force]) + ".</b> " + esc(tr("seaLook")[force]) + ' <span class="muted">' + esc(tr("sketchNote", { b: force })) + ".</span></div></section>" +
+    '<section class="stack" style="gap:8px">' + (seaPhoto(force, spot) || seaSketch(force)) + '<div style="font-size:13px"><b>Beaufort ' + force + ", " + esc(tr("bft")[force]) + ".</b> " + esc(tr("seaLook")[force]) + ' <span class="muted">' + esc(tr("sketchNote", { b: force })) + ".</span></div></section>" +
     waterTiles(day, sea) + windowSection(day, spot, false) + '<section class="stack" style="gap:14px"><div class="label">' + esc(tr("dayWater")) + "</div>";
   for (const part of [[6, 9], [10, 13], [14, 17], [18, 20]]) {
     const hours = dayHours(day).filter(hour => hour.hour >= part[0] && hour.hour <= part[1]);
@@ -1161,7 +1170,8 @@ function coastSection(day, spot) {
   if (spot.kind !== "sail") return "";
   const strong = dayHours(day).reduce((best, hour) => !best || hour.wind > best.wind ? hour : best, null), text = strong && coastText(spot, strong.dir);
   if (!text) return "";
-  return '<section class="stack"><div class="label">' + esc(tr("coastTitle")) + '</div><div class="summary" style="gap:14px">' + coastDiagram(spot, strong.dir, text.kind) + '<span><b style="font-size:17px;font-weight:600' + (text.kind === "land" ? "" : ";color:#E8762B") + '">' + esc(text.title) +
+  const leeImage = text.kind === "lee" ? '<img class="photo" src="img/lee.jpg" alt="" loading="lazy" decoding="async">' : "";
+  return '<section class="stack"><div class="label">' + esc(tr("coastTitle")) + '</div>' + leeImage + '<div class="summary" style="gap:14px">' + coastDiagram(spot, strong.dir, text.kind) + '<span><b style="font-size:17px;font-weight:600' + (text.kind === "land" ? "" : ";color:#E8762B") + '">' + esc(text.title) +
     "</b><br>" + esc(text.sub) + '</span></div><div class="small muted">' + esc(tr("coastNote")) + "</div></section>";
 }
 
