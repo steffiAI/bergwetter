@@ -9,7 +9,7 @@ Mountain weather, sun and avalanche danger for your own places, on one page. No 
 ## What it does
 
 - **Weather per place:** temperature, sun hours, wind and gusts, new snow, hour by hour and for the coming days
-- **Avalanche danger (Switzerland):** danger level, affected aspects and altitudes, avalanche problems, and how the danger changed over the last days
+- **Avalanche danger:** danger level, affected aspects and altitudes and avalanche problems for Switzerland, Tyrol, South Tyrol, Trentino, the rest of Austria, Bavaria, northern Italy and Slovenia, whenever the regional service has a bulletin out. For Switzerland also how the danger changed over the last days
 - **How reliable is the forecast:** compares several weather models and says how well they agree
 - **The last 7 days:** past weather and snow depth, to judge conditions before a tour
 - **Equipment tips** that fit the forecast
@@ -25,7 +25,8 @@ Works on phone and computer, and can be added to the home screen.
 | Data | Source |
 | --- | --- |
 | Forecast | MeteoSwiss ICON-CH models via [Open-Meteo](https://open-meteo.com/); outside that area the best model Open-Meteo offers |
-| Avalanche bulletin | [WSL Institute for Snow and Avalanche Research SLF](https://www.slf.ch/) |
+| Avalanche bulletin, Switzerland | [WSL Institute for Snow and Avalanche Research SLF](https://www.slf.ch/) |
+| Avalanche bulletins, rest of the Alps | the regional warning services of the [EAWS](https://www.avalanches.org/), collected via [avalanche.report](https://avalanche.report/) |
 | Place search | Open-Meteo Geocoding, Zippopotam.us, © OpenStreetMap contributors (Nominatim) |
 
 The bulletin and the forecast do not replace your own assessment on site.
@@ -42,8 +43,9 @@ One HTML file with plain JavaScript, no build step and no dependencies.
 | --- | --- |
 | `index.html` | the whole app |
 | `sw.js`, `manifest.json` | offline use and home-screen install |
-| `scripts/`, `.github/workflows/` | daily snapshot of the avalanche bulletin |
-| `verlauf/lawinen.json` | the saved snapshots (avalanche danger over time) |
+| `scripts/`, `.github/workflows/` | scheduled jobs that collect the avalanche bulletins |
+| `verlauf/lawinen.json` | daily snapshots for Switzerland (avalanche danger over time) |
+| `verlauf/alpen.json` | current bulletins for the rest of the Alps |
 | `neu/` | test copy for new features |
 
 Run it locally:
