@@ -142,6 +142,11 @@
   #app > footer { margin-top:auto; }
   #results .label { margin-top:8px; }
   .sortrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .finder { display:flex; flex-direction:column; gap:14px; border-top:1px solid var(--line); padding-top:24px; }
+  .finder form { max-width:640px; }
+  .found { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px; }
+  .found > div { border:1.2px solid var(--navy); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .found b { font-size:18px; font-weight:600; }
   .ghost { height:44px; padding:0 14px; border:1.2px solid var(--navy); border-radius:99px; background:none; font-size:13px; }
   .hero { display:block; width:100%; height:clamp(150px, 30vw, 400px); border-radius:16px; }
   .fact { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
@@ -295,6 +300,42 @@ const UNIT_TEXT = {
   it: { unitsTitle: "Unità", unitWind: "Vento", unitLen: "Quota e neve", hourLabel: "Ora", miniLegend: "Temperatura massima · ore di sole" }
 };
 for (const lang in UNIT_TEXT) Object.assign(TEXT[lang], UNIT_TEXT[lang]);
+const FINDER_TEXT = {
+  en: { finderTitle: "Find the sun", premiumTag: "Premium preview", finderStart: "Start, e.g. Munich or 80331", finderTime: "Travel time", finderCar: "Car", finderTransit: "Public transport", finderDay: "Day", finderGo: "Search", finderNone: "No known place within this reach.", finderFrom: "From {name}: the sunniest places within about {km} km", finderAdd: "Add to favourites",
+    finderNote: "Travel time is a rough estimate from the straight-line distance (car about 50 km/h, public transport about 35 km/h). Chosen from about 130 known places in the Alps." },
+  de: { finderTitle: "Sonne finden", premiumTag: "Premium-Vorschau", finderStart: "Startort, z. B. München oder 80331", finderTime: "Fahrzeit", finderCar: "Auto", finderTransit: "ÖV", finderDay: "Tag", finderGo: "Sonne suchen", finderNone: "Kein bekannter Ort in dieser Reichweite.", finderFrom: "Ab {name}: die sonnigsten Orte im Umkreis von etwa {km} km", finderAdd: "Zu Favoriten",
+    finderNote: "Fahrzeit grob aus der Luftlinie geschätzt (Auto etwa 50 km/h, ÖV etwa 35 km/h). Auswahl aus rund 130 bekannten Orten im Alpenraum." },
+  fr: { finderTitle: "Trouver le soleil", premiumTag: "Aperçu premium", finderStart: "Départ, p. ex. Munich ou 80331", finderTime: "Temps de trajet", finderCar: "Voiture", finderTransit: "Transports publics", finderDay: "Jour", finderGo: "Chercher", finderNone: "Aucun lieu connu à cette distance.", finderFrom: "Depuis {name} : les lieux les plus ensoleillés dans un rayon d'environ {km} km", finderAdd: "Ajouter aux favoris",
+    finderNote: "Temps de trajet estimé grossièrement à vol d'oiseau (voiture env. 50 km/h, transports publics env. 35 km/h). Choix parmi environ 130 lieux connus des Alpes." },
+  it: { finderTitle: "Trova il sole", premiumTag: "Anteprima premium", finderStart: "Partenza, p. es. Monaco o 80331", finderTime: "Tempo di viaggio", finderCar: "Auto", finderTransit: "Mezzi pubblici", finderDay: "Giorno", finderGo: "Cerca", finderNone: "Nessun luogo noto a questa distanza.", finderFrom: "Da {name}: i luoghi più soleggiati nel raggio di circa {km} km", finderAdd: "Aggiungi ai preferiti",
+    finderNote: "Tempo di viaggio stimato in modo approssimativo in linea d'aria (auto circa 50 km/h, mezzi pubblici circa 35 km/h). Scelta tra circa 130 luoghi noti delle Alpi." }
+};
+for (const lang in FINDER_TEXT) Object.assign(TEXT[lang], FINDER_TEXT[lang]);
+// name, latitude, longitude, country, m = mountain
+const DESTINATIONS = [
+  ["Zermatt", 46.02, 7.75, "CH"], ["Saas-Fee", 46.11, 7.93, "CH"], ["Verbier", 46.10, 7.23, "CH"], ["Crans-Montana", 46.31, 7.48, "CH"], ["Leukerbad", 46.38, 7.63, "CH"], ["Grindelwald", 46.62, 8.03, "CH"], ["Wengen", 46.61, 7.92, "CH"],
+  ["Mürren", 46.56, 7.89, "CH"], ["Adelboden", 46.49, 7.56, "CH"], ["Gstaad", 46.47, 7.29, "CH"], ["Kandersteg", 46.49, 7.67, "CH"], ["Interlaken", 46.69, 7.86, "CH"], ["Engelberg", 46.82, 8.40, "CH"], ["Andermatt", 46.64, 8.59, "CH"],
+  ["Davos", 46.80, 9.84, "CH"], ["Klosters", 46.87, 9.88, "CH"], ["Arosa", 46.78, 9.68, "CH"], ["Lenzerheide", 46.73, 9.56, "CH"], ["St. Moritz", 46.50, 9.84, "CH"], ["Pontresina", 46.49, 9.90, "CH"], ["Scuol", 46.80, 10.30, "CH"],
+  ["Flims", 46.84, 9.28, "CH"], ["Disentis", 46.70, 8.85, "CH"], ["Braunwald", 46.94, 9.00, "CH"], ["Säntis", 47.249, 9.343, "CH", "m"], ["Rigi", 47.057, 8.485, "CH", "m"], ["Pilatus", 46.979, 8.255, "CH", "m"], ["Titlis", 46.772, 8.438, "CH", "m"],
+  ["Jungfraujoch", 46.547, 7.985, "CH", "m"], ["Lugano", 46.00, 8.95, "CH"], ["Locarno", 46.17, 8.80, "CH"], ["Bellinzona", 46.19, 9.02, "CH"], ["Luzern", 47.05, 8.31, "CH"], ["Zürich", 47.37, 8.54, "CH"], ["Bern", 46.95, 7.45, "CH"],
+  ["Chur", 46.85, 9.53, "CH"], ["Sion", 46.23, 7.36, "CH"], ["Montreux", 46.43, 6.91, "CH"], ["Genf", 46.20, 6.14, "CH"], ["Appenzell", 47.33, 9.41, "CH"], ["Les Diablerets", 46.35, 7.16, "CH"], ["Villars", 46.30, 7.05, "CH"],
+  ["Champéry", 46.18, 6.87, "CH"], ["Bettmeralp", 46.39, 8.06, "CH"], ["Airolo", 46.53, 8.61, "CH"], ["San Bernardino", 46.46, 9.19, "CH"], ["Samnaun", 46.94, 10.36, "CH"], ["Müstair", 46.63, 10.45, "CH"],
+  ["Garmisch-Partenkirchen", 47.49, 11.10, "DE"], ["Mittenwald", 47.44, 11.26, "DE"], ["Oberstdorf", 47.41, 10.28, "DE"], ["Berchtesgaden", 47.63, 13.00, "DE"], ["Tegernsee", 47.71, 11.76, "DE"], ["Schliersee", 47.74, 11.86, "DE"],
+  ["Bayrischzell", 47.67, 12.01, "DE"], ["Lenggries", 47.68, 11.57, "DE"], ["Oberammergau", 47.60, 11.07, "DE"], ["Füssen", 47.57, 10.70, "DE"], ["Bad Tölz", 47.76, 11.56, "DE"], ["Ruhpolding", 47.76, 12.65, "DE"],
+  ["Reit im Winkl", 47.68, 12.47, "DE"], ["Zugspitze", 47.421, 10.985, "DE", "m"], ["Wendelstein", 47.703, 12.012, "DE", "m"], ["Walchensee", 47.59, 11.32, "DE"], ["Kochel am See", 47.66, 11.37, "DE"], ["Bad Hindelang", 47.50, 10.37, "DE"],
+  ["Oberstaufen", 47.55, 10.02, "DE"], ["Feldberg (Schwarzwald)", 47.874, 8.004, "DE", "m"], ["München", 48.14, 11.58, "DE"], ["Lindau", 47.55, 9.69, "DE"], ["Freiburg", 47.99, 7.85, "DE"], ["Konstanz", 47.66, 9.18, "DE"],
+  ["Innsbruck", 47.27, 11.39, "AT"], ["Seefeld in Tirol", 47.33, 11.19, "AT"], ["Kufstein", 47.58, 12.17, "AT"], ["Kitzbühel", 47.45, 12.39, "AT"], ["St. Johann in Tirol", 47.52, 12.42, "AT"], ["Ellmau", 47.51, 12.30, "AT"],
+  ["Mayrhofen", 47.17, 11.86, "AT"], ["Sölden", 46.97, 11.01, "AT"], ["Obergurgl", 46.87, 11.03, "AT"], ["Ischgl", 47.01, 10.29, "AT"], ["St. Anton am Arlberg", 47.13, 10.27, "AT"], ["Lech", 47.21, 10.14, "AT"], ["Ehrwald", 47.40, 10.92, "AT"],
+  ["Pertisau am Achensee", 47.44, 11.70, "AT"], ["Zell am See", 47.32, 12.80, "AT"], ["Kaprun", 47.27, 12.76, "AT"], ["Saalbach", 47.39, 12.64, "AT"], ["Bad Gastein", 47.11, 13.13, "AT"], ["Schladming", 47.39, 13.69, "AT"],
+  ["Obertauern", 47.25, 13.56, "AT"], ["Salzburg", 47.80, 13.04, "AT"], ["Bregenz", 47.50, 9.75, "AT"], ["Schruns", 47.08, 9.92, "AT"], ["Heiligenblut", 47.04, 12.84, "AT"], ["Lienz", 46.83, 12.77, "AT"],
+  ["Matrei in Osttirol", 47.00, 12.54, "AT"], ["Neustift im Stubaital", 47.11, 11.31, "AT"], ["Hintertux", 47.11, 11.68, "AT"],
+  ["Bozen", 46.50, 11.35, "IT"], ["Meran", 46.67, 11.16, "IT"], ["Brixen", 46.72, 11.66, "IT"], ["Bruneck", 46.80, 11.94, "IT"], ["Sterzing", 46.90, 11.43, "IT"], ["Cortina d'Ampezzo", 46.54, 12.14, "IT"], ["St. Ulrich in Gröden", 46.57, 11.67, "IT"],
+  ["Corvara", 46.55, 11.87, "IT"], ["Sexten", 46.70, 12.35, "IT"], ["Sulden", 46.52, 10.59, "IT"], ["Livigno", 46.54, 10.14, "IT"], ["Bormio", 46.47, 10.37, "IT"], ["Aosta", 45.74, 7.32, "IT"], ["Courmayeur", 45.79, 6.97, "IT"],
+  ["Cervinia", 45.93, 7.63, "IT"], ["Riva del Garda", 45.89, 10.84, "IT"], ["Como", 45.81, 9.08, "IT"], ["Trento", 46.07, 11.12, "IT"],
+  ["Chamonix", 45.92, 6.87, "FR"], ["Annecy", 45.90, 6.13, "FR"], ["Megève", 45.86, 6.62, "FR"], ["Morzine", 46.18, 6.71, "FR"], ["Val d'Isère", 45.45, 6.98, "FR"], ["Bourg-Saint-Maurice", 45.62, 6.77, "FR"], ["Grenoble", 45.19, 5.72, "FR"],
+  ["Briançon", 44.90, 6.64, "FR"], ["Alpe d'Huez", 45.09, 6.07, "FR"], ["Malbun", 47.10, 9.61, "LI"], ["Vaduz", 47.14, 9.52, "LI"], ["Bled", 46.37, 14.11, "SI"], ["Kranjska Gora", 46.48, 13.79, "SI"]
+];
+const finder = { query: "", hours: 2, mode: "car", day: 0, start: "", reach: 0, results: null, busy: false, error: "" };
 const APP_NAME = { de: "Bergwetter", fr: "Météo de montagne", it: "Meteo di montagna", en: "Mountain Weather" };
 const WIND_UNITS = { kmh: ["km/h", 1], ms: ["m/s", 1 / 3.6], kn: ["kn", 1 / 1.852], mph: ["mph", 1 / 1.609344] };
 const COMPARE_MODELS = ["ecmwf_ifs025", "icon_seamless", "gfs_seamless"];
@@ -556,7 +597,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.10";
+const VERSION = "0.11";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -706,6 +747,57 @@ function hero() {
   return '<svg class="hero" viewBox="0 120 1916 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(APP_NAME[state.lang] || APP_NAME.de) + '"><image href="winter.jpg" x="0" y="0" width="1916" height="821"/>' + extras +
     '<text x="250" y="262" font-size="' + ((APP_NAME[state.lang] || "").length > 12 ? 68 : 84) + '" font-weight="300" letter-spacing="-2" fill="#1B2A4A">' + esc(APP_NAME[state.lang] || APP_NAME.de) + "</text></svg>";
 }
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const rad = Math.PI / 180, a = Math.sin((lat2 - lat1) * rad / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin((lon2 - lon1) * rad / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(a));
+}
+async function runFinder() {
+  const input = document.getElementById("fq");
+  if (input) finder.query = input.value.trim();
+  if (!finder.query) return;
+  finder.busy = true; finder.error = ""; finder.results = null; render();
+  try {
+    const point = parseCoordinates(finder.query);
+    const start = point ? { name: finder.query, latitude: point.lat, longitude: point.lon } : (await findPlaces(finder.query, true))[0];
+    if (!start) throw new Error("nothing");
+    const speed = finder.mode === "car" ? 50 : 35, reach = finder.hours * speed;
+    const near = DESTINATIONS.map(place => ({ place, km: distanceKm(start.latitude, start.longitude, place[1], place[2]) })).filter(item => item.km <= reach && item.km >= 3).sort((a, b) => a.km - b.km).slice(0, 80);
+    finder.start = start.name; finder.reach = reach; finder.results = [];
+    if (near.length) {
+      const json = await fetchJson("https://api.open-meteo.com/v1/forecast?latitude=" + near.map(item => item.place[1]).join(",") + "&longitude=" + near.map(item => item.place[2]).join(",") +
+        "&daily=sunshine_duration,temperature_2m_max&timezone=Europe%2FZurich&forecast_days=5");
+      const list = Array.isArray(json) ? json : [json];
+      finder.results = near.map((item, index) => {
+        const daily = (list[index] || {}).daily || {};
+        return { name: item.place[0], lat: item.place[1], lon: item.place[2], cc: item.place[3], kind: item.place[4] === "m" ? "peak" : "place", km: Math.round(item.km), time: Math.max(0.5, Math.round(item.km / speed * 2) / 2),
+          sun: (daily.sunshine_duration || []).map(value => value === null ? null : round(value / 3600, 1)), temp: (daily.temperature_2m_max || []).map(value => value === null ? null : Math.round(value)) };
+      });
+    }
+  } catch (error) { finder.error = tr(error.message === "nothing" ? "nothing" : "searchFailed"); }
+  finder.busy = false; render();
+}
+function finderList() {
+  const day = finder.day;
+  return finder.results.slice().sort((a, b) => (b.sun[day] || 0) - (a.sun[day] || 0) || a.km - b.km).slice(0, 6);
+}
+function renderFinder() {
+  const seg = (attr, options, chosen) => '<div class="seg" role="group">' + options.map(option => '<button type="button" data-' + attr + '="' + option[0] + '" aria-pressed="' + (String(chosen) === String(option[0])) + '">' + esc(option[1]) + "</button>").join("") + "</div>";
+  const dates = [0, 1, 2, 3, 4].map(offset => { const date = new Date(Date.now() + offset * 86400000); return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0"); });
+  let html = '<section class="finder"><div class="sortrow"><h2>' + esc(tr("finderTitle")) + '</h2><span class="tag">' + esc(tr("premiumTag")) + "</span></div>" +
+    '<form id="finder"><input id="fq" value="' + esc(finder.query) + '" placeholder="' + esc(tr("finderStart")) + '" aria-label="' + esc(tr("finderStart")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("finderGo")) + "</button></form>" +
+    '<div class="sortrow"><span class="label">' + esc(tr("finderTime")) + "</span>" + seg("fh", [[1, "1 h"], [2, "2 h"], [3, "3 h"]], finder.hours) + seg("fm", [["car", tr("finderCar")], ["transit", tr("finderTransit")]], finder.mode) + "</div>" +
+    '<div class="sortrow"><span class="label">' + esc(tr("finderDay")) + "</span>" + seg("fd", dates.map((date, index) => [index, dayLabel(date, index)]), finder.day) + "</div>";
+  if (finder.busy) html += '<div class="muted">' + esc(tr("searching")) + "</div>";
+  if (finder.error) html += '<div class="err">' + esc(finder.error) + "</div>";
+  if (finder.results && !finder.results.length) html += '<div class="muted">' + esc(tr("finderNone")) + "</div>";
+  if (finder.results && finder.results.length) {
+    html += "<div>" + esc(tr("finderFrom", { name: finder.start, km: show(finder.reach, " km").replace(" km", "") })) + '</div><div class="found">' + finderList().map(item =>
+      "<div><b>" + (item.kind === "peak" ? icon("peak_clear", 20) + " " : "") + esc(item.name) + '</b><span class="small muted">' + esc(countryName(item.cc)) + " · ca. " + item.km + " km · ca. " + String(item.time).replace(".", state.lang === "en" ? "." : ",") + ' h</span>' +
+      '<span class="facts2"><span class="fact">' + icon("sun", 18) + show(item.sun[finder.day], " h") + '</span><span class="fact">' + icon("thermo", 18) + show(item.temp[finder.day], "°C") + "</span></span>" +
+      '<button type="button" class="ghost" data-fadd="' + esc(item.name) + '">' + esc(tr("finderAdd")) + "</button></div>").join("") + "</div>";
+  }
+  return html + '<div class="small muted">' + esc(tr("finderNote")) + "</div></section>";
+}
 function unitsPanel() {
   if (!view.unitsOpen) return "";
   const group = (label, key, options) => '<div class="sortrow"><span class="label" style="min-width:150px">' + esc(label) + '</span><div class="seg" role="group" aria-label="' + esc(label) + '">' +
@@ -737,7 +829,7 @@ function renderHome() {
     return html + "</button>";
   };
   for (const group of homeGroups()) html += (group.title ? '<div class="label">' + esc(group.title) + "</div>" : "") + '<div class="cards">' + group.spots.map(card).join("") + "</div>";
-  return html + footer();
+  return html + renderFinder() + footer();
 }
 function bulletinLink() {
   return '<a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener" title="' + esc(tr("newTab")) + '">' + esc(tr("avaFull")) + " ↗</a>";
@@ -1023,7 +1115,7 @@ async function fetchJson(url) {
 }
 function loadHistory() {
   if (!historyPromise) historyPromise = fetchJson(HISTORY_URL).then(json => { historyDays = Array.isArray(json.days) ? json.days : []; }).catch(() => { historyDays = []; })
-    .then(() => { if (!document.querySelector("#results button, #q:focus")) render(); });
+    .then(() => { if (!document.querySelector("#results button, #q:focus, #fq:focus")) render(); });
 }
 function getBulletin(lang) {
   if (!bulletinPromises[lang]) bulletinPromises[lang] = fetchJson(bulletinUrl(lang)).catch(error => { delete bulletinPromises[lang]; throw error; });
@@ -1034,14 +1126,14 @@ async function loadCloud(spot, entry) {
   try {
     entry.cloud = shapeCloud(await fetchJson(cloudUrl(spot)), entry.forecast.elevation);
     saveState();
-    if (!document.querySelector("#results button, #q:focus")) render();
+    if (!document.querySelector("#results button, #q:focus, #fq:focus")) render();
   } catch (error) { /* keep the last saved cloud data */ }
 }
 async function loadCompare(spot, entry) {
   try {
     entry.compare = shapeCompare(await fetchJson(compareUrl(spot)));
     saveState();
-    if (!document.querySelector("#results button, #q:focus")) render();
+    if (!document.querySelector("#results button, #q:focus, #fq:focus")) render();
   } catch (error) { /* reliability is simply not shown */ }
 }
 // One-time lookup of the country for favourites saved before countries were stored.
@@ -1060,7 +1152,7 @@ async function runCountryQueue() {
     try {
       const json = await fetchJson("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=3&lat=" + spot.lat + "&lon=" + spot.lon);
       const code = String((json.address || {}).country_code || "").toUpperCase();
-      if (code) { spot.cc = code; saveState(); if (!document.querySelector("#results button, #q:focus")) render(); }
+      if (code) { spot.cc = code; saveState(); if (!document.querySelector("#results button, #q:focus, #fq:focus")) render(); }
     } catch (error) { /* tried again on the next visit */ }
     await new Promise(resolve => setTimeout(resolve, 1200));
   }
@@ -1093,7 +1185,7 @@ async function refreshSpot(spot) {
     else { const feature = findBulletinFeature(bulletin, spot.lat, spot.lon); entry.avalanche = feature ? { status: "ok", summary: summarizeBulletin(feature) } : { status: "outside" }; }
   } catch (error) { if (!entry.avalanche || entry.avalanche.status !== "ok") entry.avalanche = { status: "error" }; }
   saveState();
-  if (!document.querySelector("#results button, #q:focus")) render();
+  if (!document.querySelector("#results button, #q:focus, #fq:focus")) render();
 }
 function addSpot(name, lat, lon, elevation, place) {
   const spot = { id: "s" + Date.now(), name, lat, lon };
@@ -1175,11 +1267,18 @@ function onType(value) {
   searchTimer = setTimeout(() => showPlaces(query, false), 350);
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-sort],[data-unitsopen],[data-unit],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  const target = event.target.closest("[data-lang],[data-sort],[data-unitsopen],[data-unit],[data-fh],[data-fm],[data-fd],[data-fadd],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
   if (!target) return;
   const data = target.dataset;
   if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
   else if (data.sort) { state.sort = data.sort; saveState(); render(); }
+  else if (data.fh || data.fm || data.fd !== undefined || data.fadd) {
+    const input = document.getElementById("fq");
+    if (input) finder.query = input.value.trim();
+    if (data.fadd) { const item = (finder.results || []).find(entry => entry.name === data.fadd); if (item && !state.spots.some(spot => spot.name === item.name)) { const spot = { id: "s" + Date.now(), name: item.name, lat: item.lat, lon: item.lon, cc: item.cc, kind: item.kind }; state.spots.unshift(spot); saveState(); render(); refreshSpot(spot); } }
+    else if (data.fd !== undefined) { finder.day = Number(data.fd); render(); }
+    else { if (data.fh) finder.hours = Number(data.fh); if (data.fm) finder.mode = data.fm; if (finder.results) runFinder(); else render(); }
+  }
   else if (data.unitsopen) { view.unitsOpen = !view.unitsOpen; render(); }
   else if (data.unit) { const pair = data.unit.split(":"); units()[pair[0]] = pair[1]; saveState(); render(); }
   else if (data.open) { location.hash = "spot-" + data.open; }
@@ -1200,7 +1299,7 @@ function init() {
   if (LANGS.includes(browserLang)) state.lang = browserLang;
   loadState();
   document.addEventListener("click", onClick);
-  document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); });
+  document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); if (event.target.id === "finder") { event.preventDefault(); runFinder(); } });
   document.addEventListener("input", event => { if (event.target.id === "q") onType(event.target.value); });
   window.addEventListener("hashchange", onHash);
   onHash();
