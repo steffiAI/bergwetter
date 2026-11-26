@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bergwetter</title>
+<meta name="theme-color" content="#F6F1E7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bergwetter">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root { --cream:#F6F1E7; --tile:#EFE8D8; --navy:#1B2A4A; --slate:#5B6577; --line:#D5CDBB; --orange:#E8762B; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--cream); color:var(--navy);
+    font:15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  main { max-width:560px; margin:0 auto; padding:24px 20px 48px; display:flex; flex-direction:column; gap:20px; }
+  h1 { margin:0; font-size:40px; font-weight:300; letter-spacing:-0.8px; line-height:1.1; overflow-wrap:break-word; }
+  h2 { margin:0; font-size:22px; font-weight:500; overflow-wrap:break-word; }
+  a { color:var(--navy); }
+  button { font:inherit; color:var(--navy); cursor:pointer; }
+  .muted { color:var(--slate); }
+  .small { font-size:12px; }
+  .label { font-size:12px; font-weight:600; letter-spacing:1.2px; color:var(--slate); text-transform:uppercase; }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .iconbtn { width:44px; height:44px; background:none; border:0; display:flex; align-items:center; justify-content:center; }
+  .seg { display:flex; border:1.2px solid var(--navy); border-radius:99px; overflow:hidden; }
+  .seg button { height:44px; padding:0 12px; border:0; background:none; font-size:13px; }
+  .seg button[aria-pressed="true"] { background:var(--navy); color:var(--cream); font-weight:600; }
+  .pills { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; }
+  .pills button { flex:none; height:44px; padding:0 14px; border-radius:99px; border:1.2px solid var(--navy); background:none; font-size:13px; }
+  .pills button[aria-pressed="true"] { background:var(--navy); color:var(--cream); font-weight:600; }
+  form { display:flex; gap:8px; }
+  input { flex:1; min-width:0; height:48px; padding:0 14px; border:1.2px solid var(--navy); border-radius:12px; background:#FFFDF8; color:var(--navy); font:inherit; font-size:16px; }
+  .primary { height:48px; padding:0 18px; border-radius:12px; border:1.2px solid var(--navy); background:var(--navy); color:var(--cream); font-weight:600; }
+  #results { display:flex; flex-direction:column; gap:6px; }
+  #results button { text-align:left; min-height:48px; padding:8px 14px; border-radius:12px; border:1.2px solid var(--line); background:#FFFDF8; }
+  .card { display:flex; flex-direction:column; gap:8px; width:100%; text-align:left; border:1.2px solid var(--navy); border-radius:14px; padding:16px; background:none; }
+  .chip { flex:none; border:1.2px solid var(--navy); border-radius:6px; padding:0 7px; font-size:18px; font-weight:600; color:var(--navy); }
+  .summary { display:flex; gap:10px; align-items:center; font-size:14px; }
+  .tiles { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; }
+  .tile { border:1.2px solid var(--navy); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .tile b { font-size:22px; font-weight:600; }
+  .tile b span { font-size:12px; font-weight:400; }
+  .timeline { display:grid; grid-template-columns:52px 24px minmax(0, 1fr); column-gap:10px; }
+  .timeline .time { font-size:14px; font-weight:600; padding-bottom:20px; }
+  .timeline .rail { display:flex; flex-direction:column; align-items:center; }
+  .timeline .rail i { flex:1; width:1.5px; background:var(--navy); }
+  .timeline .dot { width:10px; height:10px; border-radius:50%; border:1.5px solid var(--navy); margin-top:5px; flex:none; }
+  .timeline .text { padding-bottom:20px; }
+  .timeline .text b { font-weight:500; display:block; }
+  .timeline .last { padding-bottom:0; }
+  .hours { display:grid; grid-template-columns:repeat(8, minmax(0, 1fr)); gap:4px; text-align:center; font-size:12px; }
+  .hours > div { display:flex; flex-direction:column; gap:4px; align-items:center; background:var(--tile); border-radius:8px; padding:8px 0; }
+  .hours b { font-size:14px; }
+  .facts { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px 14px; }
+  .facts b { display:block; font-size:20px; font-weight:500; }
+  .bar { height:6px; background:var(--line); border-radius:3px; margin-top:6px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--orange); }
+  .ava { display:flex; gap:14px; align-items:center; }
+  .ava .big { width:72px; height:72px; flex:none; border-radius:12px; border:1.5px solid var(--navy); display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:600; }
+  .rule { border-top:1px solid var(--line); padding-top:20px; }
+  .err { color:#9C1F17; font-size:14px; }
+  ul { margin:0; padding-left:18px; font-size:14px; }
+  .actions { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+  .actions button { height:48px; border-radius:12px; border:1.2px solid var(--navy); background:none; font-weight:600; }
+  #print { display:none; color:#000; font-size:10pt; line-height:1.35; }
+  #print svg * { stroke:#000 !important; }
+  #print svg [fill]:not([fill="none"]) { fill:#fff !important; }
+  #print h1 { font-size:27pt; font-weight:700; letter-spacing:-0.5px; line-height:1.05; margin:2px 0 4px; }
+  .pk { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+  .phead { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; border-bottom:2pt solid #000; padding-bottom:9px; }
+  .pmeta { font-size:8.5pt; }
+  .phero { display:flex; gap:10px; align-items:center; max-width:46%; }
+  .phero b { display:block; font-size:13pt; line-height:1.2; }
+  .pbadge { flex:none; min-width:56px; height:56px; padding:0 7px; background:#000; color:#fff; border:1.5pt solid #000; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:24pt; font-weight:700; }
+  .pbadge.empty { background:#fff; color:#000; }
+  .pstats { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); row-gap:10px; }
+  .pstats > div { padding:0 12px; border-left:.75pt solid #000; display:flex; flex-direction:column; }
+  .pstats > div:nth-child(3n+1) { padding-left:0; border-left:0; }
+  .pstats b { font-size:13.5pt; line-height:1.3; white-space:nowrap; }
+  .psub { font-size:8pt; }
+  .pcols { display:grid; grid-template-columns:minmax(0, 11fr) minmax(0, 9fr); gap:26px; }
+  .ptitle { border-bottom:.75pt solid #000; padding-bottom:3px; margin-bottom:7px; }
+  .ptl { display:grid; grid-template-columns:38px 10px minmax(0, 1fr); column-gap:8px; }
+  .ptl .time { font-weight:700; }
+  .ptl .rail { display:flex; flex-direction:column; align-items:center; }
+  .ptl .rail i { width:7px; height:7px; border-radius:50%; border:1.2pt solid #000; background:#fff; margin-top:4px; flex:none; }
+  .ptl .rail span { flex:1; width:1pt; background:#000; }
+  .ptl .what { padding-bottom:7px; }
+  .pcloud { display:flex; gap:8px; align-items:flex-start; padding-bottom:6px; }
+  .plist { margin:0 0 4px; padding-left:14px; }
+  #print table { width:100%; border-collapse:collapse; font-size:8.5pt; text-align:center; table-layout:fixed; font-variant-numeric:tabular-nums; }
+  #print th, #print td { border-bottom:.5pt solid #999; padding:3px 0; font-weight:400; vertical-align:middle; }
+  #print thead th { border-bottom:1pt solid #000; font-weight:700; }
+  #print tbody tr:last-child td { border-bottom:1pt solid #000; }
+  #print th:first-child, #print td:first-child { text-align:left; width:20%; font-weight:600; }
+  #print table.pnext th:first-child, #print table.pnext td:first-child { width:24%; }
+  #print table.pnext th:nth-child(2), #print table.pnext td:nth-child(2) { width:6%; }
+  #print .night { background:#EDEDED; }
+  .pbarbox { height:14px; display:flex; align-items:flex-end; justify-content:center; }
+  .pbarbox i { display:block; width:10px; background:#000; }
+  .pfoot { font-size:7.5pt; color:#222; }
+  @page { size:A4; margin:12mm; }
+  @media print {
+    body { background:#FFFFFF; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    #app { display:none; }
+    #print { display:flex; flex-direction:column; gap:15px; max-width:none; margin:0; padding:0; }
+    #print section, .pcloud { break-inside:avoid; }
+  }
+  footer { color:var(--slate); font-size:12px; border-top:1px solid var(--line); padding-top:16px; }
+  .pills { position:sticky; top:0; z-index:2; background:var(--cream); padding:8px 0; }
+  .tag { border:1.2px solid var(--orange); border-radius:99px; padding:1px 9px; font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; }
+  .homehead, .cards, .cols, .col { display:flex; flex-direction:column; gap:20px; min-width:0; }
+  .cols[data-tab="day"] .col-details, .cols[data-tab="details"] .col-day { display:none; }
+  .avatop { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
+  .probs { display:flex; flex-direction:column; gap:8px; }
+  .prob { display:grid; grid-template-columns:32px minmax(0, 1fr) 56px; gap:12px; align-items:center; border:1.2px solid var(--navy); border-radius:12px; padding:10px 12px; }
+  .prob b { display:block; font-weight:600; }
+  @media screen and (min-width:1000px) {
+    #app { max-width:1120px; padding:40px 40px 64px; }
+    .homehead { max-width:560px; }
+    .cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .cols { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:56px; align-items:start; }
+    .cols[data-tab] .col-day, .cols[data-tab] .col-details { display:flex; }
+    .tabswitch { display:none; }
+    .col-details .rule { border-top:0; padding-top:0; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<main id="print"></main>
+<script>
+"use strict";
+const STORE_KEY = "bergwetter.v1";
+const LANGS = ["de", "fr", "it", "en"];
+const LOCALES = { de: "de-CH", fr: "fr-CH", it: "it-CH", en: "en-GB" };
+const SLF_PAGE = { de: "https://www.slf.ch/de/lawinenbulletin-und-schneesituation/", fr: "https://www.slf.ch/fr/bulletin-davalanches-et-situation-nivologique/", it: "https://www.slf.ch/it/bollettino-valanghe-e-situazione-nivologica/", en: "https://www.slf.ch/en/avalanche-bulletin-and-snow-situation/" };
+const DANGER_LEVEL = { low: 1, moderate: 2, considerable: 3, high: 4, very_high: 5 };
+const DANGER_COLOR = { 1: "#CCFF66", 2: "#FFFF00", 3: "#FF9900", 4: "#FF0000", 5: "#FF0000" };
+const SUBDIVISION_SIGN = { minus: "-", neutral: "", plus: "+" };
+const HOURLY_VARS = "temperature_2m,precipitation,snowfall,cloud_cover,wind_gusts_10m,sunshine_duration,freezing_level_height,weather_code,is_day";
+const DAILY_VARS = "sunrise,sunset,sunshine_duration,daylight_duration,temperature_2m_max,temperature_2m_min,snowfall_sum,precipitation_sum,wind_gusts_10m_max";
+const CLOUD_LEVELS = [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500];
+
+const TEXT = {
+  en: { tagline: "Sun, weather and avalanche danger for your spots. No account, no analytics.", favourites: "Favourites", placeholder: "Place or peak, or 46.02, 7.75", add: "Add", searching: "Searching…", nothing: "Nothing found. Try another spelling or enter coordinates.", searchFailed: "Search failed. Check your connection.", empty: "Add your first spot above, for example a hut, a peak or a valley.", remove: "Remove", back: "Back to favourites", language: "Language", day: "Day", details: "Details", today: "Today", tomorrow: "Tomorrow", updated: "updated", loading: "Loading…", loadFail: "Could not load the forecast. Check your connection.", refreshFail: "Could not refresh. Showing the last saved forecast.", avalanche: "Avalanche", avaOfficial: "Avalanche danger · official SLF bulletin", avaNone: "No bulletin active right now.", avaOutside: "This spot lies outside the SLF bulletin regions.", avaError: "Could not load the bulletin.", avaFull: "Read the full SLF bulletin", validUntil: "Valid until", above: "above", below: "below", to: "to", gusts: "Gusts", sunshine: "Sunshine", ofDaylight: "of {h} h daylight", sunrise: "Sunrise", sunset: "Sunset", sunny: "Sunny spell", sunnyUntil: "until about {t}", snowStarts: "Snowfall starts", rainStarts: "Rain starts", dayTotal: "{v} over the day", strongest: "Strongest gusts", temperature: "Temperature", newSnow: "New snow", precipitation: "Precipitation", freezing: "Freezing level", yourDay: "Your day on the mountain", hourLegend: "Every two hours: weather, temperature, gusts in km/h.", noSun: "none expected", astro: "Sunrise and sunset are astronomical times, not when the sun clears the ridge.", footForecast: "Forecast: MeteoSwiss ICON-CH models via Open-Meteo (Source: MeteoSwiss).", footAva: "Avalanche bulletin: WSL Institute for Snow and Avalanche Research SLF.", footNote: "The bulletin does not replace your own assessment on site. No warning shown means no warning issued, not that it is safe.", na: "n/a",
+    danger: { low: "low", moderate: "moderate", considerable: "considerable", high: "high", very_high: "very high", no_snow: "no snow", no_rating: "no rating" },
+    problem: { new_snow: "New snow", wind_slab: "Wind slab", persistent_weak_layers: "Persistent weak layers", wet_snow: "Wet snow", gliding_snow: "Gliding snow", no_distinct_avalanche_problem: "No distinct avalanche problem", favourable_situation: "Favourable situation" } },
+  de: { tagline: "Sonne, Wetter und Lawinengefahr für deine Orte. Ohne Konto, ohne Tracking.", favourites: "Favoriten", placeholder: "Ort oder Gipfel, oder 46.02, 7.75", add: "Hinzufügen", searching: "Suche…", nothing: "Nichts gefunden. Andere Schreibweise oder Koordinaten versuchen.", searchFailed: "Suche fehlgeschlagen. Verbindung prüfen.", empty: "Füge oben deinen ersten Ort hinzu, zum Beispiel eine Hütte, einen Gipfel oder ein Tal.", remove: "Entfernen", back: "Zurück zu den Favoriten", language: "Sprache", day: "Tag", details: "Details", today: "Heute", tomorrow: "Morgen", updated: "aktualisiert", loading: "Lädt…", loadFail: "Die Vorhersage konnte nicht geladen werden. Verbindung prüfen.", refreshFail: "Aktualisierung fehlgeschlagen. Letzte gespeicherte Vorhersage wird gezeigt.", avalanche: "Lawinen", avaOfficial: "Lawinengefahr · offizielles SLF-Bulletin", avaNone: "Zurzeit ist kein Bulletin aktiv.", avaOutside: "Dieser Ort liegt ausserhalb der SLF-Bulletinregionen.", avaError: "Das Bulletin konnte nicht geladen werden.", avaFull: "Ganzes SLF-Bulletin lesen", validUntil: "Gültig bis", above: "oberhalb", below: "unterhalb", to: "bis", gusts: "Böen", sunshine: "Sonnenschein", ofDaylight: "von {h} h Tageslicht", sunrise: "Sonnenaufgang", sunset: "Sonnenuntergang", sunny: "Sonnige Phase", sunnyUntil: "bis etwa {t}", snowStarts: "Schneefall beginnt", rainStarts: "Regen beginnt", dayTotal: "{v} über den Tag", strongest: "Stärkste Böen", temperature: "Temperatur", newSnow: "Neuschnee", precipitation: "Niederschlag", freezing: "Nullgradgrenze", yourDay: "Dein Tag am Berg", hourLegend: "Alle zwei Stunden: Wetter, Temperatur, Böen in km/h.", noSun: "keiner erwartet", astro: "Sonnenauf- und -untergang sind astronomische Zeiten, nicht der Moment, in dem die Sonne über den Grat kommt.", footForecast: "Vorhersage: ICON-CH-Modelle von MeteoSchweiz über Open-Meteo (Quelle: MeteoSchweiz).", footAva: "Lawinenbulletin: WSL-Institut für Schnee- und Lawinenforschung SLF.", footNote: "Das Bulletin ersetzt die eigene Beurteilung vor Ort nicht. Keine angezeigte Warnung heisst: keine Warnung ausgegeben, nicht: sicher.", na: "k. A.",
+    danger: { low: "gering", moderate: "mässig", considerable: "erheblich", high: "gross", very_high: "sehr gross", no_snow: "kein Schnee", no_rating: "keine Einstufung" },
+    problem: { new_snow: "Neuschnee", wind_slab: "Triebschnee", persistent_weak_layers: "Altschnee", wet_snow: "Nassschnee", gliding_snow: "Gleitschnee", no_distinct_avalanche_problem: "Kein ausgeprägtes Lawinenproblem", favourable_situation: "Günstige Situation" } },
+  fr: { tagline: "Soleil, météo et danger d'avalanche pour tes lieux. Sans compte, sans traçage.", favourites: "Favoris", placeholder: "Lieu ou sommet, ou 46.02, 7.75", add: "Ajouter", searching: "Recherche…", nothing: "Rien trouvé. Essaie une autre orthographe ou des coordonnées.", searchFailed: "La recherche a échoué. Vérifie la connexion.", empty: "Ajoute ton premier lieu ci-dessus, par exemple une cabane, un sommet ou une vallée.", remove: "Supprimer", back: "Retour aux favoris", language: "Langue", day: "Journée", details: "Détails", today: "Aujourd'hui", tomorrow: "Demain", updated: "mis à jour", loading: "Chargement…", loadFail: "Impossible de charger les prévisions. Vérifie la connexion.", refreshFail: "Mise à jour impossible. Dernières prévisions enregistrées affichées.", avalanche: "Avalanches", avaOfficial: "Danger d'avalanche · bulletin officiel du SLF", avaNone: "Aucun bulletin actif en ce moment.", avaOutside: "Ce lieu se trouve hors des régions du bulletin SLF.", avaError: "Impossible de charger le bulletin.", avaFull: "Lire le bulletin complet du SLF", validUntil: "Valable jusqu'à", above: "au-dessus de", below: "en dessous de", to: "à", gusts: "Rafales", sunshine: "Ensoleillement", ofDaylight: "sur {h} h de jour", sunrise: "Lever du soleil", sunset: "Coucher du soleil", sunny: "Période ensoleillée", sunnyUntil: "jusque vers {t}", snowStarts: "Début des chutes de neige", rainStarts: "Début de la pluie", dayTotal: "{v} sur la journée", strongest: "Rafales les plus fortes", temperature: "Température", newSnow: "Neige fraîche", precipitation: "Précipitations", freezing: "Isotherme zéro degré", yourDay: "Ta journée en montagne", hourLegend: "Toutes les deux heures : temps, température, rafales en km/h.", noSun: "aucun prévu", astro: "Lever et coucher sont des heures astronomiques, pas le moment où le soleil passe la crête.", footForecast: "Prévisions : modèles ICON-CH de MétéoSuisse via Open-Meteo (source : MétéoSuisse).", footAva: "Bulletin d'avalanches : WSL Institut pour l'étude de la neige et des avalanches SLF.", footNote: "Le bulletin ne remplace pas ta propre évaluation sur place. Aucune alerte affichée signifie : aucune alerte émise, pas : sans danger.", na: "n. d.",
+    danger: { low: "faible", moderate: "limité", considerable: "marqué", high: "fort", very_high: "très fort", no_snow: "pas de neige", no_rating: "pas d'évaluation" },
+    problem: { new_snow: "Neige fraîche", wind_slab: "Neige soufflée", persistent_weak_layers: "Neige ancienne", wet_snow: "Neige mouillée", gliding_snow: "Neige glissante", no_distinct_avalanche_problem: "Pas de problème d'avalanche typique", favourable_situation: "Situation favorable" } },
+  it: { tagline: "Sole, meteo e pericolo di valanghe per i tuoi luoghi. Senza account, senza tracciamento.", favourites: "Preferiti", placeholder: "Località o cima, oppure 46.02, 7.75", add: "Aggiungi", searching: "Ricerca…", nothing: "Nessun risultato. Prova un'altra grafia o le coordinate.", searchFailed: "Ricerca non riuscita. Controlla la connessione.", empty: "Aggiungi qui sopra il tuo primo luogo, per esempio una capanna, una cima o una valle.", remove: "Rimuovi", back: "Torna ai preferiti", language: "Lingua", day: "Giornata", details: "Dettagli", today: "Oggi", tomorrow: "Domani", updated: "aggiornato", loading: "Caricamento…", loadFail: "Impossibile caricare le previsioni. Controlla la connessione.", refreshFail: "Aggiornamento non riuscito. Sono mostrate le ultime previsioni salvate.", avalanche: "Valanghe", avaOfficial: "Pericolo di valanghe · bollettino ufficiale SLF", avaNone: "Nessun bollettino attivo al momento.", avaOutside: "Questo luogo è fuori dalle regioni del bollettino SLF.", avaError: "Impossibile caricare il bollettino.", avaFull: "Leggi il bollettino SLF completo", validUntil: "Valido fino a", above: "sopra i", below: "sotto i", to: "a", gusts: "Raffiche", sunshine: "Soleggiamento", ofDaylight: "su {h} h di luce", sunrise: "Alba", sunset: "Tramonto", sunny: "Fase soleggiata", sunnyUntil: "fino alle {t} circa", snowStarts: "Inizio delle nevicate", rainStarts: "Inizio della pioggia", dayTotal: "{v} nell'arco della giornata", strongest: "Raffiche più forti", temperature: "Temperatura", newSnow: "Neve fresca", precipitation: "Precipitazioni", freezing: "Isoterma di zero gradi", yourDay: "La tua giornata in montagna", hourLegend: "Ogni due ore: tempo, temperatura, raffiche in km/h.", noSun: "non previsto", astro: "Alba e tramonto sono orari astronomici, non il momento in cui il sole supera la cresta.", footForecast: "Previsioni: modelli ICON-CH di MeteoSvizzera tramite Open-Meteo (fonte: MeteoSvizzera).", footAva: "Bollettino valanghe: WSL Istituto per lo studio della neve e delle valanghe SLF.", footNote: "Il bollettino non sostituisce la tua valutazione sul posto. Nessuna allerta mostrata significa: nessuna allerta emessa, non: sicuro.", na: "n. d.",
+    danger: { low: "debole", moderate: "moderato", considerable: "marcato", high: "forte", very_high: "molto forte", no_snow: "senza neve", no_rating: "nessuna valutazione" },
+    problem: { new_snow: "Neve fresca", wind_slab: "Neve ventata", persistent_weak_layers: "Neve vecchia", wet_snow: "Neve bagnata", gliding_snow: "Slittamento di neve", no_distinct_avalanche_problem: "Nessun problema valanghivo tipico", favourable_situation: "Situazione favorevole" } }
+};
+
+const CLOUD_TEXT = {
+  en: { nextDays: "Next days", hourByHour: "Hour by hour", tableLegend: "Grey columns: before sunrise or after sunset. Sunshine bar: share of the hour with sun.", print: "Print", share: "Share or save", exported: "Printed or shared on", cloudTitle: "Cloud at your altitude", from: "from", st_in: "in cloud", st_above: "free, above the cloud", st_below: "free, below the cloud", st_between: "free, between cloud layers", st_clear: "free, no cloud layer", cloudBetween: "cloud from about {a} to {b} m", cloudTopAt: "cloud top at about {a} m", cloudBaseAt: "cloud base at about {a} m", cloudNA: "Cloud layers are not available right now.", cloudLegend: "Estimated for your spot's altitude from the ICON model at fixed heights. Can be off by 200 m or more, especially with fog.", footCloud: "Cloud layers: ICON model of Deutscher Wetterdienst via Open-Meteo." },
+  de: { nextDays: "Die nächsten Tage", hourByHour: "Stunde für Stunde", tableLegend: "Graue Spalten: vor Sonnenaufgang oder nach Sonnenuntergang. Sonnenbalken: Anteil der Stunde mit Sonne.", print: "Drucken", share: "Teilen oder speichern", exported: "Gedruckt oder geteilt am", cloudTitle: "Wolken auf deiner Höhe", from: "ab", st_in: "in den Wolken", st_above: "frei, über den Wolken", st_below: "frei, unter den Wolken", st_between: "frei, zwischen Wolkenschichten", st_clear: "frei, keine Wolkenschicht", cloudBetween: "Wolken von etwa {a} bis {b} m", cloudTopAt: "Wolkenobergrenze bei etwa {a} m", cloudBaseAt: "Wolkenuntergrenze bei etwa {a} m", cloudNA: "Wolkenschichten sind zurzeit nicht verfügbar.", cloudLegend: "Für die Höhe deines Ortes aus dem ICON-Modell auf festen Höhenstufen geschätzt. Abweichungen von 200 m und mehr sind möglich, besonders bei Nebel.", footCloud: "Wolkenschichten: ICON-Modell des Deutschen Wetterdienstes über Open-Meteo." },
+  fr: { nextDays: "Les prochains jours", hourByHour: "Heure par heure", tableLegend: "Colonnes grises : avant le lever ou après le coucher du soleil. Barre de soleil : part de l'heure ensoleillée.", print: "Imprimer", share: "Partager ou enregistrer", exported: "Imprimé ou partagé le", cloudTitle: "Nuages à ton altitude", from: "dès", st_in: "dans les nuages", st_above: "dégagé, au-dessus des nuages", st_below: "dégagé, sous les nuages", st_between: "dégagé, entre deux couches nuageuses", st_clear: "dégagé, pas de couche nuageuse", cloudBetween: "nuages d'environ {a} à {b} m", cloudTopAt: "sommet des nuages vers {a} m", cloudBaseAt: "base des nuages vers {a} m", cloudNA: "Les couches nuageuses ne sont pas disponibles pour le moment.", cloudLegend: "Estimation pour l'altitude de ton lieu, d'après le modèle ICON à des niveaux fixes. Des écarts de 200 m ou plus sont possibles, surtout par brouillard.", footCloud: "Couches nuageuses : modèle ICON du Deutscher Wetterdienst via Open-Meteo." },
+  it: { nextDays: "I prossimi giorni", hourByHour: "Ora per ora", tableLegend: "Colonne grigie: prima dell'alba o dopo il tramonto. Barra del sole: quota dell'ora con sole.", print: "Stampa", share: "Condividi o salva", exported: "Stampato o condiviso il", cloudTitle: "Nubi alla tua quota", from: "dalle", st_in: "nelle nubi", st_above: "libera, sopra le nubi", st_below: "libera, sotto le nubi", st_between: "libera, tra due strati di nubi", st_clear: "libera, nessuno strato di nubi", cloudBetween: "nubi da circa {a} a {b} m", cloudTopAt: "limite superiore delle nubi a circa {a} m", cloudBaseAt: "base delle nubi a circa {a} m", cloudNA: "Gli strati di nubi non sono disponibili al momento.", cloudLegend: "Stima per la quota del tuo luogo dal modello ICON a livelli fissi. Sono possibili scarti di 200 m o più, soprattutto con nebbia.", footCloud: "Strati di nubi: modello ICON del Deutscher Wetterdienst tramite Open-Meteo." }
+};
+for (const lang in CLOUD_TEXT) Object.assign(TEXT[lang], CLOUD_TEXT[lang]);
+const WIDE_TEXT = {
+  en: "Outside the MeteoSwiss area: forecast from the best available model for this place.",
+  de: "Ausserhalb des MeteoSchweiz-Gebiets: Vorhersage aus dem besten verfügbaren Modell für diesen Ort.",
+  fr: "Hors de la zone MétéoSuisse : prévision issue du meilleur modèle disponible pour ce lieu.",
+  it: "Fuori dall'area MeteoSvizzera: previsione dal miglior modello disponibile per questo luogo."
+};
+for (const lang in WIDE_TEXT) TEXT[lang].wideModel = WIDE_TEXT[lang];
+const MORE_TEXT = {
+  en: { st_free: "free", highAt: "high cloud at times, from about {a} m", footWide: "Outside the MeteoSwiss area: the best available model from Open-Meteo." },
+  de: { st_free: "frei", highAt: "zeitweise hohe Wolken ab etwa {a} m", footWide: "Ausserhalb des MeteoSchweiz-Gebiets: das beste verfügbare Modell von Open-Meteo." },
+  fr: { st_free: "dégagé", highAt: "nuages élevés par moments, dès {a} m environ", footWide: "Hors de la zone MétéoSuisse : le meilleur modèle disponible d'Open-Meteo." },
+  it: { st_free: "libera", highAt: "a tratti nubi alte, da circa {a} m", footWide: "Fuori dall'area MeteoSvizzera: il miglior modello disponibile di Open-Meteo." }
+};
+for (const lang in MORE_TEXT) Object.assign(TEXT[lang], MORE_TEXT[lang]);
+const AVA_TEXT = {
+  en: { allAspects: "all aspects", yourSpot: "your spot", example: "Example", problems: "Avalanche problems", tendency: "Tendency", tend_increasing: "increasing", tend_steady: "steady", tend_decreasing: "decreasing", newTab: "opens in a new tab",
+    roseLegend: "Rose: filled = affected aspect. Inner ring = above, outer ring = below the stated altitude." },
+  de: { allAspects: "alle Expositionen", yourSpot: "dein Ort", example: "Beispiel", problems: "Lawinenprobleme", tendency: "Tendenz", tend_increasing: "steigend", tend_steady: "gleichbleibend", tend_decreasing: "abnehmend", newTab: "öffnet in neuem Tab",
+    roseLegend: "Rose: gefüllt = betroffene Exposition. Innerer Ring = oberhalb, äusserer Ring = unterhalb der genannten Höhe." },
+  fr: { allAspects: "toutes les expositions", yourSpot: "ton lieu", example: "Exemple", problems: "Problèmes d'avalanche", tendency: "Tendance", tend_increasing: "en hausse", tend_steady: "stable", tend_decreasing: "en baisse", newTab: "s'ouvre dans un nouvel onglet",
+    roseLegend: "Rose : rempli = exposition concernée. Anneau intérieur = au-dessus, anneau extérieur = en dessous de l'altitude indiquée." },
+  it: { allAspects: "tutte le esposizioni", yourSpot: "il tuo luogo", example: "Esempio", problems: "Problemi valanghivi", tendency: "Tendenza", tend_increasing: "in aumento", tend_steady: "stabile", tend_decreasing: "in diminuzione", newTab: "si apre in una nuova scheda",
+    roseLegend: "Rosa: pieno = esposizione interessata. Anello interno = sopra, anello esterno = sotto la quota indicata." }
+};
+for (const lang in AVA_TEXT) Object.assign(TEXT[lang], AVA_TEXT[lang]);
+const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478 };
+
+let state = { lang: "en", spots: [], cache: {} };
+function shownSpots() { return state.spots.length ? state.spots : [EXAMPLE_SPOT]; }
+function findSpot(id) { return state.spots.find(item => item.id === id) || (id === EXAMPLE_SPOT.id ? EXAMPLE_SPOT : null); }
+let view = { name: "home", tab: "day", day: 0 };
+const bulletinPromises = {};
+
+function tr(key, vars) {
+  let text = (TEXT[state.lang] || TEXT.en)[key] || TEXT.en[key] || key;
+  for (const name in vars || {}) text = text.replace("{" + name + "}", vars[name]);
+  return text;
+}
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+function round(value, digits) {
+  if (value === null || value === undefined) return null;
+  const factor = Math.pow(10, digits || 0);
+  return Math.round(value * factor) / factor;
+}
+function show(value, unit) { return value === null || value === undefined ? tr("na") : value + (unit || ""); }
+function hourText(hour) { return String(hour).padStart(2, "0") + ":00"; }
+
+function forecastUrl(spot, model) {
+  return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon +
+    (typeof spot.elevation === "number" ? "&elevation=" + Math.round(spot.elevation) : "") +
+    "&hourly=" + HOURLY_VARS + "&daily=" + DAILY_VARS + "&models=" + model + "&timezone=Europe%2FZurich&forecast_days=5";
+}
+function geocodeUrl(query) {
+  return "https://geocoding-api.open-meteo.com/v1/search?count=6&format=json&language=" + state.lang + "&name=" + encodeURIComponent(query);
+}
+function bulletinUrl(lang) { return "https://aws.slf.ch/api/bulletin/caaml/" + lang + "/geojson"; }
+function cloudUrl(spot) {
+  const variables = CLOUD_LEVELS.map(level => "cloud_cover_" + level + "hPa").concat(CLOUD_LEVELS.map(level => "geopotential_height_" + level + "hPa"));
+  return "https://api.open-meteo.com/v1/forecast?latitude=" + spot.lat + "&longitude=" + spot.lon + "&hourly=" + variables.join(",") + "&models=icon_seamless&timezone=Europe%2FZurich&forecast_days=5";
+}
+function parseCoordinates(text) {
+  const match = /^\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*$/.exec(text);
+  if (!match) return null;
+  const lat = Number(match[1]), lon = Number(match[2]);
+  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null;
+}
+
+/* ---------- Data shaping ---------- */
+function shapeForecast(json) {
+  const hourly = json.hourly, daily = json.daily, days = [];
+  const column = name => hourly[name] || [];
+  for (let d = 0; d < daily.time.length; d++) {
+    const date = daily.time[d], hours = [];
+    const sunriseHour = daily.sunrise[d] ? Number(daily.sunrise[d].slice(11, 13)) : 6;
+    const sunsetHour = daily.sunset[d] ? Number(daily.sunset[d].slice(11, 13)) : 20;
+    for (let h = 0; h < hourly.time.length; h++) {
+      if (hourly.time[h].slice(0, 10) !== date) continue;
+      const hour = Number(hourly.time[h].slice(11, 13)), isDay = column("is_day")[h];
+      hours.push({
+        hour, temp: round(column("temperature_2m")[h]), gust: round(column("wind_gusts_10m")[h]),
+        sunMinutes: column("sunshine_duration")[h] === null || column("sunshine_duration")[h] === undefined ? null : Math.round(column("sunshine_duration")[h] / 60),
+        cloud: column("cloud_cover")[h], precip: round(column("precipitation")[h], 1), snow: round(column("snowfall")[h], 1),
+        freezing: column("freezing_level_height")[h], code: column("weather_code")[h],
+        isDay: isDay === null || isDay === undefined ? hour > sunriseHour && hour <= sunsetHour : isDay === 1
+      });
+    }
+    const freezing = hours.map(x => x.freezing).filter(x => x !== null && x !== undefined);
+    days.push({
+      date, hours,
+      sunrise: daily.sunrise[d] ? daily.sunrise[d].slice(11, 16) : null, sunset: daily.sunset[d] ? daily.sunset[d].slice(11, 16) : null,
+      sunHours: daily.sunshine_duration[d] === null ? null : round(daily.sunshine_duration[d] / 3600, 1),
+      daylightHours: daily.daylight_duration[d] === null ? null : round(daily.daylight_duration[d] / 3600, 1),
+      tempMin: round(daily.temperature_2m_min[d]), tempMax: round(daily.temperature_2m_max[d]),
+      snowCm: round(daily.snowfall_sum[d], 1), precipMm: round(daily.precipitation_sum[d], 1), gustMax: round(daily.wind_gusts_10m_max[d]),
+      freezingMin: freezing.length ? Math.round(Math.min.apply(null, freezing) / 50) * 50 : null,
+      freezingMax: freezing.length ? Math.round(Math.max.apply(null, freezing) / 50) * 50 : null
+    });
+  }
+  return { elevation: round(json.elevation), days, fetchedAt: Date.now() };
+}
+function weatherKind(hour) {
+  if (hour.code >= 95) return "thunder";
+  if (hour.snow > 0) return "snow";
+  if (hour.precip > 0) return "rain";
+  if (!hour.isDay) return hour.cloud >= 70 ? "cloud" : hour.cloud >= 30 ? "partlyNight" : "moon";
+  if (hour.sunMinutes === null) return hour.cloud >= 70 ? "cloud" : hour.cloud >= 30 ? "partly" : "sun";
+  return hour.sunMinutes >= 40 ? "sun" : hour.sunMinutes >= 15 ? "partly" : "cloud";
+}
+function dayKind(day) {
+  const daytime = day.hours.filter(hour => hour.isDay);
+  if (daytime.some(hour => hour.code >= 95)) return "thunder";
+  if (day.snowCm >= 1) return "snow";
+  if (day.precipMm >= 1) return "rain";
+  if (day.sunHours === null || !day.daylightHours) return "cloud";
+  const share = day.sunHours / day.daylightHours;
+  return share >= 0.6 ? "sun" : share >= 0.25 ? "partly" : "cloud";
+}
+/* Events of one day in time order, built only from forecast values. */
+function dayEvents(day) {
+  const events = [];
+  const at = hour => day.hours.find(item => item.hour === hour);
+  if (day.sunrise) { const hour = at(Number(day.sunrise.slice(0, 2))); events.push({ time: day.sunrise, kind: "dot", title: tr("sunrise"), sub: hour ? show(hour.temp, "°C") + ", " + tr("gusts").toLowerCase() + " " + show(hour.gust, " km/h") : "" }); }
+  const sunny = day.hours.filter(hour => hour.sunMinutes !== null && hour.sunMinutes >= 30);
+  if (sunny.length) events.push({ time: hourText(Math.max(0, sunny[0].hour - 1)), kind: "sun", title: tr("sunny"), sub: tr("sunnyUntil", { t: hourText(sunny[sunny.length - 1].hour) }) });
+  const wet = day.hours.find(hour => hour.precip >= 0.1 || hour.snow >= 0.1);
+  if (wet) { const snowing = wet.snow >= 0.1; events.push({ time: hourText(Math.max(0, wet.hour - 1)), kind: snowing ? "snow" : "rain", title: tr(snowing ? "snowStarts" : "rainStarts"), sub: tr("dayTotal", { v: snowing ? show(day.snowCm, " cm") : show(day.precipMm, " mm") }) }); }
+  const peak = day.hours.reduce((best, hour) => hour.gust !== null && (!best || hour.gust > best.gust) ? hour : best, null);
+  if (peak && peak.gust >= 40) events.push({ time: hourText(peak.hour), kind: "wind", title: tr("strongest"), sub: peak.gust + " km/h" });
+  if (day.sunset) { const hour = at(Number(day.sunset.slice(0, 2))); events.push({ time: day.sunset, kind: "dotFull", title: tr("sunset"), sub: hour ? show(hour.temp, "°C") : "" }); }
+  return events.sort((a, b) => a.time.localeCompare(b.time));
+}
+
+/* ---------- Cloud layers ---------- */
+/* Where the spot sits relative to the cloud, from cloud cover on fixed pressure levels (50 % or more counts as cloud). */
+function cloudState(layers, elevation) {
+  const round50 = value => Math.round(value / 50) * 50;
+  let lower = -1;
+  for (let i = 0; i < layers.length; i++) if (layers[i].height <= elevation) lower = i;
+  const below = lower >= 0 ? layers[lower] : null, above = lower + 1 < layers.length ? layers[lower + 1] : null;
+  const coverHere = below && above ? below.cover + (above.cover - below.cover) * (elevation - below.height) / (above.height - below.height) : (below || above).cover;
+  if (coverHere >= 50) {
+    let low = below && below.cover >= 50 ? lower : lower + 1, high = above && above.cover >= 50 ? lower + 1 : lower;
+    while (low - 1 >= 0 && layers[low - 1].cover >= 50) low--;
+    while (high + 1 < layers.length && layers[high + 1].cover >= 50) high++;
+    return { s: "in", b: round50(Math.min(layers[low].height, elevation)), t: round50(Math.max(layers[high].height, elevation)) };
+  }
+  let cloudBelow = null, cloudAbove = null;
+  for (let i = 0; i <= lower; i++) if (layers[i].cover >= 50) cloudBelow = layers[i];
+  for (let i = layers.length - 1; i > lower; i--) if (layers[i].cover >= 50) cloudAbove = layers[i];
+  return { s: cloudBelow && cloudAbove ? "between" : cloudBelow ? "above" : cloudAbove ? "below" : "clear",
+    b: cloudAbove ? round50(cloudAbove.height) : null, t: cloudBelow ? round50(cloudBelow.height) : null };
+}
+// Cloud this far above the spot does not change the day: such hours are shown together with clear ones.
+const HIGH_CLOUD_GAP = 1000;
+function shapeCloud(json, elevation) {
+  const hourly = json.hourly, byTime = {};
+  for (let h = 0; h < hourly.time.length; h++) {
+    const layers = [];
+    for (const level of CLOUD_LEVELS) {
+      const height = (hourly["geopotential_height_" + level + "hPa"] || [])[h], cover = (hourly["cloud_cover_" + level + "hPa"] || [])[h];
+      if (typeof height === "number" && typeof cover === "number" && height >= 300) layers.push({ height, cover });
+    }
+    if (layers.length < 3) continue;
+    layers.sort((a, b) => a.height - b.height);
+    const state = cloudState(layers, elevation);
+    if (state.s === "below" && state.b - elevation >= HIGH_CLOUD_GAP) state.h = 1;
+    byTime[hourly.time[h]] = state;
+  }
+  return { byTime, fetchedAt: Date.now() };
+}
+function cloudSegments(day, cloud) {
+  const segments = [];
+  for (const hour of day.hours) {
+    const item = hour.hour >= 6 && hour.hour <= 20 && cloud && cloud.byTime ? cloud.byTime[day.date + "T" + hourText(hour.hour)] : null;
+    if (!item) continue;
+    const last = segments[segments.length - 1];
+    const state = item.s === "clear" || item.h ? "free" : item.s;
+    if (last && last.state === state) last.items.push(item); else segments.push({ from: hour.hour, state, items: [item] });
+  }
+  return segments;
+}
+function segmentView(segment) {
+  const bases = segment.items.map(item => item.b).filter(value => value !== null && value !== undefined);
+  const tops = segment.items.map(item => item.t).filter(value => value !== null && value !== undefined);
+  const lowest = bases.length ? Math.min.apply(null, bases) : null, highest = tops.length ? Math.max.apply(null, tops) : null;
+  if (segment.state === "free") {
+    if (!bases.length) return { kind: "peak_clear", title: tr("st_clear"), detail: "" };
+    if (bases.length === segment.items.length) return { kind: "peak_below", title: tr("st_below"), detail: tr("cloudBaseAt", { a: lowest }) };
+    return { kind: "peak_below", title: tr("st_free"), detail: tr("highAt", { a: lowest }) };
+  }
+  let detail = "";
+  if (segment.state === "in" && bases.length && tops.length) detail = tr("cloudBetween", { a: lowest, b: highest });
+  else if ((segment.state === "above" || segment.state === "between") && tops.length) detail = tr("cloudTopAt", { a: highest });
+  else if (segment.state === "below" && bases.length) detail = tr("cloudBaseAt", { a: lowest });
+  return { kind: "peak_" + segment.state, title: tr("st_" + segment.state), detail };
+}
+
+/* ---------- Avalanche bulletin ---------- */
+function pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function pointInPolygon(lon, lat, polygon) {
+  if (!polygon.length || !pointInRing(lon, lat, polygon[0])) return false;
+  for (let i = 1; i < polygon.length; i++) if (pointInRing(lon, lat, polygon[i])) return false;
+  return true;
+}
+function findBulletinFeature(geojson, lat, lon) {
+  for (const feature of (geojson && geojson.features) || []) {
+    const geometry = feature.geometry;
+    if (!geometry) continue;
+    const polygons = geometry.type === "MultiPolygon" ? geometry.coordinates : geometry.type === "Polygon" ? [geometry.coordinates] : [];
+    if (polygons.some(polygon => pointInPolygon(lon, lat, polygon))) return feature;
+  }
+  return null;
+}
+function summarizeBulletin(feature) {
+  const props = feature.properties || {};
+  const where = item => ({ lower: item.elevation && item.elevation.lowerBound || null, upper: item.elevation && item.elevation.upperBound || null, aspects: item.aspects || [] });
+  const ratings = (props.dangerRatings || []).map(rating => Object.assign(where(rating), {
+    value: rating.mainValue, level: DANGER_LEVEL[rating.mainValue] || null,
+    sign: SUBDIVISION_SIGN[rating.customData && rating.customData.CH && rating.customData.CH.subdivision] || ""
+  }));
+  const top = ratings.reduce((best, rating) => (!best || (rating.level || 0) > (best.level || 0)) ? rating : best, null);
+  const problems = (props.avalancheProblems || []).filter(item => item.problemType).map(item => Object.assign(where(item), { type: item.problemType }));
+  const tendency = (props.tendency || []).find(item => item && item.tendencyType);
+  return { top, ratings, problems, tendency: tendency ? tendency.tendencyType : null, validUntil: props.validTime && props.validTime.endTime || null };
+}
+function whereText(item) {
+  const unit = value => /^\d+$/.test(String(value)) ? value + " m" : String(value);
+  const parts = [];
+  if (item.lower && item.upper) parts.push(unit(item.lower) + " " + tr("to") + " " + unit(item.upper));
+  else if (item.lower) parts.push(tr("above") + " " + unit(item.lower));
+  else if (item.upper) parts.push(tr("below") + " " + unit(item.upper));
+  if (item.aspects.length) parts.push(item.aspects.length >= 8 ? tr("allAspects") : item.aspects.join(", "));
+  return parts.join(" · ");
+}
+function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[value] || String(value || "").replace(/_/g, " "); }
+function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
+
+/* ---------- Icons ---------- */
+const VERSION = "0.5";
+function icon(kind, size) {
+  const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
+  const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
+  const cloud = '<path stroke="#1B2A4A" d="M7 16h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 7.5 4.25 4.25 0 0 0 7 16z"/>';
+  const peak = '<path stroke="#1B2A4A" d="M2.5 20l7-11 3.5 5 2-3 6.5 9z"/>';
+  const lowCloud = '<path stroke="#1B2A4A" fill="#F6F1E7" d="M9 20h8.5a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 8.3 12.6 3.75 3.75 0 0 0 9 20z"/>';
+  const shapes = {
+    sun: '<g stroke="#E8762B"><circle cx="12" cy="12" r="4"/>' + rays + "</g>",
+    moon: '<path stroke="#1B2A4A" d="M17.5 14.5A7 7 0 0 1 9.5 6.5a7 7 0 1 0 8 8z"/>',
+    partly: '<g stroke="#E8762B"><circle cx="8" cy="8" r="3"/><path d="M8 2.5v1.2M2.5 8h1.2M4.1 4.1l.9.9M11.9 4.1l-.9.9"/></g>' + lowCloud,
+    partlyNight: '<path stroke="#1B2A4A" d="M11.5 7.5A4.5 4.5 0 0 1 6.5 2.5a4.5 4.5 0 1 0 5 5z"/>' + lowCloud,
+    cloud: cloud,
+    rain: cloud + '<path stroke="#1B2A4A" d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/>',
+    snow: '<g transform="translate(2.4 -1) scale(0.8)" stroke-width="2"><path stroke="#1B2A4A" d="M7 16h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 7.5 4.25 4.25 0 0 0 7 16z"/></g><path stroke="#1B2A4A" stroke-width="1.3" d="M7.5 15.7v5.8M4.99 17.15l5.02 2.9M4.99 20.05l5.02 -2.9M16.5 15.7v5.8M13.99 17.15l5.02 2.9M13.99 20.05l5.02 -2.9"/>',
+    thunder: cloud + '<path stroke="#E8762B" d="M12.5 17l-2 3h3l-2 3"/>',
+    wind: '<g stroke="#1B2A4A"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h8"/></g>',
+    peak_clear: peak,
+    peak_below: peak + '<path stroke="#1B2A4A" stroke-width="2.2" d="M4 3.5h16M7 6.5h10"/>',
+    peak_between: peak + '<path stroke="#1B2A4A" stroke-width="2.2" d="M4 3.5h16M2 21.5h20"/>',
+    peak_above: '<circle stroke="#E8762B" cx="18.5" cy="5" r="2.5"/>' + peak + '<path stroke="#1B2A4A" stroke-width="2.2" d="M2 18h20M4 21.5h16"/>',
+    peak_in: '<g opacity="0.45">' + peak + '</g><path stroke="#1B2A4A" stroke-width="2.2" d="M3 8h18M5 11.5h14M3 15h18"/>',
+    back: '<path stroke="#1B2A4A" d="M15 5l-7 7 7 7"/>',
+    trash: '<g stroke="#1B2A4A"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></g>'
+  };
+  return open + (shapes[kind] || shapes.cloud) + "</svg>";
+}
+
+/* ---------- Avalanche drawings ---------- */
+function problemIcon(type, size) {
+  const navy = 'stroke="#1B2A4A"', orange = 'stroke="#E8762B"';
+  const shapes = {
+    new_snow: '<path ' + navy + ' d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5M9.6 4.4L12 6.8l2.4-2.4M9.6 19.6L12 17.2l2.4 2.4"/>',
+    wind_slab: '<path ' + orange + ' d="M2 5.5h8.5a2.3 2.3 0 1 0-2.3-2.3M2 9.5h13"/><path ' + navy + ' d="M2 20.5h20c-1.6-4.6-3.8-7.5-7.6-7.5-3 0-4.2 2-6.1 4-1.6 1.7-3.2 3.5-6.3 3.5z"/>',
+    persistent_weak_layers: '<path ' + navy + ' d="M3 4h18v16H3zM3 9h18"/><path ' + orange + ' stroke-dasharray="2 2.6" d="M4 14.5h16"/>',
+    wet_snow: '<path ' + navy + ' d="M12 2.5c3.2 4.2 5.5 7 5.5 9.8a5.5 5.5 0 0 1-11 0c0-2.8 2.3-5.6 5.5-9.8z"/><path ' + orange + ' d="M5 21.5h14"/>',
+    gliding_snow: '<path ' + navy + ' d="M2 21.5L22 9.5M2 15.5l7.5-4.5 2 3.6M22 3.5l-8 4.8 2 3.6"/><path ' + orange + ' d="M10.6 9.6l3.2 5.8"/>',
+    none: '<circle ' + navy + ' cx="12" cy="12" r="9"/><path ' + navy + ' d="M7.5 12.3l3 3 6-6.6"/>'
+  };
+  return '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (shapes[type] || shapes.none) + "</svg>";
+}
+// Inner ring: terrain above the stated altitude. Outer ring: terrain below it.
+function aspectRose(item, size) {
+  const names = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"], active = item.aspects.map(aspect => String(aspect).toUpperCase());
+  if (!active.length) return "<span></span>";
+  const innerOn = !(item.upper && !item.lower), outerOn = !(item.lower && !item.upper), cx = 24, cy = 27, mid = 9.5, out = 18;
+  const point = (radius, degrees) => (cx + radius * Math.sin(degrees * Math.PI / 180)).toFixed(2) + " " + (cy - radius * Math.cos(degrees * Math.PI / 180)).toFixed(2);
+  let wedges = "";
+  names.forEach((name, index) => {
+    const from = index * 45 - 22.5, to = index * 45 + 22.5, on = active.includes(name);
+    wedges += '<path fill="' + (on && innerOn ? "#1B2A4A" : "none") + '" d="M' + cx + " " + cy + "L" + point(mid, from) + "A" + mid + " " + mid + " 0 0 1 " + point(mid, to) + 'Z"/>' +
+      '<path fill="' + (on && outerOn ? "#1B2A4A" : "none") + '" d="M' + point(mid, from) + "L" + point(out, from) + "A" + out + " " + out + " 0 0 1 " + point(out, to) + "L" + point(mid, to) + "A" + mid + " " + mid + " 0 0 0 " + point(mid, from) + 'Z"/>';
+  });
+  return '<svg role="img" aria-label="' + esc(whereText(item)) + '" width="' + size + '" height="' + size + '" viewBox="0 0 48 48" stroke="#1B2A4A" stroke-width="1" stroke-linejoin="round">' + wedges +
+    '<text x="24" y="7" text-anchor="middle" font-size="8" font-weight="700" fill="#1B2A4A" stroke="none">N</text></svg>';
+}
+// Side view of a mountain: danger bands by altitude, with the altitude of the chosen spot.
+function altitudeProfile(ratings, elevation) {
+  const number = value => /^\d+$/.test(String(value)) ? Number(value) : null;
+  const bands = ratings.filter(rating => rating.level);
+  if (!bands.length || bands.some(rating => (rating.lower && number(rating.lower) === null) || (rating.upper && number(rating.upper) === null))) return "";
+  const known = typeof elevation === "number";
+  const low = known && elevation < 1200 ? 0 : 1000, high = Math.max(4800, known ? Math.ceil((elevation + 200) / 100) * 100 : 0), top = 8, height = 84, width = 96;
+  const y = metres => top + (high - Math.min(high, Math.max(low, metres))) / (high - low) * height;
+  const outline = [[0, 1], [13, .74], [22, .8], [40, .14], [48, 0], [57, .22], [68, .56], [78, .5], [96, 1]].map(pair => pair[0] + " " + (top + pair[1] * height).toFixed(1)).join("L");
+  let fills = "", marks = "";
+  const labels = [];
+  for (const band of bands) {
+    const from = y(number(band.upper) || high), to = y(number(band.lower) || low);
+    fills += '<rect x="0" y="' + from.toFixed(1) + '" width="' + width + '" height="' + (to - from).toFixed(1) + '" fill="' + DANGER_COLOR[band.level] + '"/>';
+    for (const bound of [number(band.lower), number(band.upper)]) if (bound && !labels.some(label => label.metres === bound)) labels.push({ metres: bound, at: y(bound) });
+  }
+  for (const label of labels) marks += '<path stroke="#1B2A4A" stroke-width="1" stroke-dasharray="3 3" d="M0 ' + label.at.toFixed(1) + "H" + (width + 6) + '"/><text x="' + (width + 10) + '" y="' + (label.at + 3.5).toFixed(1) + '" font-size="10" fill="#1B2A4A">' + label.metres + " m</text>";
+  if (known) {
+    const at = y(elevation);
+    let textAt = at + 3.5;
+    for (const label of labels) if (Math.abs(label.at - at) < 12) textAt = label.at + (at <= label.at ? -8.5 : 15.5);
+    marks += '<path stroke="#E8762B" stroke-width="1.6" d="M0 ' + at.toFixed(1) + "H" + (width + 2) + '"/><circle cx="' + (width + 4) + '" cy="' + at.toFixed(1) + '" r="2.6" fill="#E8762B"/>' +
+      '<text x="' + (width + 10) + '" y="' + Math.max(9, textAt).toFixed(1) + '" font-size="10" font-weight="600" fill="#1B2A4A">' + esc(tr("yourSpot")) + " " + Math.round(elevation) + " m</text>";
+  }
+  return '<svg aria-hidden="true" width="210" height="100" viewBox="0 0 210 100" fill="none" style="flex:none;max-width:100%"><clipPath id="profileClip"><path d="M' + outline + 'Z"/></clipPath>' +
+    '<g clip-path="url(#profileClip)">' + fills + '</g><path stroke="#1B2A4A" stroke-width="1.4" stroke-linejoin="round" d="M' + outline + '"/>' + marks + "</svg>";
+}
+
+/* ---------- Rendering ---------- */
+function dayLabel(date, index) {
+  if (index === 0) return tr("today");
+  if (index === 1) return tr("tomorrow");
+  return new Date(date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short", day: "numeric", month: "short" });
+}
+function clock(timestamp) { return new Date(timestamp).toLocaleString(LOCALES[state.lang], { weekday: "short", hour: "2-digit", minute: "2-digit" }); }
+function chip(top) {
+  if (!top || !top.level) return "";
+  const dark = top.level >= 4;
+  return '<span class="chip" style="background:' + DANGER_COLOR[top.level] + (dark ? ";color:#FFFFFF" : "") + '">' + top.level + esc(top.sign) + "</span>";
+}
+function languageSwitch() {
+  return '<div class="seg" role="group" aria-label="' + esc(tr("language")) + '">' + LANGS.map(lang =>
+    '<button data-lang="' + lang + '" aria-pressed="' + (state.lang === lang) + '">' + lang.toUpperCase() + "</button>").join("") + "</div>";
+}
+function footer() {
+  return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
+    ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · v' + VERSION + "</footer>";
+}
+function renderHome() {
+  let html = '<div class="homehead"><header style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:flex-end">' + languageSwitch() + "</div><h1>" + esc(tr("favourites")) + "</h1></header>" +
+    '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
+    '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
+  if (!state.spots.length) html += '<p class="muted" style="margin:0">' + esc(tr("empty")) + "</p>";
+  html += '</div><div class="cards">';
+  for (const spot of shownSpots()) {
+    const entry = state.cache[spot.id] || {}, forecast = entry.forecast, today = forecast && forecast.days[0];
+    const top = entry.avalanche && entry.avalanche.status === "ok" ? entry.avalanche.summary.top : null;
+    html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + '<span class="row">' + (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + chip(top) + "</span></span>" +
+      '<span class="small muted">' + (forecast && forecast.elevation !== null ? forecast.elevation + " m · " : "") + (forecast ? esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : esc(tr(entry.error ? "loadFail" : "loading"))) + "</span>";
+    if (today) html += '<span class="summary">' + icon(dayKind(today), 26) + "<span>" + esc(tr("sunshine")) + " " + show(today.sunHours, " h") + " · " + show(today.tempMin, "°") + " " + esc(tr("to")) + " " + show(today.tempMax, "°C") +
+      " · " + esc(tr("gusts")) + " " + show(today.gustMax, " km/h") + (today.snowCm > 0 ? " · " + esc(tr("newSnow")) + " " + today.snowCm + " cm" : "") + "</span></span>";
+    html += "</button>";
+  }
+  return html + "</div>" + footer();
+}
+function bulletinLink() {
+  return '<a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener" title="' + esc(tr("newTab")) + '">' + esc(tr("avaFull")) + " ↗</a>";
+}
+function renderAvalancheBlock(avalanche, elevation) {
+  let html = '<section class="rule" style="display:flex;flex-direction:column;gap:14px"><div class="label">' + esc(tr("avaOfficial")) + "</div>";
+  if (!avalanche) return html + '<div class="muted">' + esc(tr("loading")) + "</div></section>";
+  if (avalanche.status !== "ok") return html + "<div>" + esc(tr(avalanche.status === "none" ? "avaNone" : avalanche.status === "outside" ? "avaOutside" : "avaError")) + "</div>" + bulletinLink() + "</section>";
+  const summary = avalanche.summary, top = summary.top, arrow = { increasing: "↗", steady: "→", decreasing: "↘" }[summary.tendency];
+  if (top) html += '<div class="avatop"><div class="ava"><div class="big" style="background:' + (DANGER_COLOR[top.level] || "none") + (top.level >= 4 ? ";color:#FFFFFF" : "") + '">' + (top.level ? top.level + esc(top.sign) : "–") +
+    '</div><div><div style="font-size:22px;font-weight:500">' + esc(dangerWord(top.value)) + "</div><div>" + esc(whereText(top)) + "</div>" +
+    (arrow ? '<div class="small" style="font-weight:600">' + esc(tr("tendency")) + ": " + arrow + " " + esc(tr("tend_" + summary.tendency)) + "</div>" : "") + "</div></div>" + altitudeProfile(summary.ratings, elevation) + "</div>";
+  const others = summary.ratings.filter(rating => rating !== top).map(rating => (rating.level || "") + " " + dangerWord(rating.value) + (whereText(rating) ? " · " + whereText(rating) : ""));
+  if (others.length) html += "<ul>" + others.map(line => "<li>" + esc(line) + "</li>").join("") + "</ul>";
+  if (summary.problems.length) {
+    html += '<div class="label">' + esc(tr("problems")) + '</div><div class="probs">' + summary.problems.map(problem =>
+      '<div class="prob">' + problemIcon(problem.type, 30) + "<div><b>" + esc(problemWord(problem.type)) + '</b><span class="small muted">' + esc(whereText(problem)) + "</span></div>" + aspectRose(problem, 56) + "</div>").join("") + "</div>";
+    if (summary.problems.some(problem => problem.aspects.length)) html += '<div class="small muted">' + esc(tr("roseLegend")) + "</div>";
+  }
+  return html + bulletinLink() + (summary.validUntil ? '<div class="small muted">' + esc(tr("validUntil")) + " " + esc(clock(summary.validUntil)) + "</div>" : "") + "</section>";
+}
+function renderCloudSection(day, cloud) {
+  const segments = cloudSegments(day, cloud);
+  let html = '<section style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("cloudTitle")) + "</div>";
+  if (!segments.length) return html + '<div class="muted">' + esc(tr("cloudNA")) + "</div></section>";
+  for (const segment of segments) {
+    const view = segmentView(segment);
+    html += '<div class="summary">' + icon(view.kind, 30) + '<span><b style="font-weight:600">' + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(view.title) + "</b>" +
+      (view.detail ? '<br><span class="small muted">' + esc(view.detail) + "</span>" : "") + "</span></div>";
+  }
+  return html + '<div class="small muted">' + esc(tr("cloudLegend")) + "</div></section>";
+}
+function renderDayTab(day, avalanche, cloud) {
+  const top = avalanche && avalanche.status === "ok" ? avalanche.summary.top : null;
+  let html = '<section class="tiles"><div class="tile"><span class="small muted">' + esc(tr("avalanche")) + "</span><b>" + (top && top.level ? chip(top) : "–") + '</b><span class="small">' + esc(top ? dangerWord(top.value) : "") + "</span></div>" +
+    '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax) + ' <span>km/h</span></b><span class="small">max</span></div>' +
+    '<div class="tile"><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours) + ' <span>h</span></b><span class="small">' + esc(tr("ofDaylight", { h: show(day.daylightHours) })) + "</span></div></section>";
+  html += renderCloudSection(day, cloud);
+  const events = dayEvents(day);
+  html += '<section><div class="label" style="margin-bottom:12px">' + esc(tr("yourDay")) + '</div><div class="timeline">';
+  events.forEach((event, index) => {
+    const last = index === events.length - 1 ? " last" : "";
+    const marker = event.kind === "dot" ? '<span class="dot"></span>' : event.kind === "dotFull" ? '<span class="dot" style="background:#1B2A4A"></span>' : icon(event.kind, 22);
+    html += '<div class="time' + last + '">' + esc(event.time) + '</div><div class="rail">' + marker + (last ? "" : "<i></i>") + '</div><div class="text' + last + '"><b>' + esc(event.title) + '</b><span class="small muted">' + esc(event.sub) + "</span></div>";
+  });
+  html += '</div></section><section style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
+  for (const hour of day.hours.filter(item => item.hour >= 6 && item.hour <= 20 && item.hour % 2 === 0)) {
+    html += '<div><span class="muted">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + "<b>" + show(hour.temp, "°") + "</b><span" + (hour.gust >= 60 ? ' style="font-weight:700"' : "") + ">" + show(hour.gust) + "</span></div>";
+  }
+  return html + '</div><div class="small muted">' + esc(tr("hourLegend")) + "</div></section>";
+}
+function renderDetailsTab(day, avalanche, elevation) {
+  const share = day.sunHours !== null && day.daylightHours ? Math.min(100, Math.round(100 * day.sunHours / day.daylightHours)) : 0;
+  return '<section class="facts">' +
+    '<div><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours, " h") + '</b><div class="bar"><i style="width:' + share + '%"></i></div></div>' +
+    '<div><span class="small muted">' + esc(tr("sunrise")) + " / " + esc(tr("sunset")) + "</span><b>" + esc(show(day.sunrise)) + " / " + esc(show(day.sunset)) + "</b></div>" +
+    '<div><span class="small muted">' + esc(tr("temperature")) + "</span><b>" + show(day.tempMin, "°") + " " + esc(tr("to")) + " " + show(day.tempMax, "°C") + "</b></div>" +
+    '<div><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax, " km/h") + "</b></div>" +
+    '<div><span class="small muted">' + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
+    '<div><span class="small muted">' + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
+    (day.freezingMin !== null ? '<div><span class="small muted">' + esc(tr("freezing")) + "</span><b>" + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + esc(tr("to")) + " " + day.freezingMax : "") + " m</b></div>" : "") +
+    "</section>" + renderAvalancheBlock(avalanche, elevation);
+}
+function renderSpot(spot) {
+  const entry = state.cache[spot.id] || {}, forecast = entry.forecast;
+  let html = '<header style="display:flex;flex-direction:column;gap:6px"><div class="row"><button class="iconbtn" data-home="1" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button>" +
+    '<div class="row"><div class="seg tabswitch" role="group"><button data-tab="day" aria-pressed="' + (view.tab === "day") + '">' + esc(tr("day")) + '</button><button data-tab="details" aria-pressed="' + (view.tab === "details") + '">' + esc(tr("details")) + "</button></div>" +
+    (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : '<button class="iconbtn" data-remove="' + esc(spot.id) + '" aria-label="' + esc(tr("remove")) + '" style="margin-right:-10px">' + icon("trash", 22) + "</button>") + "</div></div>" +
+    "<h1>" + esc(spot.name) + '</h1><div class="muted" style="font-size:14px">' + (forecast && forecast.elevation !== null ? forecast.elevation + " m · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) +
+    (forecast ? " · " + esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : "") + "</div></header>";
+  if (entry.error) html += '<div class="err">' + esc(tr(forecast ? "refreshFail" : "loadFail")) + "</div>";
+  if (!forecast) return html + (entry.error ? "" : '<p class="muted">' + esc(tr("loading")) + "</p>") + footer();
+  const dayIndex = Math.min(view.day, forecast.days.length - 1), day = forecast.days[dayIndex];
+  if (forecast.wide) html += '<p class="small muted" style="margin:0">' + esc(tr("wideModel")) + "</p>";
+  html += '<div class="pills">' + forecast.days.map((item, index) => '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '">' + esc(dayLabel(item.date, index)) + "</button>").join("") + "</div>";
+  return html + '<div class="cols" data-tab="' + (view.tab === "details" ? "details" : "day") + '"><div class="col col-day">' + renderDayTab(day, entry.avalanche, entry.cloud) +
+    '</div><div class="col col-details">' + renderDetailsTab(day, entry.avalanche, forecast.elevation) + "</div></div>" +
+    '<div class="actions"><button data-print="' + esc(spot.id) + '">' + esc(tr("print")) + '</button><button data-share="' + esc(spot.id) + '">' + esc(tr("share")) + "</button></div>" + footer();
+}
+function reportDay(spot) {
+  const entry = state.cache[spot.id] || {}, forecast = entry.forecast;
+  if (!forecast) return null;
+  const index = Math.min(view.day, forecast.days.length - 1);
+  return { entry, forecast, index, day: forecast.days[index] };
+}
+function avalancheLine(avalanche) {
+  if (!avalanche || avalanche.status !== "ok") return tr(!avalanche || avalanche.status === "error" ? "avaError" : avalanche.status === "none" ? "avaNone" : "avaOutside");
+  const top = avalanche.summary.top;
+  return (top ? (top.level ? top.level + top.sign + " " : "") + dangerWord(top.value) + (whereText(top) ? " · " + whereText(top) : "") : tr("na")) +
+    avalanche.summary.problems.map(problem => "; " + problemWord(problem.type)).join("");
+}
+function renderReport(spot) {
+  const report = reportDay(spot);
+  if (!report) return "";
+  const day = report.day, forecast = report.forecast, avalanche = report.entry.avalanche;
+  const ok = avalanche && avalanche.status === "ok", top = ok ? avalanche.summary.top : null;
+  const longDate = date => new Date(date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const stat = (label, value, sub) => '<div><span class="pk">' + esc(label) + "</span><b>" + esc(value) + '</b><span class="psub">' + esc(sub || "") + "</span></div>";
+  const title = label => '<div class="pk ptitle">' + esc(label) + "</div>";
+  let html = '<header class="phead"><div><div class="pk">Bergwetter · ' + esc(longDate(day.date)) + "</div><h1>" + esc(spot.name) + '</h1><div class="pmeta">' +
+    (forecast.elevation !== null ? forecast.elevation + " m · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) + " · " + esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) + " · " + esc(tr("exported")) + " " + esc(clock(Date.now())) + "</div></div>" +
+    '<div class="phero"><div class="pbadge' + (top && top.level ? "" : " empty") + '">' + (top && top.level ? top.level + esc(top.sign) : "–") + '</div><div><span class="pk">' + esc(tr("avalanche")) + "</span><b>" +
+    esc(top ? dangerWord(top.value) : tr("na")) + '</b><span class="psub">' + esc(top ? whereText(top) : avalancheLine(avalanche)) + "</span></div></div></header>";
+  html += '<section class="pstats">' +
+    stat(tr("gusts"), show(day.gustMax, " km/h"), "max") +
+    stat(tr("sunshine"), show(day.sunHours, " h"), tr("ofDaylight", { h: show(day.daylightHours) })) +
+    stat(tr("temperature"), show(day.tempMin, "°") + " " + tr("to") + " " + show(day.tempMax, "°C")) +
+    stat(tr("newSnow"), show(day.snowCm, " cm")) +
+    stat(tr("precipitation"), show(day.precipMm, " mm")) +
+    stat(tr("freezing"), day.freezingMin === null ? tr("na") : day.freezingMax !== day.freezingMin ? day.freezingMin + "–" + day.freezingMax + " m" : day.freezingMin + " m") + "</section>";
+  const events = dayEvents(day);
+  html += '<section class="pcols"><div>' + title(tr("yourDay")) + '<div class="ptl">' + events.map((event, index) =>
+    '<div class="time">' + esc(event.time) + '</div><div class="rail"><i></i>' + (index === events.length - 1 ? "" : "<span></span>") + '</div><div class="what"><b>' + esc(event.title) + "</b>" + (event.sub ? '<br><span class="psub">' + esc(event.sub) + "</span>" : "") + "</div>").join("") + "</div></div><div>";
+  const segments = cloudSegments(day, report.entry.cloud);
+  html += title(tr("cloudTitle")) + (segments.length ? segments.map(segment => {
+    const view = segmentView(segment);
+    return '<div class="pcloud">' + icon(view.kind, 22) + "<div><b>" + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(view.title) + "</b>" + (view.detail ? '<br><span class="psub">' + esc(view.detail) + "</span>" : "") + "</div></div>";
+  }).join("") : "<div>" + esc(tr("cloudNA")) + "</div>");
+  if (ok) {
+    const lines = avalanche.summary.ratings.filter(rating => rating !== top).map(rating => (rating.level || "") + " " + dangerWord(rating.value) + (whereText(rating) ? " · " + whereText(rating) : ""))
+      .concat(avalanche.summary.problems.map(problem => problemWord(problem.type) + (whereText(problem) ? " · " + whereText(problem) : "")));
+    html += '<div style="margin-top:8px">' + title(tr("avaOfficial")) + "</div>" + (lines.length ? '<ul class="plist">' + lines.map(line => "<li>" + esc(line) + "</li>").join("") + "</ul>" : "") +
+      (avalanche.summary.validUntil ? '<div class="psub">' + esc(tr("validUntil")) + " " + esc(clock(avalanche.summary.validUntil)) + "</div>" : "");
+  }
+  html += "</div></section>";
+  const hours = day.hours.filter(hour => hour.hour >= 5 && hour.hour <= 21);
+  const shade = hour => hour.isDay ? "" : ' class="night"';
+  const row = (label, cell) => "<tr><td>" + esc(label) + "</td>" + hours.map(hour => "<td" + shade(hour) + ">" + cell(hour) + "</td>").join("") + "</tr>";
+  const plain = value => value === null || value === undefined ? "–" : value;
+  html += "<section>" + title(tr("hourByHour")) + "<table><thead><tr><th></th>" + hours.map(hour => "<th" + shade(hour) + ">" + String(hour.hour).padStart(2, "0") + "</th>").join("") + "</tr></thead><tbody>" +
+    row("", hour => icon(weatherKind(hour), 16)) +
+    row(tr("temperature") + " (°C)", hour => plain(hour.temp)) +
+    row(tr("gusts") + " (km/h)", hour => hour.gust >= 60 ? "<b>" + hour.gust + "</b>" : plain(hour.gust)) +
+    row(tr("sunshine"), hour => '<div class="pbarbox"><i style="height:' + Math.round(14 * (hour.sunMinutes || 0) / 60) + 'px"></i></div>') +
+    row(tr("precipitation") + " (mm)", hour => hour.precip > 0 ? hour.precip : "") +
+    row(tr("newSnow") + " (cm)", hour => hour.snow > 0 ? hour.snow : "") + '</tbody></table><div class="psub" style="margin-top:3px">' + esc(tr("tableLegend")) + "</div></section>";
+  const later = forecast.days.slice(report.index + 1, report.index + 5);
+  if (later.length) html += "<section>" + title(tr("nextDays")) + '<table class="pnext"><thead><tr><th></th><th></th><th>' + [tr("sunshine"), tr("temperature"), tr("gusts"), tr("newSnow"), tr("precipitation")].map(esc).join("</th><th>") + "</th></tr></thead><tbody>" +
+    later.map(next => "<tr><td>" + esc(new Date(next.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "short" })) + "</td><td>" + icon(dayKind(next), 16) + "</td><td>" + show(next.sunHours, " h") + "</td><td>" +
+      show(next.tempMin, "°") + " " + esc(tr("to")) + " " + show(next.tempMax, "°C") + "</td><td>" + (next.gustMax >= 60 ? "<b>" + next.gustMax + " km/h</b>" : show(next.gustMax, " km/h")) + "</td><td>" + show(next.snowCm, " cm") + "</td><td>" + show(next.precipMm, " mm") + "</td></tr>").join("") + "</tbody></table></section>";
+  return html + '<div class="pfoot">' + esc(tr("footNote")) + " " + esc(tr("cloudLegend")) + " " + esc(tr("astro")) + "<br>" + esc(forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + "</div>";
+}
+function reportText(spot) {
+  const report = reportDay(spot);
+  if (!report) return "";
+  const day = report.day, forecast = report.forecast, lines = [];
+  lines.push("Bergwetter · " + spot.name + (forecast.elevation !== null ? " (" + forecast.elevation + " m)" : ""));
+  lines.push(new Date(day.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+  lines.push(tr("updated") + " " + clock(forecast.fetchedAt), "");
+  lines.push(tr("sunshine") + ": " + show(day.sunHours, " h") + " (" + tr("ofDaylight", { h: show(day.daylightHours) }) + ")");
+  lines.push(tr("sunrise") + " / " + tr("sunset") + ": " + show(day.sunrise) + " / " + show(day.sunset));
+  lines.push(tr("temperature") + ": " + show(day.tempMin, "°") + " " + tr("to") + " " + show(day.tempMax, "°C"));
+  lines.push(tr("gusts") + ": " + show(day.gustMax, " km/h"));
+  lines.push(tr("newSnow") + ": " + show(day.snowCm, " cm") + " · " + tr("precipitation") + ": " + show(day.precipMm, " mm"));
+  if (day.freezingMin !== null) lines.push(tr("freezing") + ": " + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + tr("to") + " " + day.freezingMax : "") + " m");
+  const segments = cloudSegments(day, report.entry.cloud);
+  if (segments.length) lines.push("", tr("cloudTitle") + ":");
+  for (const segment of segments) lines.push("  " + tr("from") + " " + hourText(segment.from) + ": " + segmentView(segment).title);
+  lines.push("", tr("yourDay") + ":");
+  for (const event of dayEvents(day)) lines.push("  " + event.time + "  " + event.title + (event.sub ? " (" + event.sub + ")" : ""));
+  lines.push("", tr("avalanche") + ": " + avalancheLine(report.entry.avalanche), "", tr("footNote"), (forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + tr("footAva"));
+  return lines.join("\n");
+}
+async function shareReport(spot) {
+  const body = reportText(spot), report = reportDay(spot);
+  if (!body) return;
+  if (navigator.share) { try { await navigator.share({ title: "Bergwetter · " + spot.name, text: body }); } catch (error) { /* closed by the user */ } return; }
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([body], { type: "text/plain;charset=utf-8" }));
+  link.download = "bergwetter-" + spot.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + report.day.date + ".txt";
+  document.body.appendChild(link); link.click(); link.remove();
+}
+function printReport(spot) {
+  document.getElementById("print").innerHTML = renderReport(spot);
+  window.print();
+}
+function render() {
+  const spot = view.name === "spot" ? findSpot(view.id) : null;
+  if (view.name === "spot" && !spot) view = { name: "home", tab: "day", day: 0 };
+  document.documentElement.lang = state.lang;
+  document.getElementById("app").innerHTML = spot ? renderSpot(spot) : renderHome();
+}
+
+/* ---------- Loading and saving ---------- */
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {} };
+  } catch (error) { /* start empty */ }
+  for (const id in state.cache) if (state.cache[id].forecast && state.cache[id].forecast.days.some(day => !day.hours || (day.hours[0] && day.hours[0].isDay === undefined))) delete state.cache[id];
+}
+function saveState() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (error) { /* storage unavailable */ } }
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  return response.json();
+}
+function getBulletin(lang) {
+  if (!bulletinPromises[lang]) bulletinPromises[lang] = fetchJson(bulletinUrl(lang)).catch(error => { delete bulletinPromises[lang]; throw error; });
+  return bulletinPromises[lang];
+}
+/* Separate request that is not waited for, so cloud data never delays or blocks the forecast and the bulletin. */
+async function loadCloud(spot, entry) {
+  try {
+    entry.cloud = shapeCloud(await fetchJson(cloudUrl(spot)), entry.forecast.elevation);
+    saveState();
+    if (!document.querySelector("#results button, #q:focus")) render();
+  } catch (error) { /* keep the last saved cloud data */ }
+}
+function hasValues(json) {
+  return !!(json && json.hourly && (json.hourly.temperature_2m || []).some(value => value !== null && value !== undefined));
+}
+// The MeteoSwiss models cover the Alps and central Europe only; elsewhere fall back to Open-Meteo's best match.
+async function loadForecast(spot) {
+  let json = null;
+  try { json = await fetchJson(forecastUrl(spot, "meteoswiss_icon_seamless")); } catch (error) { json = null; }
+  const wide = !hasValues(json);
+  if (wide) json = await fetchJson(forecastUrl(spot, "best_match"));
+  if (!hasValues(json)) throw new Error("no forecast values");
+  const forecast = shapeForecast(json);
+  forecast.wide = wide;
+  return forecast;
+}
+async function refreshSpot(spot) {
+  const entry = state.cache[spot.id] || (state.cache[spot.id] = {});
+  entry.error = false;
+  try { entry.forecast = await loadForecast(spot); } catch (error) { entry.error = true; }
+  if (entry.forecast && entry.forecast.elevation !== null) loadCloud(spot, entry);
+  try {
+    const bulletin = await getBulletin(state.lang);
+    if (!bulletin.features || !bulletin.features.length) entry.avalanche = { status: "none" };
+    else { const feature = findBulletinFeature(bulletin, spot.lat, spot.lon); entry.avalanche = feature ? { status: "ok", summary: summarizeBulletin(feature) } : { status: "outside" }; }
+  } catch (error) { if (!entry.avalanche || entry.avalanche.status !== "ok") entry.avalanche = { status: "error" }; }
+  saveState();
+  if (!document.querySelector("#results button, #q:focus")) render();
+}
+function addSpot(name, lat, lon, elevation) {
+  const spot = { id: "s" + Date.now(), name, lat, lon };
+  if (typeof elevation === "number") spot.elevation = elevation;
+  state.spots.unshift(spot); saveState(); render(); refreshSpot(spot);
+}
+let searchResults = [];
+async function onSearch(event) {
+  event.preventDefault();
+  const input = document.getElementById("q"), results = document.getElementById("results"), query = input.value.trim();
+  if (!query) return;
+  const coordinates = parseCoordinates(query);
+  if (coordinates) return addSpot(coordinates.lat.toFixed(3) + ", " + coordinates.lon.toFixed(3), coordinates.lat, coordinates.lon);
+  results.innerHTML = '<p class="muted" style="margin:0">' + esc(tr("searching")) + "</p>";
+  try {
+    searchResults = (await fetchJson(geocodeUrl(query))).results || [];
+    results.innerHTML = searchResults.length ? searchResults.map((place, index) => '<button type="button" data-pick="' + index + '">' + esc(place.name) +
+      ' <span class="small muted">' + esc([place.admin1, place.country, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>").join("")
+      : '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>";
+  } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
+}
+function onClick(event) {
+  const target = event.target.closest("[data-lang],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  if (!target) return;
+  const data = target.dataset;
+  if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
+  else if (data.open) { location.hash = "spot-" + data.open; }
+  else if (data.home) { location.hash = ""; }
+  else if (data.tab) { view.tab = data.tab; render(); }
+  else if (data.day) { view.day = Number(data.day); render(); }
+  else if (data.remove) { state.spots = state.spots.filter(spot => spot.id !== data.remove); delete state.cache[data.remove]; saveState(); location.hash = ""; render(); if (!state.spots.length) refreshSpot(EXAMPLE_SPOT); }
+  else if (data.print || data.share) { const spot = findSpot(data.print || data.share); if (spot) (data.print ? printReport : shareReport)(spot); }
+  else if (data.pick) { const place = searchResults[Number(data.pick)]; addSpot(place.name, place.latitude, place.longitude, place.elevation); }
+}
+function onHash() {
+  const match = /^#spot-(.+)$/.exec(location.hash);
+  view = match ? { name: "spot", id: match[1], tab: "day", day: 0 } : { name: "home", tab: "day", day: 0 };
+  render(); window.scrollTo(0, 0);
+}
+function init() {
+  const browserLang = (navigator.language || "en").slice(0, 2);
+  if (LANGS.includes(browserLang)) state.lang = browserLang;
+  loadState();
+  document.addEventListener("click", onClick);
+  document.addEventListener("submit", event => { if (event.target.id === "search") onSearch(event); });
+  window.addEventListener("hashchange", onHash);
+  onHash();
+  shownSpots().forEach(refreshSpot);
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+if (typeof document !== "undefined") init();
+</script>
+</body>
+</html>
