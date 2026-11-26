@@ -153,6 +153,8 @@
   .found b { font-size:18px; font-weight:600; }
   #up { position:fixed; right:max(16px, env(safe-area-inset-right)); bottom:max(16px, env(safe-area-inset-bottom)); width:48px; height:48px; border-radius:50%; border:0; background:var(--navy); color:var(--cream); font-size:22px; line-height:1; box-shadow:0 2px 10px rgba(27,42,74,.3); cursor:pointer; z-index:5; }
   #up[hidden] { display:none; }
+  .legal { display:flex; flex-direction:column; gap:18px; max-width:680px; }
+  .legal p { margin:6px 0 0; }
   .jump { align-self:flex-start; display:inline-flex; align-items:center; gap:8px; }
   .ghost { height:44px; padding:0 14px; border:1.2px solid var(--navy); border-radius:99px; background:none; font-size:13px; }
   .hero { display:block; width:100%; height:clamp(150px, 30vw, 400px); border-radius:16px; }
@@ -616,7 +618,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.14";
+const VERSION = "0.15";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -726,9 +728,44 @@ function languageSwitch() {
   return '<div class="seg" role="group" aria-label="' + esc(tr("language")) + '">' + LANGS.map(lang =>
     '<button data-lang="' + lang + '" aria-pressed="' + (state.lang === lang) + '">' + lang.toUpperCase() + "</button>").join("") + "</div>";
 }
+const PRIVACY = {
+  en: { title: "Privacy", parts: [
+    ["Who is responsible", "Stefanie Strasser runs Bergwetter as a private project. Questions and requests: github.com/steffiAI/bergwetter (Issues)."],
+    ["What stays on your device", "Your favourites, language, units, the last loaded forecast and a random device number are saved only in your browser. There is no account, no cookies, no analytics and no advertising. Clearing the site data in your browser removes everything."],
+    ["Loading the page", "The page is hosted on GitHub Pages (GitHub, Inc., USA). As with every website, the host receives your IP address and browser details when the page loads."],
+    ["Weather and place data", "Your browser fetches data directly from these services, and each of them sees your IP address: Open-Meteo (coordinates of your places and your search text), WSL Institute for Snow and Avalanche Research SLF (the whole bulletin, no location is sent), Zippopotam.us (a postcode you type) and OpenStreetMap Nominatim (a postcode you type and, once per place, its coordinates to find the country)."],
+    ["Supporter code", "When you enter a supporter code, the code and the random device number are sent to the Bergwetter code server (hosted by Lovable). It stores a fingerprint of the code, the device number and the time of redemption. No name and no e-mail address."],
+    ["Your rights", "Under the GDPR you may ask what is stored about you, have it corrected or deleted, and complain to a data protection authority. Bergwetter itself holds nothing that names you."]] },
+  de: { title: "Datenschutz", parts: [
+    ["Wer verantwortlich ist", "Stefanie Strasser betreibt Bergwetter als privates Projekt. Fragen und Anliegen: github.com/steffiAI/bergwetter (Issues)."],
+    ["Was auf deinem Gerät bleibt", "Deine Favoriten, Sprache, Einheiten, die zuletzt geladene Vorhersage und eine zufällige Gerätenummer liegen nur in deinem Browser. Es gibt kein Konto, keine Cookies, keine Analyse und keine Werbung. Löschst du die Websitedaten im Browser, ist alles entfernt."],
+    ["Laden der Seite", "Die Seite liegt bei GitHub Pages (GitHub, Inc., USA). Wie bei jeder Website erhält der Anbieter beim Laden deine IP-Adresse und Angaben zum Browser."],
+    ["Wetter- und Ortsdaten", "Dein Browser holt die Daten direkt bei diesen Diensten, und jeder davon sieht deine IP-Adresse: Open-Meteo (Koordinaten deiner Orte und dein Suchtext), WSL-Institut für Schnee- und Lawinenforschung SLF (das ganze Bulletin, kein Ort wird gesendet), Zippopotam.us (eine eingegebene Postleitzahl) und OpenStreetMap Nominatim (eine eingegebene Postleitzahl und einmal je Ort dessen Koordinaten, um das Land zu finden)."],
+    ["Unterstützer-Code", "Gibst du einen Unterstützer-Code ein, gehen der Code und die zufällige Gerätenummer an den Bergwetter-Code-Server (gehostet bei Lovable). Gespeichert werden ein Fingerabdruck des Codes, die Gerätenummer und der Zeitpunkt der Einlösung. Kein Name und keine E-Mail-Adresse."],
+    ["Deine Rechte", "Nach der DSGVO kannst du Auskunft, Berichtigung und Löschung verlangen und dich bei einer Datenschutzbehörde beschweren. Bergwetter selbst speichert nichts, das dich namentlich nennt."]] },
+  fr: { title: "Confidentialité", parts: [
+    ["Responsable", "Stefanie Strasser gère Bergwetter comme projet privé. Questions et demandes : github.com/steffiAI/bergwetter (Issues)."],
+    ["Ce qui reste sur ton appareil", "Tes favoris, la langue, les unités, la dernière prévision chargée et un numéro d'appareil aléatoire sont enregistrés uniquement dans ton navigateur. Pas de compte, pas de cookies, pas d'analyse, pas de publicité. Effacer les données du site dans le navigateur supprime tout."],
+    ["Chargement de la page", "La page est hébergée sur GitHub Pages (GitHub, Inc., États-Unis). Comme pour tout site web, l'hébergeur reçoit ton adresse IP et des informations sur le navigateur au chargement."],
+    ["Données météo et de lieux", "Ton navigateur récupère les données directement auprès de ces services, et chacun voit ton adresse IP : Open-Meteo (coordonnées de tes lieux et texte de recherche), Institut WSL pour l'étude de la neige et des avalanches SLF (le bulletin entier, aucun lieu n'est envoyé), Zippopotam.us (un code postal saisi) et OpenStreetMap Nominatim (un code postal saisi et, une fois par lieu, ses coordonnées pour trouver le pays)."],
+    ["Code de soutien", "Quand tu saisis un code de soutien, le code et le numéro d'appareil aléatoire sont envoyés au serveur de codes Bergwetter (hébergé par Lovable). Il enregistre une empreinte du code, le numéro d'appareil et le moment de l'utilisation. Ni nom ni adresse e-mail."],
+    ["Tes droits", "Selon le RGPD, tu peux demander l'accès, la rectification et l'effacement, et déposer une plainte auprès d'une autorité de protection des données. Bergwetter ne conserve rien qui te nomme."]] },
+  it: { title: "Privacy", parts: [
+    ["Chi è responsabile", "Stefanie Strasser gestisce Bergwetter come progetto privato. Domande e richieste: github.com/steffiAI/bergwetter (Issues)."],
+    ["Cosa resta sul tuo dispositivo", "I tuoi preferiti, la lingua, le unità, l'ultima previsione caricata e un numero casuale del dispositivo sono salvati solo nel tuo browser. Nessun account, nessun cookie, nessuna analisi, nessuna pubblicità. Cancellando i dati del sito nel browser si elimina tutto."],
+    ["Caricamento della pagina", "La pagina è ospitata su GitHub Pages (GitHub, Inc., USA). Come per ogni sito web, il fornitore riceve il tuo indirizzo IP e informazioni sul browser al caricamento."],
+    ["Dati meteo e di località", "Il tuo browser recupera i dati direttamente da questi servizi, e ognuno vede il tuo indirizzo IP: Open-Meteo (coordinate delle tue località e testo di ricerca), Istituto WSL per lo studio della neve e delle valanghe SLF (l'intero bollettino, nessuna località viene inviata), Zippopotam.us (un codice postale inserito) e OpenStreetMap Nominatim (un codice postale inserito e, una volta per località, le sue coordinate per trovare il paese)."],
+    ["Codice sostenitore", "Quando inserisci un codice sostenitore, il codice e il numero casuale del dispositivo vengono inviati al server dei codici Bergwetter (ospitato da Lovable). Vengono salvati un'impronta del codice, il numero del dispositivo e il momento dell'utilizzo. Nessun nome e nessun indirizzo e-mail."],
+    ["I tuoi diritti", "Secondo il GDPR puoi chiedere accesso, rettifica e cancellazione e presentare reclamo a un'autorità per la protezione dei dati. Bergwetter non conserva nulla che ti identifichi per nome."]] }
+};
+function renderPrivacy() {
+  const text = PRIVACY[state.lang] || PRIVACY.en;
+  return '<header class="row" style="justify-content:space-between;flex-wrap:wrap"><span class="row"><button class="iconbtn" data-home="1" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button><h1>" + esc(text.title) + "</h1></span>" + languageSwitch() + "</header>" +
+    '<div class="legal">' + text.parts.map(part => "<section><h2>" + esc(part[0]) + "</h2><p>" + esc(part[1]) + "</p></section>").join("") + "</div>" + footer();
+}
 function footer() {
   return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footPost")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
-    ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · v' + VERSION + "</footer>";
+    ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · <a href="#privacy">' + esc((PRIVACY[state.lang] || PRIVACY.en).title) + "</a> · v" + VERSION + "</footer>";
 }
 function spotKind(spot) {
   const forecast = (state.cache[spot.id] || {}).forecast, elevation = forecast && forecast.elevation !== null ? forecast.elevation : spot.elevation;
@@ -1176,6 +1213,7 @@ function printReport(spot) {
 function render() {
   const spot = view.name === "spot" ? findSpot(view.id) : null;
   if (view.name === "spot" && !spot) view = { name: "home", tab: "day", day: 0 };
+  if (view.name === "privacy") { document.documentElement.lang = state.lang; document.getElementById("app").innerHTML = renderPrivacy(); return; }
   document.documentElement.lang = state.lang;
   document.getElementById("app").innerHTML = spot ? renderSpot(spot) : renderHome();
 }
@@ -1380,7 +1418,7 @@ function onClick(event) {
 }
 function onHash() {
   const match = /^#spot-(.+)$/.exec(location.hash);
-  view = match ? { name: "spot", id: match[1], tab: "day", day: 0 } : { name: "home", tab: "day", day: 0 };
+  view = match ? { name: "spot", id: match[1], tab: "day", day: 0 } : { name: location.hash === "#privacy" ? "privacy" : "home", tab: "day", day: 0 };
   render(); window.scrollTo(0, 0);
 }
 function init() {

@@ -1,5 +1,5 @@
 // Keeps the app itself available without signal. Weather data is cached by the page, not here.
-const CACHE = "bergwetter-shell-v11";
+const CACHE = "bergwetter-shell-v12";
 const SHELL = ["./", "index.html", "manifest.json", "icon-180.png", "icon-512.png", "winter.jpg"];
 
 self.addEventListener("install", event => {
