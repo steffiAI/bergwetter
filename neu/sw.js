@@ -1,6 +1,6 @@
 // Keeps the app itself available without signal. Weather data is cached by the page, not here.
-const CACHE = "bergwetter-neu-v5";
-const SHELL = ["./", "index.html", "manifest.json", "icon-180.png", "icon-512.png"];
+const CACHE = "bergwetter-neu-v6";
+const SHELL = ["./", "index.html", "manifest.json", "icon-180.png", "icon-512.png", "winter.jpg"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

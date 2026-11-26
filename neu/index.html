@@ -142,6 +142,17 @@
   #app > footer { margin-top:auto; }
   #results .label { margin-top:8px; }
   .sortrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ghost { height:44px; padding:0 14px; border:1.2px solid var(--navy); border-radius:99px; background:none; font-size:13px; }
+  .hero { display:block; width:100%; height:clamp(150px, 30vw, 400px); border-radius:16px; }
+  .fact { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .facts2 { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:15px; }
+  .c-name, .c-today, .c-days { display:flex; flex-direction:column; gap:8px; min-width:0; width:100%; }
+  .hours { grid-template-columns:auto repeat(8, minmax(0, 1fr)); }
+  .hours > .hlegend { background:none; align-items:flex-start; padding:8px 6px 8px 0; color:var(--slate); font-size:12px; white-space:nowrap; }
+  .hlegend span { display:flex; align-items:center; }
+  .nexthead { display:grid; grid-template-columns:minmax(0, 1.5fr) 26px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 30px; gap:8px; padding:0 12px; font-size:12px; color:var(--slate); }
+  .rel-legend { display:flex; flex-wrap:wrap; gap:4px 14px; align-items:center; }
+  .rel-legend span { display:inline-flex; align-items:center; gap:5px; }
   .next button { grid-template-columns:minmax(0, 1.5fr) 26px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 30px; }
   #results button { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   @media screen and (max-width:999px) {
@@ -151,14 +162,16 @@
     #app { max-width:1280px; padding:40px 48px 64px; }
     h1 { font-size:46px; }
     .homehead form { max-width:640px; }
-    .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); }
+    .cards { gap:10px; }
+    .card { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(0, 1.5fr); gap:28px; align-items:center; }
+    .card .mini { border-top:0; padding-top:0; }
     .cols { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:36px 64px; align-items:start; }
     .col { gap:32px; }
     .col-wide { grid-column:1 / -1; }
     .cols .tiles, .tabswitch, .only-narrow, .pills { display:none; }
     .cols .facts { grid-template-columns:repeat(3, minmax(0, 1fr)); }
     .a-ava { border-top:0; padding-top:0; }
-    .hours { grid-template-columns:repeat(15, minmax(0, 1fr)); gap:6px; font-size:14px; }
+    .hours { grid-template-columns:auto repeat(15, minmax(0, 1fr)); gap:6px; font-size:14px; }
     .hours .odd { display:flex; }
     .only-wide { display:inline; }
   }
@@ -275,6 +288,14 @@ const MORE2_TEXT = {
     relNote: "Confronto tra più modelli meteo (tra cui ECMWF, DWD, NOAA). Una stima, non una garanzia." }
 };
 for (const lang in MORE2_TEXT) Object.assign(TEXT[lang], MORE2_TEXT[lang]);
+const UNIT_TEXT = {
+  en: { unitsTitle: "Units", unitWind: "Wind", unitLen: "Altitude and snow", hourLabel: "Time", miniLegend: "High temperature · hours of sun" },
+  de: { unitsTitle: "Einheiten", unitWind: "Wind", unitLen: "Höhe und Schnee", hourLabel: "Uhr", miniLegend: "Höchsttemperatur · Sonnenstunden" },
+  fr: { unitsTitle: "Unités", unitWind: "Vent", unitLen: "Altitude et neige", hourLabel: "Heure", miniLegend: "Température maximale · heures de soleil" },
+  it: { unitsTitle: "Unità", unitWind: "Vento", unitLen: "Quota e neve", hourLabel: "Ora", miniLegend: "Temperatura massima · ore di sole" }
+};
+for (const lang in UNIT_TEXT) Object.assign(TEXT[lang], UNIT_TEXT[lang]);
+const WIND_UNITS = { kmh: ["km/h", 1], ms: ["m/s", 1 / 3.6], kn: ["kn", 1 / 1.852], mph: ["mph", 1 / 1.609344] };
 const COMPARE_MODELS = ["ecmwf_ifs025", "icon_seamless", "gfs_seamless"];
 function countryName(code, fallback) {
   try { return (code && new Intl.DisplayNames([LOCALES[state.lang]], { type: "region" }).of(code)) || fallback || ""; } catch (error) { return fallback || code || ""; }
@@ -303,7 +324,33 @@ function round(value, digits) {
   const factor = Math.pow(10, digits || 0);
   return Math.round(value * factor) / factor;
 }
-function show(value, unit) { return value === null || value === undefined ? tr("na") : value + (unit || ""); }
+function units() { return state.units || (state.units = { temp: "c", wind: "kmh", len: "m" }); }
+function windUnit() { return WIND_UNITS[units().wind][0]; }
+function tempUnit() { return units().temp === "f" ? "°F" : "°C"; }
+// Values are stored in °C, km/h, cm, mm and m and converted only when shown.
+function convert(value, kind) {
+  if (value === null || value === undefined) return value;
+  if (kind === "temp") return units().temp === "f" ? Math.round(value * 9 / 5 + 32) : value;
+  if (kind === "wind") return Math.round(value * WIND_UNITS[units().wind][1]);
+  return value;
+}
+function show(value, unit) {
+  if (value === null || value === undefined) return tr("na");
+  if (unit === "°" || unit === "°C") return convert(value, "temp") + (unit === "°" ? "°" : tempUnit());
+  if (unit === " km/h" || unit === "wind") return convert(value, "wind") + (unit === "wind" ? "" : " " + windUnit());
+  if (units().len === "ft") {
+    if (unit === " cm") return round(value / 2.54, 1) + " in";
+    if (unit === " mm") return round(value / 25.4, 2) + " in";
+    if (unit === " m") return Math.round(value * 3.28084 / 10) * 10 + " ft";
+  }
+  return value + (unit || "");
+}
+function altitudeText(key, vars) {
+  if (units().len !== "ft") return tr(key, vars);
+  const feet = {};
+  for (const name in vars) feet[name] = Math.round(vars[name] * 3.28084 / 10) * 10;
+  return tr(key, feet).replace(/(\d) m\b/g, "$1 ft");
+}
 function hourText(hour) { return String(hour).padStart(2, "0") + ":00"; }
 
 function forecastUrl(spot, model) {
@@ -390,7 +437,7 @@ function dayEvents(day) {
   const wet = day.hours.find(hour => hour.precip >= 0.1 || hour.snow >= 0.1);
   if (wet) { const snowing = wet.snow >= 0.1; events.push({ time: hourText(Math.max(0, wet.hour - 1)), kind: snowing ? "snow" : "rain", title: tr(snowing ? "snowStarts" : "rainStarts"), sub: tr("dayTotal", { v: snowing ? show(day.snowCm, " cm") : show(day.precipMm, " mm") }) }); }
   const peak = day.hours.reduce((best, hour) => hour.gust !== null && (!best || hour.gust > best.gust) ? hour : best, null);
-  if (peak && peak.gust >= 40) events.push({ time: hourText(peak.hour), kind: "wind", title: tr("strongest"), sub: peak.gust + " km/h" });
+  if (peak && peak.gust >= 40) events.push({ time: hourText(peak.hour), kind: "wind", title: tr("strongest"), sub: show(peak.gust, " km/h") });
   if (day.sunset) { const hour = at(Number(day.sunset.slice(0, 2))); events.push({ time: day.sunset, kind: "dotFull", title: tr("sunset"), sub: hour ? show(hour.temp, "°C") : "" }); }
   return events.sort((a, b) => a.time.localeCompare(b.time));
 }
@@ -450,13 +497,13 @@ function segmentView(segment) {
   const lowest = bases.length ? Math.min.apply(null, bases) : null, highest = tops.length ? Math.max.apply(null, tops) : null;
   if (segment.state === "free") {
     if (!bases.length) return { kind: "peak_clear", title: tr("st_clear"), detail: "" };
-    if (bases.length === segment.items.length) return { kind: "peak_below", title: tr("st_below"), detail: tr("cloudBaseAt", { a: lowest }) };
-    return { kind: "peak_below", title: tr("st_free"), detail: tr("highAt", { a: lowest }) };
+    if (bases.length === segment.items.length) return { kind: "peak_below", title: tr("st_below"), detail: altitudeText("cloudBaseAt", { a: lowest }) };
+    return { kind: "peak_below", title: tr("st_free"), detail: altitudeText("highAt", { a: lowest }) };
   }
   let detail = "";
-  if (segment.state === "in" && bases.length && tops.length) detail = tr("cloudBetween", { a: lowest, b: highest });
-  else if ((segment.state === "above" || segment.state === "between") && tops.length) detail = tr("cloudTopAt", { a: highest });
-  else if (segment.state === "below" && bases.length) detail = tr("cloudBaseAt", { a: lowest });
+  if (segment.state === "in" && bases.length && tops.length) detail = altitudeText("cloudBetween", { a: lowest, b: highest });
+  else if ((segment.state === "above" || segment.state === "between") && tops.length) detail = altitudeText("cloudTopAt", { a: highest });
+  else if (segment.state === "below" && bases.length) detail = altitudeText("cloudBaseAt", { a: lowest });
   return { kind: "peak_" + segment.state, title: tr("st_" + segment.state), detail };
 }
 
@@ -496,7 +543,7 @@ function summarizeBulletin(feature) {
   return { top, ratings, problems, tendency: tendency ? tendency.tendencyType : null, validUntil: props.validTime && props.validTime.endTime || null };
 }
 function elevationText(item) {
-  const unit = value => /^\d+$/.test(String(value)) ? value + " m" : String(value);
+  const unit = value => /^\d+$/.test(String(value)) ? show(Number(value), " m") : String(value);
   if (item.lower && item.upper) return unit(item.lower) + " " + tr("to") + " " + unit(item.upper);
   if (item.lower) return tr("above") + " " + unit(item.lower);
   if (item.upper) return tr("below") + " " + unit(item.upper);
@@ -508,7 +555,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.8";
+const VERSION = "0.9";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -590,13 +637,13 @@ function altitudeProfile(ratings, elevation) {
     fills += '<rect x="0" y="' + from.toFixed(1) + '" width="' + width + '" height="' + (to - from).toFixed(1) + '" fill="' + DANGER_COLOR[band.level] + '"/>';
     for (const bound of [number(band.lower), number(band.upper)]) if (bound && !labels.some(label => label.metres === bound)) labels.push({ metres: bound, at: y(bound) });
   }
-  for (const label of labels) marks += '<path stroke="#1B2A4A" stroke-width="1" stroke-dasharray="3 3" d="M0 ' + label.at.toFixed(1) + "H" + (width + 8) + '"/><text x="' + (width + 14) + '" y="' + (label.at + 4).toFixed(1) + '" font-size="12" fill="#1B2A4A">' + label.metres + " m</text>";
+  for (const label of labels) marks += '<path stroke="#1B2A4A" stroke-width="1" stroke-dasharray="3 3" d="M0 ' + label.at.toFixed(1) + "H" + (width + 8) + '"/><text x="' + (width + 14) + '" y="' + (label.at + 4).toFixed(1) + '" font-size="12" fill="#1B2A4A">' + show(label.metres, " m") + "</text>";
   if (known) {
     const at = y(elevation);
     let textAt = at + 4;
     for (const label of labels) if (Math.abs(label.at - at) < 14) textAt = label.at + (at <= label.at ? -10 : 18);
     marks += '<path stroke="#E8762B" stroke-width="1.8" d="M0 ' + at.toFixed(1) + "H" + (width + 4) + '"/><circle cx="' + (width + 6) + '" cy="' + at.toFixed(1) + '" r="3" fill="#E8762B"/>' +
-      '<text x="' + (width + 14) + '" y="' + Math.max(11, textAt).toFixed(1) + '" font-size="12" font-weight="600" fill="#1B2A4A">' + esc(tr("yourSpot")) + " " + Math.round(elevation) + " m</text>";
+      '<text x="' + (width + 14) + '" y="' + Math.max(11, textAt).toFixed(1) + '" font-size="12" font-weight="600" fill="#1B2A4A">' + esc(tr("yourSpot")) + " " + show(Math.round(elevation), " m") + "</text>";
   }
   return '<svg aria-hidden="true" width="320" height="112" viewBox="0 0 320 112" fill="none" style="max-width:100%"><defs><pattern id="restHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path stroke="#B9B09A" stroke-width="1.6" d="M0 0v6"/></pattern>' +
     '<clipPath id="profileClip"><path d="M' + outline + 'Z"/></clipPath></defs><g clip-path="url(#profileClip)"><rect x="0" y="0" width="' + width + '" height="112" fill="url(#restHatch)"/>' + fills + '</g><path stroke="#1B2A4A" stroke-width="1.5" stroke-linejoin="round" d="M' + outline + '"/>' + marks + "</svg>";
@@ -635,8 +682,38 @@ function homeGroups() {
   spots.forEach(spot => { if (codes.indexOf(spot.cc || "") < 0) codes.push(spot.cc || ""); });
   return codes.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map(code => ({ title: codes.length > 1 || code ? (code ? countryName(code) : tr("otherPlaces")) : "", spots: spots.filter(spot => (spot.cc || "") === code).sort(byName) }));
 }
+function hero() {
+  const today = shownSpots().map(spot => ((state.cache[spot.id] || {}).forecast || { days: [] }).days[0]).filter(Boolean);
+  const snowing = today.some(day => dayKind(day) === "snow"), sunny = !snowing && today.some(day => day.sunHours >= 4);
+  const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const along = (path, seconds, begin) => still ? "" : '<animateMotion dur="' + seconds + 's" begin="' + begin + 's" repeatCount="indefinite" path="' + path + '"/>';
+  const cabin = '<path stroke="#1B2A4A" stroke-width="2" d="M0 0v12"/><rect x="-12" y="12" width="24" height="19" rx="4" fill="#1B2A4A"/><rect x="-8" y="16" width="16" height="6" rx="1.5" fill="#F6F1E7"/><rect x="-12" y="25" width="24" height="3" fill="#E8762B"/>';
+  const skier = '<circle cx="0" cy="-15" r="3.2" fill="#1B2A4A"/><path stroke="#1B2A4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M0 -11l-2 7 3 5M-8 3l14 -3"/><path stroke="#E8762B" stroke-width="2.4" stroke-linecap="round" d="M-1 -9l5 3"/>';
+  const cable = "M592 688L728 618L1118 516L1420 422L1532 384", back = "M1532 384L1420 422L1118 516L728 618L592 688", slope = "M1500 470C1440 520 1385 525 1330 585S1235 640 1180 705S1085 765 1010 815";
+  let extras = "";
+  if (!sunny) extras += [[190, 150, 0], [300, 210, -80]].map(item => '<path fill="#DCE6F2" transform="translate(' + (still ? 1300 - item[2] * 6 + " " + item[0] : "0 0") + ')" d="M0 0h150a26 26 0 0 0-30-26 40 40 0 0 0-74-8 30 30 0 0 0-46 34z">' +
+    along("M-200 " + item[0] + "H2100", item[1], item[2]) + "</path>").join("");
+  if (sunny) extras += '<g transform="translate(1690 255)"><g stroke="#E8762B" stroke-width="7" stroke-linecap="round">' + [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(angle => '<path transform="rotate(' + angle + ')" d="M0 -62v-22"/>').join("") +
+    (still ? "" : '<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="120s" repeatCount="indefinite"/>') + '</g><circle r="46" fill="#E8762B"/></g>';
+  extras += '<g transform="' + (still ? "translate(1118 516)" : "") + '">' + cabin + along(cable, 46, 0) + "</g>" + (still ? "" : "<g>" + cabin + along(back, 46, -23) + "</g>");
+  if (!still) extras += [0, -7].map(begin => "<g>" + skier + along(slope, 15, begin) + "</g>").join("");
+  if (snowing) for (let index = 0; index < 46; index++) {
+    const x = (index * 137) % 1916, seconds = 7 + index % 5;
+    extras += '<circle cx="' + x + '" cy="' + (still ? 160 + (index * 53) % 560 : 100) + '" r="' + (2.5 + index % 3) + '" fill="#FFFFFF" opacity=".9">' +
+      (still ? "" : '<animate attributeName="cy" from="100" to="780" dur="' + seconds + 's" begin="-' + (index * 0.37 % seconds).toFixed(2) + 's" repeatCount="indefinite"/>') + "</circle>";
+  }
+  return '<svg class="hero" viewBox="0 120 1916 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Bergwetter"><image href="winter.jpg" x="0" y="0" width="1916" height="821"/>' + extras +
+    '<text x="250" y="262" font-size="84" font-weight="300" letter-spacing="-2" fill="#1B2A4A">Bergwetter</text></svg>';
+}
+function unitsPanel() {
+  if (!view.unitsOpen) return "";
+  const group = (label, key, options) => '<div class="sortrow"><span class="label" style="min-width:150px">' + esc(label) + '</span><div class="seg" role="group" aria-label="' + esc(label) + '">' +
+    options.map(option => '<button data-unit="' + key + ":" + option[0] + '" aria-pressed="' + (units()[key] === option[0]) + '">' + esc(option[1]) + "</button>").join("") + "</div></div>";
+  return '<div class="note" style="display:flex;flex-direction:column;gap:10px">' + group(tr("temperature"), "temp", [["c", "°C"], ["f", "°F"]]) +
+    group(tr("unitWind"), "wind", [["kmh", "km/h"], ["ms", "m/s"], ["kn", "kn"], ["mph", "mph"]]) + group(tr("unitLen"), "len", [["m", "m · cm"], ["ft", "ft · in"]]) + "</div>";
+}
 function renderHome() {
-  let html = '<div class="homehead"><header class="row" style="flex-wrap:wrap-reverse;justify-content:space-between"><h1>' + esc(tr("favourites")) + "</h1>" + languageSwitch() + "</header>" +
+  let html = hero() + '<div class="homehead"><header class="row" style="flex-wrap:wrap-reverse;justify-content:space-between"><h1>' + esc(tr("favourites")) + "</h1>" + '<span class="row"><button class="ghost" data-unitsopen="1" aria-expanded="' + !!view.unitsOpen + '">' + esc(tr("unitsTitle")) + "</button>" + languageSwitch() + "</span></header>" + unitsPanel() +
     '<p class="muted" style="margin:0">' + esc(tr("tagline")) + "</p>" +
     '<form id="search"><input id="q" placeholder="' + esc(tr("placeholder")) + '" aria-label="' + esc(tr("add")) + '" autocomplete="off"><button class="primary" type="submit">' + esc(tr("add")) + '</button></form><div id="results"></div>';
   if (!state.spots.length) html += '<p class="muted" style="margin:0">' + esc(tr("empty")) + "</p>";
@@ -644,18 +721,19 @@ function renderHome() {
     [["country", "sortCountry"], ["kind", "sortKind"], ["sun", "sortSun"]].map(item => '<button data-sort="' + item[0] + '" aria-pressed="' + ((state.sort || "country") === item[0]) + '">' + esc(tr(item[1])) + "</button>").join("") + "</div></div>";
   html += "</div>";
   const sunniest = state.spots.map(spot => ({ id: spot.id, sun: (((state.cache[spot.id] || {}).forecast || { days: [{}] }).days[0] || {}).sunHours || 0 })).sort((a, b) => b.sun - a.sun)[0];
+  const fact = (kind, text) => '<span class="fact">' + icon(kind, 18) + esc(text) + "</span>";
   const card = spot => {
-    let html = "";
     const entry = state.cache[spot.id] || {}, forecast = entry.forecast, today = forecast && forecast.days[0];
     const top = entry.avalanche && entry.avalanche.status === "ok" ? entry.avalanche.summary.top : null;
-    html += '<button class="card" data-open="' + esc(spot.id) + '"><span class="row" style="width:100%"><h2>' + esc(spot.name) + "</h2>" + '<span class="row">' + (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + (state.spots.length > 1 && sunniest.sun > 0 && sunniest.id === spot.id ? '<span class="tag">' + esc(tr("mostSun")) + "</span>" : "") + chip(top) + "</span></span>" +
-      '<span class="small muted">' + (forecast && forecast.elevation !== null ? forecast.elevation + " m · " : "") + (forecast ? esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : esc(tr(entry.error ? "loadFail" : "loading"))) + "</span>";
-    if (today) html += '<span class="summary">' + icon(dayKind(today), 26) + "<span>" + esc(tr("sunshine")) + " " + show(today.sunHours, " h") + " · " + show(today.tempMin, "°") + " " + esc(tr("to")) + " " + show(today.tempMax, "°C") +
-      " · " + esc(tr("gusts")) + " " + show(today.gustMax, " km/h") + (today.snowCm > 0 ? " · " + esc(tr("newSnow")) + " " + today.snowCm + " cm" : "") + "</span></span>";
-    if (forecast) html += '<span class="mini">' + forecast.days.map(item => '<span><span class="muted">' + esc(new Date(item.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short" })) + "</span>" +
-      icon(dayKind(item), 24) + "<b>" + show(item.tempMax, "°") + "</b><span>" + show(item.sunHours, " h") + "</span></span>").join("") + "</span>";
-    html += "</button>";
-    return html;
+    const tags = (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : "") + (state.spots.length > 1 && sunniest.sun > 0 && sunniest.id === spot.id ? '<span class="tag">' + esc(tr("mostSun")) + "</span>" : "");
+    let html = '<button class="card" data-open="' + esc(spot.id) + '"><span class="c-name"><span class="row" style="width:100%"><h2>' + esc(spot.name) + '</h2><span class="row">' + tags + "</span></span>" +
+      '<span class="small muted">' + (forecast && forecast.elevation !== null ? show(forecast.elevation, " m") + " · " : "") + (forecast ? esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : esc(tr(entry.error ? "loadFail" : "loading"))) + "</span></span>";
+    if (today) html += '<span class="c-today"><span class="facts2">' + icon(dayKind(today), 30) + fact("thermo", show(today.tempMin, "°") + " " + tr("to") + " " + show(today.tempMax, "°C")) + fact("sun", show(today.sunHours, " h")) +
+      fact(today.gustMax >= 60 ? "gust" : "wind", show(today.gustMax, " km/h")) + (today.snowCm > 0 ? fact("flake", show(today.snowCm, " cm")) : "") + "</span>" +
+      (top && top.level ? '<span class="facts2">' + chip(top) + "<span>" + esc(tr("avalanche")) + ": " + esc(dangerWord(top.value)) + "</span></span>" : "") + "</span>";
+    if (forecast) html += '<span class="c-days"><span class="mini">' + forecast.days.map(item => '<span><span class="muted">' + esc(new Date(item.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "short" })) + "</span>" +
+      icon(dayKind(item), 24) + "<b>" + show(item.tempMax, "°") + "</b><span>" + show(item.sunHours, " h") + '</span></span>').join("") + '</span><span class="small muted">' + esc(tr("miniLegend")) + "</span></span>";
+    return html + "</button>";
   };
   for (const group of homeGroups()) html += (group.title ? '<div class="label">' + esc(group.title) + "</div>" : "") + '<div class="cards">' + group.spots.map(card).join("") + "</div>";
   return html + footer();
@@ -725,13 +803,18 @@ function shapeCompare(json) {
 function reliability(forecast, compare, index) {
   const day = forecast.days[index], at = compare ? compare.dates.indexOf(day.date) : -1;
   if (at < 0) return null;
-  const spread = (lists, own) => { const values = lists.map(list => list[at]).concat(own).filter(value => typeof value === "number"); return values.length > 1 ? { range: Math.max.apply(null, values) - Math.min.apply(null, values), max: Math.max.apply(null, values) } : null; };
-  const temp = spread(compare.temp, day.tempMax), precip = spread(compare.precip, day.precipMm), gust = spread(compare.gust, day.gustMax), sun = spread(compare.sun, day.sunHours), issues = [];
+  const gap = (lists, own) => {
+    const others = lists.map(list => list[at]).filter(value => typeof value === "number").sort((a, b) => a - b);
+    if (!others.length || typeof own !== "number") return null;
+    const middle = others.length % 2 ? others[(others.length - 1) / 2] : (others[others.length / 2 - 1] + others[others.length / 2]) / 2;
+    return { off: Math.abs(own - middle), top: Math.max(own, middle) };
+  };
+  const temp = gap(compare.temp, day.tempMax), precip = gap(compare.precip, day.precipMm), gust = gap(compare.gust, day.gustMax), sun = gap(compare.sun, day.sunHours), issues = [];
   if (!temp && !precip && !gust && !sun) return null;
-  if (temp && temp.range > 3) issues.push("temperature");
-  if (precip && precip.range > Math.max(3, precip.max * 0.6)) issues.push("precipitation");
-  if (gust && gust.range > 25) issues.push("gusts");
-  if (sun && sun.range > 4) issues.push("sunshine");
+  if (temp && temp.off > 4) issues.push("temperature");
+  if (precip && precip.off > Math.max(4, precip.top * 0.7)) issues.push("precipitation");
+  if (gust && gust.off > 30) issues.push("gusts");
+  if (sun && sun.off > 5) issues.push("sunshine");
   let level = 3 - Math.min(2, issues.length);
   if (index >= 3) level = Math.min(level, 2);
   return { level, issues };
@@ -745,11 +828,11 @@ function renderOutlook(forecast, dayIndex, compare) {
   const verdict = chosen ? '<div class="note"><b>' + esc(tr("relTitle")) + " " + esc(dayLabel(forecast.days[dayIndex].date, dayIndex)) + ": " + esc(tr("rel" + chosen.level)) + ".</b> " +
     esc(chosen.issues.length ? tr("relDiffer", { list: chosen.issues.map(key => tr(key)).join(", ") }) : tr("relAgree")) + (dayIndex >= 3 ? " " + esc(tr("relFar")) : "") +
     '<div class="small muted" style="margin-top:4px">' + esc(tr("relNote")) + "</div></div>" : "";
-  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("nextDays")) + '</div><div class="next">' + forecast.days.map((item, index) => {
+  return '<section class="m-day" style="display:flex;flex-direction:column;gap:10px"><div class="label">' + esc(tr("nextDays")) + '</div><div class="nexthead"><span></span><span></span><span>min / max ' + tempUnit() + "</span><span>" + esc(tr("sortSun")) + "</span><span>" + esc(tr("gusts")) + " " + windUnit() + '</span><span></span></div><div class="next">' + forecast.days.map((item, index) => {
     const rating = reliability(forecast, compare, index);
     return '<button data-day="' + index + '" aria-pressed="' + (index === dayIndex) + '"><span>' + esc(dayLabel(item.date, index)) + "</span>" + icon(dayKind(item), 24) + "<span>" + show(item.tempMin, "°") + " / " + show(item.tempMax, "°") + "</span><span>" +
-      icon("sun", 16) + show(item.sunHours, " h") + "</span><span" + (item.gustMax >= 60 ? ' style="font-weight:700"' : "") + ">" + icon(item.gustMax >= 60 ? "gust" : "wind", 16) + show(item.gustMax) + "</span>" + (rating ? dots(rating.level) : "<span></span>") + "</button>";
-  }).join("") + "</div>" + verdict + "</section>";
+      icon("sun", 16) + show(item.sunHours, " h") + "</span><span" + (item.gustMax >= 60 ? ' style="font-weight:700"' : "") + ">" + icon(item.gustMax >= 60 ? "gust" : "wind", 16) + show(item.gustMax, "wind") + "</span>" + (rating ? dots(rating.level) : "<span></span>") + "</button>";
+  }).join("") + "</div>" + (compare ? '<div class="small muted rel-legend"><span>' + esc(tr("relTitle")) + ":</span>" + [3, 2, 1].map(level => "<span>" + dots(level) + esc(tr("rel" + level)) + "</span>").join("") + "</div>" : "") + verdict + "</section>";
 }
 function renderCloudSection(day, cloud) {
   const segments = cloudSegments(day, cloud);
@@ -760,12 +843,12 @@ function renderCloudSection(day, cloud) {
     html += '<div class="summary">' + icon(view.kind, 30) + '<span><b style="font-weight:600">' + esc(tr("from")) + " " + hourText(segment.from) + ": " + esc(view.title) + "</b>" +
       (view.detail ? '<br><span class="small muted">' + esc(view.detail) + "</span>" : "") + "</span></div>";
   }
-  return html + '<div class="small muted">' + esc(tr("cloudLegend")) + "</div></section>";
+  return html + '<div class="small muted">' + esc(tr("cloudLegend").replace("200 m", show(200, " m"))) + "</div></section>";
 }
 function renderDayTab(day, avalanche, cloud) {
   const top = avalanche && avalanche.status === "ok" ? avalanche.summary.top : null;
   let html = '<section class="tiles m-day"><div class="tile"><span class="small muted">' + esc(tr("avalanche")) + "</span><b>" + (top && top.level ? chip(top) : "–") + '</b><span class="small">' + esc(top ? dangerWord(top.value) : "") + "</span></div>" +
-    '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax) + ' <span>km/h</span></b><span class="small">' + (day.gustMax >= 75 ? esc(tr("stormGusts")) : "max") + "</span></div>" +
+    '<div class="tile"><span class="small muted">' + esc(tr("gusts")) + "</span><b>" + show(day.gustMax, "wind") + ' <span>' + windUnit() + '</span></b><span class="small">' + (day.gustMax >= 75 ? esc(tr("stormGusts")) : "max") + "</span></div>" +
     '<div class="tile"><span class="small muted">' + esc(tr("sunshine")) + "</span><b>" + show(day.sunHours) + ' <span>h</span></b><span class="small">' + esc(tr("ofDaylight", { h: show(day.daylightHours) })) + "</span></div></section>";
   html += renderCloudSection(day, cloud);
   const events = dayEvents(day);
@@ -776,12 +859,13 @@ function renderDayTab(day, avalanche, cloud) {
     html += '<div class="time' + last + '">' + esc(event.time) + '</div><div class="rail">' + marker + (last ? "" : "<i></i>") + '</div><div class="text' + last + '"><b>' + esc(event.title) + '</b><span class="small muted">' + esc(event.sub) + "</span></div>";
   });
   html += "</div></section>" + renderGear(day, avalanche, cloud) + '<!--hours--><section class="a-hours m-day" style="display:flex;flex-direction:column;gap:8px"><div class="hours">';
+  html += '<div class="hlegend"><span style="height:20px">' + esc(tr("hourLabel")) + '</span><span style="height:24px"></span><span style="height:22px">' + tempUnit() + '</span><span style="height:20px">' + windUnit() + "</span></div>";
   for (const hour of day.hours.filter(item => item.hour >= 6 && item.hour <= 20)) {
     const strong = hour.gust >= 60;
     html += "<div" + (hour.hour % 2 ? ' class="odd"' : "") + '><span class="hh">' + String(hour.hour).padStart(2, "0") + "</span>" + icon(weatherKind(hour), 24) + '<b class="temp" style="background:' + tempTint(hour.temp) + '">' + show(hour.temp, "°") +
-      '</b><span class="gust"' + (strong ? ' style="font-weight:700"' : "") + ">" + (strong ? icon("gust", 14) : "") + show(hour.gust) + "</span></div>";
+      '</b><span class="gust"' + (strong ? ' style="font-weight:700"' : "") + ">" + (strong ? icon("gust", 14) : "") + show(hour.gust, "wind") + "</span></div>";
   }
-  return html + '</div><div class="small muted"><span class="only-narrow">' + esc(tr("hourLegend")) + '</span><span class="only-wide">' + esc(tr("hourLegendAll")) + "</span> " + esc(tr("hourColors")) + "</div></section>";
+  return html + '</div><div class="small muted"><span class="only-narrow">' + esc(tr("hourLegend").replace("km/h", windUnit())) + '</span><span class="only-wide">' + esc(tr("hourLegendAll").replace("km/h", windUnit())) + "</span> " + esc(tr("hourColors").replace("60 km/h", show(60, " km/h"))) + "</div></section>";
 }
 function tempTint(temp) {
   if (temp === null || temp === undefined) return "#EFE8D8";
@@ -798,7 +882,7 @@ function renderDetailsTab(day, avalanche, elevation, spot) {
     '<div><span class="small muted flabel">' + icon("wind", 16) + esc(tr("gusts")) + "</span><b>" + show(day.gustMax, " km/h") + "</b>" + (day.gustMax >= 75 ? '<span class="tag">' + esc(tr("stormGusts")) + "</span>" : "") + "</div>" +
     '<div><span class="small muted flabel">' + icon("flake", 16) + esc(tr("newSnow")) + "</span><b>" + show(day.snowCm, " cm") + "</b></div>" +
     '<div><span class="small muted flabel">' + icon("drop", 16) + esc(tr("precipitation")) + "</span><b>" + show(day.precipMm, " mm") + "</b></div>" +
-    (day.freezingMin !== null ? '<div><span class="small muted flabel">' + icon("zero", 16) + esc(tr("freezing")) + "</span><b>" + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + esc(tr("to")) + " " + day.freezingMax : "") + " m</b></div>" : "") +
+    (day.freezingMin !== null ? '<div><span class="small muted flabel">' + icon("zero", 16) + esc(tr("freezing")) + "</span><b>" + (day.freezingMax !== day.freezingMin ? convert(day.freezingMin, "alt") + " " + esc(tr("to")) + " " : "") + show(day.freezingMax, " m") + "</b></div>" : "") +
     "</section><!--ava-->" + renderAvalancheBlock(avalanche, elevation, spot);
 }
 function renderSpot(spot) {
@@ -806,7 +890,7 @@ function renderSpot(spot) {
   let html = '<header style="display:flex;flex-direction:column;gap:6px"><div class="row"><button class="iconbtn" data-home="1" aria-label="' + esc(tr("back")) + '" style="margin-left:-10px">' + icon("back", 24) + "</button>" +
     '<div class="row"><div class="seg tabswitch" role="group"><button data-tab="day" aria-pressed="' + (view.tab === "day") + '">' + esc(tr("day")) + '</button><button data-tab="details" aria-pressed="' + (view.tab === "details") + '">' + esc(tr("details")) + "</button></div>" +
     (spot === EXAMPLE_SPOT ? '<span class="tag">' + esc(tr("example")) + "</span>" : '<button class="iconbtn" data-remove="' + esc(spot.id) + '" aria-label="' + esc(tr("remove")) + '" style="margin-right:-10px">' + icon("trash", 22) + "</button>") + "</div></div>" +
-    "<h1>" + esc(spot.name) + '</h1><div class="muted" style="font-size:14px">' + (forecast && forecast.elevation !== null ? forecast.elevation + " m · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) +
+    "<h1>" + esc(spot.name) + '</h1><div class="muted" style="font-size:14px">' + (forecast && forecast.elevation !== null ? show(forecast.elevation, " m") + " · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) +
     (forecast ? " · " + esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) : "") + "</div></header>";
   if (entry.error) html += '<div class="err">' + esc(tr(forecast ? "refreshFail" : "loadFail")) + "</div>";
   if (!forecast) return html + (entry.error ? "" : '<p class="muted">' + esc(tr("loading")) + "</p>") + footer();
@@ -839,7 +923,7 @@ function renderReport(spot) {
   const stat = (label, value, sub) => '<div><span class="pk">' + esc(label) + "</span><b>" + esc(value) + '</b><span class="psub">' + esc(sub || "") + "</span></div>";
   const title = label => '<div class="pk ptitle">' + esc(label) + "</div>";
   let html = '<header class="phead"><div><div class="pk">Bergwetter · ' + esc(longDate(day.date)) + "</div><h1>" + esc(spot.name) + '</h1><div class="pmeta">' +
-    (forecast.elevation !== null ? forecast.elevation + " m · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) + " · " + esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) + " · " + esc(tr("exported")) + " " + esc(clock(Date.now())) + "</div></div>" +
+    (forecast.elevation !== null ? show(forecast.elevation, " m") + " · " : "") + spot.lat.toFixed(3) + ", " + spot.lon.toFixed(3) + " · " + esc(tr("updated")) + " " + esc(clock(forecast.fetchedAt)) + " · " + esc(tr("exported")) + " " + esc(clock(Date.now())) + "</div></div>" +
     '<div class="phero"><div class="pbadge' + (top && top.level ? "" : " empty") + '">' + (top && top.level ? top.level + esc(top.sign) : "–") + '</div><div><span class="pk">' + esc(tr("avalanche")) + "</span><b>" +
     esc(top ? dangerWord(top.value) : tr("na")) + '</b><span class="psub">' + esc(top ? whereText(top) : avalancheLine(avalanche)) + "</span></div></div></header>";
   html += '<section class="pstats">' +
@@ -848,7 +932,7 @@ function renderReport(spot) {
     stat(tr("temperature"), show(day.tempMin, "°") + " " + tr("to") + " " + show(day.tempMax, "°C")) +
     stat(tr("newSnow"), show(day.snowCm, " cm")) +
     stat(tr("precipitation"), show(day.precipMm, " mm")) +
-    stat(tr("freezing"), day.freezingMin === null ? tr("na") : day.freezingMax !== day.freezingMin ? day.freezingMin + "–" + day.freezingMax + " m" : day.freezingMin + " m") + "</section>";
+    stat(tr("freezing"), day.freezingMin === null ? tr("na") : day.freezingMax !== day.freezingMin ? show(day.freezingMin, " m") + " – " + show(day.freezingMax, " m") : show(day.freezingMin, " m")) + "</section>";
   const events = dayEvents(day);
   html += '<section class="pcols"><div>' + title(tr("yourDay")) + '<div class="ptl">' + events.map((event, index) =>
     '<div class="time">' + esc(event.time) + '</div><div class="rail"><i></i>' + (index === events.length - 1 ? "" : "<span></span>") + '</div><div class="what"><b>' + esc(event.title) + "</b>" + (event.sub ? '<br><span class="psub">' + esc(event.sub) + "</span>" : "") + "</div>").join("") + "</div></div><div>";
@@ -870,8 +954,8 @@ function renderReport(spot) {
   const plain = value => value === null || value === undefined ? "–" : value;
   html += "<section>" + title(tr("hourByHour")) + "<table><thead><tr><th></th>" + hours.map(hour => "<th" + shade(hour) + ">" + String(hour.hour).padStart(2, "0") + "</th>").join("") + "</tr></thead><tbody>" +
     row("", hour => icon(weatherKind(hour), 16)) +
-    row(tr("temperature") + " (°C)", hour => plain(hour.temp)) +
-    row(tr("gusts") + " (km/h)", hour => hour.gust >= 60 ? "<b>" + hour.gust + "</b>" : plain(hour.gust)) +
+    row(tr("temperature") + " (" + tempUnit() + ")", hour => plain(convert(hour.temp, "temp"))) +
+    row(tr("gusts") + " (" + windUnit() + ")", hour => hour.gust >= 60 ? "<b>" + convert(hour.gust, "wind") + "</b>" : plain(convert(hour.gust, "wind"))) +
     row(tr("sunshine"), hour => '<div class="pbarbox"><i style="height:' + Math.round(14 * (hour.sunMinutes || 0) / 60) + 'px"></i></div>') +
     row(tr("precipitation") + " (mm)", hour => hour.precip > 0 ? hour.precip : "") +
     row(tr("newSnow") + " (cm)", hour => hour.snow > 0 ? hour.snow : "") + '</tbody></table><div class="psub" style="margin-top:3px">' + esc(tr("tableLegend")) + "</div></section>";
@@ -879,13 +963,13 @@ function renderReport(spot) {
   if (later.length) html += "<section>" + title(tr("nextDays")) + '<table class="pnext"><thead><tr><th></th><th></th><th>' + [tr("sunshine"), tr("temperature"), tr("gusts"), tr("newSnow"), tr("precipitation")].map(esc).join("</th><th>") + "</th></tr></thead><tbody>" +
     later.map(next => "<tr><td>" + esc(new Date(next.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "short" })) + "</td><td>" + icon(dayKind(next), 16) + "</td><td>" + show(next.sunHours, " h") + "</td><td>" +
       show(next.tempMin, "°") + " " + esc(tr("to")) + " " + show(next.tempMax, "°C") + "</td><td>" + (next.gustMax >= 60 ? "<b>" + next.gustMax + " km/h</b>" : show(next.gustMax, " km/h")) + "</td><td>" + show(next.snowCm, " cm") + "</td><td>" + show(next.precipMm, " mm") + "</td></tr>").join("") + "</tbody></table></section>";
-  return html + '<div class="pfoot">' + esc(tr("footNote")) + " " + esc(tr("cloudLegend")) + " " + esc(tr("astro")) + "<br>" + esc(forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + "</div>";
+  return html + '<div class="pfoot">' + esc(tr("footNote")) + " " + esc(tr("cloudLegend").replace("200 m", show(200, " m"))) + " " + esc(tr("astro")) + "<br>" + esc(forecast.wide ? tr("wideModel") : tr("footForecast")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + "</div>";
 }
 function reportText(spot) {
   const report = reportDay(spot);
   if (!report) return "";
   const day = report.day, forecast = report.forecast, lines = [];
-  lines.push("Bergwetter · " + spot.name + (forecast.elevation !== null ? " (" + forecast.elevation + " m)" : ""));
+  lines.push("Bergwetter · " + spot.name + (forecast.elevation !== null ? " (" + show(forecast.elevation, " m") + ")" : ""));
   lines.push(new Date(day.date + "T12:00:00").toLocaleDateString(LOCALES[state.lang], { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
   lines.push(tr("updated") + " " + clock(forecast.fetchedAt), "");
   lines.push(tr("sunshine") + ": " + show(day.sunHours, " h") + " (" + tr("ofDaylight", { h: show(day.daylightHours) }) + ")");
@@ -893,7 +977,7 @@ function reportText(spot) {
   lines.push(tr("temperature") + ": " + show(day.tempMin, "°") + " " + tr("to") + " " + show(day.tempMax, "°C"));
   lines.push(tr("gusts") + ": " + show(day.gustMax, " km/h"));
   lines.push(tr("newSnow") + ": " + show(day.snowCm, " cm") + " · " + tr("precipitation") + ": " + show(day.precipMm, " mm"));
-  if (day.freezingMin !== null) lines.push(tr("freezing") + ": " + day.freezingMin + (day.freezingMax !== day.freezingMin ? " " + tr("to") + " " + day.freezingMax : "") + " m");
+  if (day.freezingMin !== null) lines.push(tr("freezing") + ": " + (day.freezingMax !== day.freezingMin ? show(day.freezingMin, " m") + " " + tr("to") + " " : "") + show(day.freezingMax, " m"));
   const segments = cloudSegments(day, report.entry.cloud);
   if (segments.length) lines.push("", tr("cloudTitle") + ":");
   for (const segment of segments) lines.push("  " + tr("from") + " " + hourText(segment.from) + ": " + segmentView(segment).title);
@@ -926,7 +1010,7 @@ function render() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {}, sort: saved.sort || "country" };
+    if (saved && Array.isArray(saved.spots)) state = { lang: LANGS.includes(saved.lang) ? saved.lang : state.lang, spots: saved.spots, cache: saved.cache || {}, sort: saved.sort || "country", units: saved.units || { temp: "c", wind: "kmh", len: "m" } };
   } catch (error) { /* start empty */ }
   for (const id in state.cache) if (state.cache[id].forecast && state.cache[id].forecast.days.some(day => !day.hours || (day.hours[0] && day.hours[0].isDay === undefined))) delete state.cache[id];
 }
@@ -960,15 +1044,26 @@ async function loadCompare(spot, entry) {
   } catch (error) { /* reliability is simply not shown */ }
 }
 // One-time lookup of the country for favourites saved before countries were stored.
-async function fillCountry(spot) {
-  if (spot === EXAMPLE_SPOT || spot.cc || spot.ccTried) return;
-  spot.ccTried = true;
-  try {
-    const json = await fetchJson("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=3&lat=" + spot.lat + "&lon=" + spot.lon);
-    spot.cc = String((json.address || {}).country_code || "").toUpperCase() || undefined;
-  } catch (error) { /* stays ungrouped */ }
-  saveState();
-  if (!document.querySelector("#results button, #q:focus")) render();
+const countryQueue = [], countryAsked = {};
+let countryBusy = false;
+function fillCountry(spot) {
+  if (spot === EXAMPLE_SPOT || spot.cc || countryAsked[spot.id]) return;
+  countryAsked[spot.id] = true;
+  countryQueue.push(spot);
+  if (!countryBusy) runCountryQueue();
+}
+async function runCountryQueue() {
+  countryBusy = true;
+  while (countryQueue.length) {
+    const spot = countryQueue.shift();
+    try {
+      const json = await fetchJson("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=3&lat=" + spot.lat + "&lon=" + spot.lon);
+      const code = String((json.address || {}).country_code || "").toUpperCase();
+      if (code) { spot.cc = code; saveState(); if (!document.querySelector("#results button, #q:focus")) render(); }
+    } catch (error) { /* tried again on the next visit */ }
+    await new Promise(resolve => setTimeout(resolve, 1200));
+  }
+  countryBusy = false;
 }
 function hasValues(json) {
   return !!(json && json.hourly && (json.hourly.temperature_2m || []).some(value => value !== null && value !== undefined));
@@ -1030,7 +1125,7 @@ function renderResults() {
     const land = countryName(place.country_code, place.country);
     if (land !== country) { country = land; html += '<div class="label">' + esc(country) + "</div>"; }
     html += '<button type="button" data-pick="' + index + '">' + (placeKind(place) === tr("kindPeak") ? icon("peak_clear", 20) : "") + "<span>" + esc(place.name) + '</span><span class="small muted">' +
-      esc([placeKind(place), place.admin1, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>";
+      esc([placeKind(place), place.admin1, typeof place.elevation === "number" ? show(Math.round(place.elevation), " m") : ""].filter(Boolean).join(" · ")) + "</span></button>";
   });
   return html;
 }
@@ -1079,11 +1174,13 @@ function onType(value) {
   searchTimer = setTimeout(() => showPlaces(query, false), 350);
 }
 function onClick(event) {
-  const target = event.target.closest("[data-lang],[data-sort],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
+  const target = event.target.closest("[data-lang],[data-sort],[data-unitsopen],[data-unit],[data-open],[data-home],[data-tab],[data-day],[data-remove],[data-pick],[data-print],[data-share]");
   if (!target) return;
   const data = target.dataset;
   if (data.lang) { state.lang = data.lang; saveState(); render(); shownSpots().forEach(refreshSpot); }
   else if (data.sort) { state.sort = data.sort; saveState(); render(); }
+  else if (data.unitsopen) { view.unitsOpen = !view.unitsOpen; render(); }
+  else if (data.unit) { const pair = data.unit.split(":"); units()[pair[0]] = pair[1]; saveState(); render(); }
   else if (data.open) { location.hash = "spot-" + data.open; }
   else if (data.home) { location.hash = ""; }
   else if (data.tab) { view.tab = data.tab; render(); }
