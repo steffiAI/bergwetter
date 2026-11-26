@@ -295,6 +295,7 @@ const UNIT_TEXT = {
   it: { unitsTitle: "Unità", unitWind: "Vento", unitLen: "Quota e neve", hourLabel: "Ora", miniLegend: "Temperatura massima · ore di sole" }
 };
 for (const lang in UNIT_TEXT) Object.assign(TEXT[lang], UNIT_TEXT[lang]);
+const APP_NAME = { de: "Bergwetter", fr: "Météo de montagne", it: "Meteo di montagna", en: "Mountain Weather" };
 const WIND_UNITS = { kmh: ["km/h", 1], ms: ["m/s", 1 / 3.6], kn: ["kn", 1 / 1.852], mph: ["mph", 1 / 1.609344] };
 const COMPARE_MODELS = ["ecmwf_ifs025", "icon_seamless", "gfs_seamless"];
 function countryName(code, fallback) {
@@ -555,7 +556,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.9";
+const VERSION = "0.10";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -702,8 +703,8 @@ function hero() {
     extras += '<circle cx="' + x + '" cy="' + (still ? 160 + (index * 53) % 560 : 100) + '" r="' + (2.5 + index % 3) + '" fill="#FFFFFF" opacity=".9">' +
       (still ? "" : '<animate attributeName="cy" from="100" to="780" dur="' + seconds + 's" begin="-' + (index * 0.37 % seconds).toFixed(2) + 's" repeatCount="indefinite"/>') + "</circle>";
   }
-  return '<svg class="hero" viewBox="0 120 1916 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Bergwetter"><image href="winter.jpg" x="0" y="0" width="1916" height="821"/>' + extras +
-    '<text x="250" y="262" font-size="84" font-weight="300" letter-spacing="-2" fill="#1B2A4A">Bergwetter</text></svg>';
+  return '<svg class="hero" viewBox="0 120 1916 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(APP_NAME[state.lang] || APP_NAME.de) + '"><image href="winter.jpg" x="0" y="0" width="1916" height="821"/>' + extras +
+    '<text x="250" y="262" font-size="' + ((APP_NAME[state.lang] || "").length > 12 ? 68 : 84) + '" font-weight="300" letter-spacing="-2" fill="#1B2A4A">' + esc(APP_NAME[state.lang] || APP_NAME.de) + "</text></svg>";
 }
 function unitsPanel() {
   if (!view.unitsOpen) return "";
