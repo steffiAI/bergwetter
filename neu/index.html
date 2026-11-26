@@ -138,6 +138,10 @@
   .prob-figs { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; border-top:1px solid var(--line); padding-top:12px; }
   .prob-fig { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; min-width:0; }
   .note { background:var(--tile); border-radius:10px; padding:10px 12px; font-size:14px; }
+  #app { min-height:100vh; min-height:100dvh; }
+  #app > footer { margin-top:auto; }
+  #results .label { margin-top:8px; }
+  #results button { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   @media screen and (max-width:999px) {
     .cols[data-tab="day"] .m-details, .cols[data-tab="details"] .m-day { display:none !important; }
   }
@@ -247,6 +251,14 @@ const GEAR_TEXT = {
     gear: { ava: "ARTVA, pala, sonda (fuori da piste e sentieri protetti)", cold: "Molto freddo: strati caldi, guanti spessi, protezione per il viso", wind: "Vento forte: giacca antivento, maschera da sci", sun: "Molto sole: crema solare, occhiali da sole", rain: "Pioggia: giacca e pantaloni impermeabili", snow: "Neve fresca: ghette, scarpe impermeabili", fog: "Nubi alla tua quota: carta e traccia GPS", lamp: "Giornata corta: lampada frontale" } }
 };
 for (const lang in GEAR_TEXT) Object.assign(TEXT[lang], GEAR_TEXT[lang]);
+const SEARCH_TEXT = {
+  en: { kindPlace: "Place", kindPeak: "Mountain", kindPost: "Postcode", footPost: "Postcode search: © OpenStreetMap contributors." },
+  de: { kindPlace: "Ort", kindPeak: "Berg", kindPost: "PLZ", footPost: "PLZ-Suche: © OpenStreetMap-Mitwirkende." },
+  fr: { kindPlace: "Lieu", kindPeak: "Montagne", kindPost: "Code postal", footPost: "Recherche par code postal : © les contributeurs d'OpenStreetMap." },
+  it: { kindPlace: "Località", kindPeak: "Montagna", kindPost: "CAP", footPost: "Ricerca per CAP: © i contributori di OpenStreetMap." }
+};
+for (const lang in SEARCH_TEXT) Object.assign(TEXT[lang], SEARCH_TEXT[lang]);
+const NEAR_COUNTRIES = ["CH", "DE", "AT", "LI", "IT", "FR"];
 const HISTORY_URL = (typeof location !== "undefined" && location.pathname.indexOf("/neu/") >= 0 ? "../" : "") + "verlauf/lawinen.json";
 let historyDays = null, historyPromise = null;
 const EXAMPLE_SPOT = { id: "example", name: "Matterhorn", lat: 45.976, lon: 7.659, elevation: 4478 };
@@ -471,7 +483,7 @@ function dangerWord(value) { return (TEXT[state.lang].danger || TEXT.en.danger)[
 function problemWord(type) { return (TEXT[state.lang].problem || TEXT.en.problem)[type] || String(type).replace(/_/g, " "); }
 
 /* ---------- Icons ---------- */
-const VERSION = "0.6";
+const VERSION = "0.7";
 function icon(kind, size) {
   const open = '<svg aria-hidden="true" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none">';
   const rays = '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
@@ -582,7 +594,7 @@ function languageSwitch() {
     '<button data-lang="' + lang + '" aria-pressed="' + (state.lang === lang) + '">' + lang.toUpperCase() + "</button>").join("") + "</div>";
 }
 function footer() {
-  return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
+  return "<footer>" + esc(tr("footForecast")) + " " + esc(tr("footWide")) + " " + esc(tr("footAva")) + " " + esc(tr("footCloud")) + " " + esc(tr("footPost")) + " " + esc(tr("footNote")) + " " + esc(tr("astro")) +
     ' <a href="https://open-meteo.com/" target="_blank" rel="noopener">open-meteo.com</a> · <a href="' + SLF_PAGE[state.lang] + '" target="_blank" rel="noopener">slf.ch</a> · v' + VERSION + "</footer>";
 }
 function renderHome() {
@@ -901,6 +913,32 @@ function addSpot(name, lat, lon, elevation) {
   state.spots.unshift(spot); saveState(); render(); refreshSpot(spot);
 }
 let searchResults = [];
+// Postcodes of the Alpine countries come from OpenStreetMap, because the place search knows only some of them.
+async function postcodeLookup(code) {
+  const rows = await fetchJson("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=" + NEAR_COUNTRIES.join(",").toLowerCase() +
+    "&accept-language=" + state.lang + "&postalcode=" + encodeURIComponent(code));
+  const seen = {};
+  return (Array.isArray(rows) ? rows : []).map(row => {
+    const address = row.address || {};
+    return { name: address.city || address.town || address.village || address.municipality || address.county || row.name || code, latitude: Number(row.lat), longitude: Number(row.lon),
+      admin1: address.state, country: address.country, country_code: String(address.country_code || "").toUpperCase(), postcode: code };
+  }).filter(place => isFinite(place.latitude) && isFinite(place.longitude) && !seen[place.name + place.country_code] && (seen[place.name + place.country_code] = true));
+}
+function placeKind(place) {
+  if (place.postcode) return tr("kindPost") + " " + place.postcode;
+  return /^(MT|MTS|PK|PKS|RDGE|PASS|GLCR|HLL)$/.test(place.feature_code || "") ? tr("kindPeak") : tr("kindPlace");
+}
+function renderResults() {
+  const rank = place => { const index = NEAR_COUNTRIES.indexOf(place.country_code); return (place.postcode ? -10 : 0) + (index < 0 ? NEAR_COUNTRIES.length : index); };
+  searchResults = searchResults.map((place, index) => ({ place, index })).sort((a, b) => rank(a.place) - rank(b.place) || a.index - b.index).map(item => item.place);
+  let html = "", country = null;
+  searchResults.forEach((place, index) => {
+    if (place.country !== country) { country = place.country; html += '<div class="label">' + esc(country || "") + "</div>"; }
+    html += '<button type="button" data-pick="' + index + '">' + (placeKind(place) === tr("kindPeak") ? icon("peak_clear", 20) : "") + "<span>" + esc(place.name) + '</span><span class="small muted">' +
+      esc([placeKind(place), place.admin1, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>";
+  });
+  return html;
+}
 async function onSearch(event) {
   event.preventDefault();
   const input = document.getElementById("q"), results = document.getElementById("results"), query = input.value.trim();
@@ -909,13 +947,13 @@ async function onSearch(event) {
   if (coordinates) return addSpot(coordinates.lat.toFixed(3) + ", " + coordinates.lon.toFixed(3), coordinates.lat, coordinates.lon);
   results.innerHTML = '<p class="muted" style="margin:0">' + esc(tr("searching")) + "</p>";
   try {
-    const lookup = async text => (await fetchJson(geocodeUrl(text))).results || [], mixed = /^(\d{4,5})\s+(.+)$/.exec(query);
-    searchResults = await lookup(query);
-    if (!searchResults.length && mixed) searchResults = await lookup(mixed[1]);
-    if (!searchResults.length && mixed) searchResults = await lookup(mixed[2]);
-    results.innerHTML = searchResults.length ? searchResults.map((place, index) => '<button type="button" data-pick="' + index + '">' + esc(place.name) +
-      ' <span class="small muted">' + esc([/^\d{4,5}/.test(query) ? query.match(/^\d+/)[0] : "", place.admin1, place.country, typeof place.elevation === "number" ? Math.round(place.elevation) + " m" : ""].filter(Boolean).join(" · ")) + "</span></button>").join("")
-      : '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>";
+    const lookup = async text => (await fetchJson(geocodeUrl(text))).results || [], mixed = /^(\d{4,5})\s+(.+)$/.exec(query), code = (/^(\d{4,5})(\s|$)/.exec(query) || [])[1];
+    let byCode = [];
+    if (code) { try { byCode = await postcodeLookup(code); } catch (error) { byCode = []; } }
+    let places = await lookup(query);
+    if (!places.length && mixed) places = await lookup(mixed[2]);
+    searchResults = byCode.concat(places.filter(place => !byCode.some(hit => hit.name === place.name && hit.country_code === place.country_code)));
+    results.innerHTML = searchResults.length ? renderResults() : '<p class="muted" style="margin:0">' + esc(tr("nothing")) + "</p>";
   } catch (error) { results.innerHTML = '<p class="err" style="margin:0">' + esc(tr("searchFailed")) + "</p>"; }
 }
 function onClick(event) {
